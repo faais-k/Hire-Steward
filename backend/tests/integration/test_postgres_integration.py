@@ -327,16 +327,17 @@ def test_public_salary_report_stays_unverified_and_cannot_authorize_submission(
                 "amount": "200000.00",
                 "currency": "INR",
                 "period": "YEAR",
-                "evidence_reference": "https://example.invalid/jobs/123",
+                "evidence_reference": "claim:example.invalid:jobs:123",
             },
         )
 
-    assert response.status_code == 201
+    assert response.status_code == 201, response.text
     result = response.json()
     assert result["reported_status"] == "PAID"
     assert result["evidence_verification_state"] == "UNVERIFIED"
     assert result["outcome"] == "REVIEW_REQUIRED"
     assert result["reason_code"] == "EVIDENCE_UNVERIFIED"
     assert result["eligible_to_submit"] is False
+    assert result["reported_evidence_reference"] == "claim:example.invalid:jobs:123"
     assert "reported" in result["explanation"].lower()
     assert "verified annualized compensation" not in result["explanation"].lower()
