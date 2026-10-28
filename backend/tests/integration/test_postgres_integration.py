@@ -1,18 +1,14 @@
-import os
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
 from decimal import Decimal
 from threading import Barrier
-from uuid import uuid4
 
 import pytest
-from alembic import command
-from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine, event, inspect, select, text
-from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker
+
+from conftest import PostgresDatabase, local_headers, upgrade
 
 from backend.app.db.base import Base
 from backend.app.db.models import CompensationPreference, CompensationPreferenceAudit
@@ -21,64 +17,6 @@ from backend.app.services.preferences import set_minimum_compensation
 
 
 pytestmark = pytest.mark.postgres
-
-
-@dataclass(frozen=True)
-class PostgresDatabase:
-    engine: Engine
-    session_factory: sessionmaker[Session]
-    schema: str
-
-
-@pytest.fixture
-def postgres_database():
-    database_url = os.getenv("JOBPILOT_TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("JOBPILOT_TEST_DATABASE_URL is not configured")
-
-    parsed_url = make_url(database_url)
-    if parsed_url.drivername != "postgresql+psycopg":
-        pytest.fail("PostgreSQL integration tests require the psycopg PostgreSQL URL")
-    if parsed_url.database != "jobpilot_test":
-        pytest.fail("PostgreSQL integration tests require the dedicated jobpilot_test database")
-
-    schema = f"jobpilot_test_{uuid4().hex}"
-    admin_engine = create_engine(database_url, pool_pre_ping=True)
-    engine: Engine | None = None
-    schema_created = False
-    try:
-        with admin_engine.begin() as connection:
-            connection.exec_driver_sql(f'CREATE SCHEMA "{schema}"')
-        schema_created = True
-
-        engine = create_engine(
-            database_url,
-            connect_args={"options": f"-csearch_path={schema}"},
-            pool_pre_ping=True,
-        )
-        yield PostgresDatabase(
-            engine=engine,
-            session_factory=sessionmaker(bind=engine, expire_on_commit=False),
-            schema=schema,
-        )
-    finally:
-        if engine is not None:
-            engine.dispose()
-        if schema_created:
-            with admin_engine.begin() as connection:
-                connection.exec_driver_sql(f'DROP SCHEMA IF EXISTS "{schema}" CASCADE')
-        admin_engine.dispose()
-
-
-def upgrade(database: PostgresDatabase, revision: str = "head") -> None:
-    config = Config("backend/alembic.ini")
-    with database.engine.begin() as connection:
-        config.attributes["connection"] = connection
-        command.upgrade(config, revision)
-
-
-def local_headers() -> dict[str, str]:
-    return {"host": "localhost", "origin": "http://localhost"}
 
 
 def test_fresh_migration_matches_models_and_seeds_exact_default(postgres_database):
@@ -137,7 +75,7 @@ def test_fresh_migration_matches_models_and_seeds_exact_default(postgres_databas
     assert preference.amount == Decimal("100000.00")
     assert preference.currency == "INR"
     assert preference.period == "YEAR"
-    assert revision == "0002_comp_evidence_trust"
+    assert revision == "0003_candidate_evidence"
 
 
 def test_readiness_fails_closed_when_required_table_is_dropped_after_migration(

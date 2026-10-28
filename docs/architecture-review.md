@@ -2,7 +2,7 @@
 
 **Review date:** 2026-10-28  
 **Scope:** Validate the proposed local-first architecture against the documented single-user workload, safety rules, reliability requirements and observed workspace.  
-**Conclusion:** The modular-monolith direction remains justified. Foundation 1 proves a small FastAPI/SQLAlchemy/Alembic slice with exact decimal settings, transactional audit, assessment snapshots, and local-origin checks. Foundation 2 adds a PostgreSQL-only Compose service, a non-mutating readiness endpoint that verifies current schema shape as well as migration state, isolated PostgreSQL test code, and CI workflow configuration. Actual PostgreSQL behavior and hosted CI remain unverified; source access and external actions remain unimplemented.
+**Conclusion:** The modular-monolith direction remains justified. Foundation 1 proves a small FastAPI/SQLAlchemy/Alembic slice with exact decimal settings, transactional audit, assessment snapshots, and local-origin checks. Foundation 2 adds a PostgreSQL-only Compose service, a non-mutating readiness endpoint that verifies current schema shape as well as migration state, isolated PostgreSQL test code, and CI workflow configuration. Hosted CI verified `f47b9d1` against PostgreSQL on 2026-10-28 (73 passed, 0 failed, one upstream warning); local Compose and production operational behavior remain unverified. Source access and external actions remain unimplemented.
 
 ## Verified state and assumptions
 

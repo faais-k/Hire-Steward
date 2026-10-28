@@ -1,6 +1,6 @@
 # Hire-steward — System Architecture
 
-**Status:** Overall architecture remains proposed. Foundation 1 implements and locally tests the compensation-preference backend slice. Foundation 2 defines a PostgreSQL Compose service, schema-aware readiness, isolated PostgreSQL integration tests, and CI; the actual PostgreSQL suite and GitHub workflow have not yet run.
+**Status:** Overall architecture remains proposed. Foundation 1 implements and locally tests the compensation-preference backend slice. Foundation 2 implements a PostgreSQL Compose service, schema-aware readiness, isolated PostgreSQL integration tests, and CI. Hosted GitHub Actions verified commit `f47b9d1` on 2026-10-28 against its PostgreSQL service: 73 tests passed, 0 failed, with one upstream Starlette/AnyIO deprecation warning. This does not verify local Compose startup, backup/restore, remote deployment, or production operations.
 
 ## 1. Design goals
 

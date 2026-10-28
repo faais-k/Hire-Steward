@@ -1,6 +1,6 @@
 # Hire-steward — Operations and Deployment Runbook
 
-**Status:** Foundation 2 defines a local PostgreSQL service, readiness behavior, test isolation, and CI. PostgreSQL execution and GitHub CI remain unverified in the current workspace.
+**Status:** Foundation 2 defines a local PostgreSQL service, readiness behavior, test isolation, and CI. Hosted CI verified `f47b9d1` against its PostgreSQL service on 2026-10-28 (73 passed, 0 failed, one upstream warning). Local Compose startup and operational use remain unverified in this workspace.
 
 ## 1. Deployment stages
 

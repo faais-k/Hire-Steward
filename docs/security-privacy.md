@@ -11,6 +11,12 @@
 - Provider prompts/responses, model telemetry, logs, screenshots and backups.
 - Source credentials, rate limits and capability records.
 
+### Foundation 3 implemented evidence boundary
+
+Candidate-document uploads accept only bounded, non-empty UTF-8 `text/plain` bytes. Server validates bytes incrementally, normalizes/rejects unsafe display filenames, computes hashes, and writes only beneath configured absolute root outside checkout. Callers cannot provide storage keys, content/evidence hashes, extraction results, confidence, or fact verification state. Stored document and byte-span provenance link prove neither semantic support nor candidate truth: public facts remain `UNREVIEWED`.
+
+100 MiB service-managed quota counts committed blobs plus durable 10 MiB reservations for staged/potential orphan files in supported single-process local deployment. It is not filesystem-wide quota and does not protect against external writers or another uncoordinated process. Filesystem/database commits are not atomic; stale reservation reconciliation is operator-only, grace-period controlled, and never deletes blob referenced by committed database metadata. Raw document content, absolute paths, temporary keys, SQL errors, and excerpts are not API response fields.
+
 ## 2. Threat actors and failure modes
 
 - Malicious or compromised job page containing prompt injection or malicious HTML.

@@ -35,7 +35,7 @@
 
 1. Owner review of these findings, especially source capability, reference-reuse and operational risks.
 2. Root Git/ignore setup and Python lock ownership are in place; review the staged initial baseline before committing. Frontend/Node/container lock and runtime pins remain for their implementation phase.
-3. FastAPI/SQLAlchemy/Alembic compatibility has been exercised on Python 3.12.10 with unit and SQLite integration tests; PostgreSQL behavior remains unverified.
+3. FastAPI/SQLAlchemy/Alembic compatibility has been exercised on Python 3.12.10 with unit, SQLite integration, and hosted PostgreSQL integration tests. Local Compose startup, backup/restore, and production operational behavior remain unverified.
 4. Current compensation writes have a loopback trusted-host and same-origin guard under ADR-0008. Review any broader local UI/API auth/CSRF design before adding other state-changing routes; remote mode remains out of scope.
 5. Select a first source only after current terms and exact operation are reviewed for a concrete source/employer. No live job request is needed during the audit.
 6. Select document extractors and any AI provider only after privacy/license/maintenance review and fixture-based quality checks. No paid provider call without explicit budget approval.
@@ -49,7 +49,7 @@
 
 ### Work order
 
-1. Add repository hygiene and tooling: non-empty `.gitignore`, root Python lock strategy, pytest suite, repository instructions, and CI configuration. The root `uv.lock`, focused tests, `AGENTS.md`, and CI workflow now exist; formatting/lint/type checks and frontend lock/runtime remain unselected. CI has not run yet.
+1. Add repository hygiene and tooling: non-empty `.gitignore`, root Python lock strategy, pytest suite, repository instructions, and CI configuration. The root `uv.lock`, focused tests, `AGENTS.md`, and CI workflow now exist. Hosted CI verified `f47b9d1` on 2026-10-28 (73 passed, 0 failed, one upstream warning); formatting/lint/type checks and frontend lock/runtime remain unselected.
 2. Create minimal typed backend/API and database boundaries. The compensation-only backend modules now exist; the frontend remains empty and no broad skeleton was created.
 3. Persist the minimum-compensation preference as exact INR/year decimal, default to INR 100,000/year, allow zero, validate at the API boundary and enforce the stored value on assessments. **Implemented and locally tested in Foundation 1.**
 4. Persist setting changes and immutable assessment snapshots transactionally. **Implemented and locally tested in Foundation 1.**
@@ -68,14 +68,14 @@
 
 ### Foundation 2 — PostgreSQL, Compose, and CI
 
-**Status:** Configuration and test code implemented on 2026-10-28; actual PostgreSQL and hosted CI verification remain pending.
+**Status:** Implemented and hosted-CI verified at commit `f47b9d1` on 2026-10-28. The CI PostgreSQL service was healthy and `uv run --locked pytest -q` reported 73 passed, 0 failed, and one upstream Starlette/AnyIO deprecation warning. The workflow-run URL is not available in repository context. Local Compose startup and broader operational checks remain pending.
 
 - Root `compose.yaml` runs only PostgreSQL `17.11-bookworm`, with a named persistent volume, environment-configured database/user/password/host port, a loopback-only host binding, and `pg_isready` health check. No frontend, worker, Redis, or broker container was added.
 - `.env.example` contains local placeholders and the single SQLAlchemy/Alembic `DATABASE_URL`; `.env` remains ignored. `backend/alembic.ini` no longer carries a second database URL. Alembic requires runtime `DATABASE_URL` when it is not given an injected connection.
 - `/health` remains liveness-only. `/ready` checks database connectivity, required model tables and columns plus `alembic_version`, current Alembic heads, and the valid migrated compensation-preference row; it returns a safe `503` if any check fails and never repairs schema state.
 - PostgreSQL integration tests require `JOBPILOT_TEST_DATABASE_URL` for the exact `jobpilot_test` database. Each test creates and drops a uniquely named schema rather than dropping the database. Coverage includes fresh/legacy migrations, defaults and numeric precision, audit rollback, decimal persistence, concurrent preference updates, constraints, and public unverified evidence behavior.
 - `.github/workflows/ci.yml` uses Python 3.12, pinned uv 0.13.5, locked commands, and a health-checked PostgreSQL service. It checks the lock, compiles backend/migrations, and runs SQLite plus PostgreSQL tests without external secrets or job-site requests.
-- The local Docker engine is unavailable, and the installed PostgreSQL Windows service is stopped. PostgreSQL tests were therefore not run locally; CI has not run on GitHub. Compose config validation and SQLite-backed checks are tracked separately in `docs/memory.md`.
+- The local Docker engine is unavailable, and the installed PostgreSQL Windows service is stopped. PostgreSQL tests were not run locally, but hosted CI ran the complete suite against PostgreSQL successfully. Compose config validation and SQLite-backed checks are tracked separately in `docs/memory.md`.
 
 **Architecture record:** ADR-0010 selects the PostgreSQL image pin, local environment setup, explicit test-database/schema isolation, and CI verification path. This decision configures local development only; it does not establish production readiness or PostgreSQL compatibility.
 
@@ -83,23 +83,25 @@
 
 - A clean checkout starts through a documented local command and shuts down cleanly. **Commands and Compose configuration are documented; not end-to-end verified because the Docker engine is unavailable.**
 - API binds to loopback by default; PostgreSQL's Compose host port also binds to loopback. No browser-debug port is exposed.
-- `/health` reports liveness only; `/ready` verifies DB connectivity, complete required schema shape, migration heads, and preference state without leaking secrets. **SQLite-backed API tests pass; actual PostgreSQL readiness remains unverified.**
+- `/health` reports liveness only; `/ready` verifies DB connectivity, complete required schema shape, migration heads, and preference state without leaking secrets. **SQLite-backed API tests and the hosted PostgreSQL suite pass; local Compose readiness remains unverified.**
 - Invalid config fails clearly and safely. Compensation settings accept zero and other finite non-negative values; reject malformed, negative, NaN, infinite and otherwise invalid values. The unpaid-role prohibition is independent of the setting.
 - Logs/errors expose correlation IDs and safe error codes but not environment values, tokens or candidate text.
-- Clean-install and migration-upgrade paths are described with a single root lockfile and a pinned PostgreSQL image. **Lockfile checks and SQLite migration paths are verified; PostgreSQL migration execution remains pending.**
-- CI runs locked dependencies, compilation, SQLite tests, and PostgreSQL integration tests. **Workflow configuration exists; no hosted CI run has occurred.**
+- Clean-install and migration-upgrade paths are described with a single root lockfile and a pinned PostgreSQL image. **Lockfile checks, SQLite paths, and hosted PostgreSQL migration execution are verified; local Compose migration execution remains pending.**
+- CI runs locked dependencies, compilation, SQLite tests, and PostgreSQL integration tests. **Hosted CI passed for `f47b9d1`; it is not evidence of local Compose or production readiness.**
 - Unit/integration tests cover settings validation, health/readiness, logging redaction, DB session isolation and initial constraints. CI does not contact live sources/providers.
 
 ## Stage C — Core product
 
 ### Phase 2 — Candidate evidence and provenance
 
-**Depends on:** Foundation, storage permissions, selected extractors and file limits.
+**Depends on:** Foundation, storage permissions, selected extractors and file limits. Foundation 3 implemented the approved text-only metadata/provenance subset from `docs/superpowers/plans/2026-10-28-candidate-evidence-vertical-slice.md`; PostgreSQL verification and owner review remain before commit. Extractors and verified review remain separate decisions.
 
 - Implement document registry, safe file ingestion, hash/version metadata and staged filesystem writes.
 - Store raw extraction separately from accepted facts; attach evidence ID, source version/span, confidence, sensitivity and verification state.
 - Add conflict resolution and manual profile editing; changed-file scans must be incremental.
 - Add PDF/DOCX/TXT/Markdown/CSV/XLSX fixtures; keep OCR optional until measured.
+
+**Foundation 3 scope:** Metadata/provenance and safe text-only ingestion are implemented first. Parsers, OCR, model extraction, embeddings, jobs, UI, and submission remain explicitly deferred.
 
 **Acceptance:** Re-ingesting identical content creates no duplicate active version; parse failure/empty output cannot erase accepted facts; every accepted fact traces to a version or user entry; malformed/oversized input is rejected or quarantined; file/DB consistency checks detect missing/orphaned artifacts.
 
@@ -180,4 +182,4 @@ Possible changes include a broker-backed queue, separate worker pools, managed P
 
 ## Current implementation status
 
-Stage B is `IN_PROGRESS`; Foundations 1 and 2 have local backend/database/CI configuration with a public compensation-evidence trust boundary. Public assessments remain unverified until a controlled source verifier is implemented. Current SQLite, Compose syntax, lockfile, and compilation results are recorded in `docs/memory.md`; actual PostgreSQL and hosted CI evidence remain outstanding. Phase 0 remains incomplete, and the owner-directed work does not approve sources/providers or satisfy their entry gates. Next, run the PostgreSQL suite against the isolated test DB or CI, then continue the remaining general foundation before any source integration.
+Stage B is `IN_PROGRESS`; Foundation 2 is hosted-CI verified while local Compose and broader operational acceptance remain open. Foundation 3 implements the smallest candidate-evidence/provenance slice; its PostgreSQL verification remains outstanding locally. Public compensation assessments remain unverified until controlled source verifier exists. Phase 0 remains incomplete; no source/provider is approved. Next, review Foundation 3 diff and verify its PostgreSQL suite before any source integration.

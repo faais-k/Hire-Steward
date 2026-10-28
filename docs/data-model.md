@@ -1,6 +1,6 @@
 # Hire-steward — Data Model and Persistence Specification
 
-**Status:** The full product schema remains conceptual. The focused compensation-preference tables are implemented in Alembic revisions `0001_compensation_preference` and `0002_comp_evidence_trust`; other entities remain proposed.
+**Status:** The full product schema remains conceptual except for compensation revisions `0001_compensation_preference`/`0002_comp_evidence_trust` and Foundation 3 revision `0003_candidate_evidence`. The latter implements a narrow candidate-evidence metadata/provenance slice; its scope is recorded in `docs/superpowers/plans/2026-10-28-candidate-evidence-vertical-slice.md`.
 
 ## 1. Modeling principles
 
@@ -50,6 +50,14 @@ Suggested verification states: `UNREVIEWED`, `USER_VERIFIED`, `DOCUMENT_SUPPORTE
 Many-to-many fact provenance. Fields: `id`, `fact_id`, `document_version_id`, `extract_job_id`, `page_number`, `section_path`, `quote_or_span`, `byte_or_text_offsets`, `evidence_hash`, `created_at`.
 
 Store only the excerpt necessary to support the fact, and redact sensitive values where not required. Avoid fragile line offsets as the sole locator; content hash and version are essential.
+
+### 2.5a Foundation 3 candidate-evidence slice — implemented, limited
+
+The implemented slice deliberately stays smaller than the full conceptual model: one local candidate scope; logical documents and immutable document versions; content-addressed blobs held beneath a configured controlled storage root; candidate facts; and fact-to-document-version provenance. No parser, OCR engine, model provider, embeddings, job source, frontend, scheduler, or submission workflow is included.
+
+Revision `0003_candidate_evidence` creates `candidate_document_blobs`, `candidate_evidence_storage_usage`, `candidate_evidence_storage_reservations`, `candidate_documents`, `candidate_document_versions`, `candidate_facts`, and `candidate_fact_evidence`. Versions reference blob content through `blob_hash -> candidate_document_blobs.content_hash`; `(document_id, version_number)` and `(document_id, blob_hash)` are unique. Durable reservations conservatively account for a full 10 MiB before storage and move to committed usage only in the metadata transaction. A crash after placement can leave a reservation-accounted orphan; the operator-only reconciliation command may reclaim only stale unreferenced reservation files. Extraction is `NOT_REQUESTED`; storage or provenance must not promote any fact beyond `UNREVIEWED`.
+
+Open owner decisions are recorded in the plan: the permitted media-type/size policy, the initial fact-type vocabulary and structured-value contract, and the authenticated user-review boundary for `USER_VERIFIED`. Until they are approved, this is architecture, not a schema or API contract.
 
 ### 2.6 `answer_bank_items`
 
@@ -176,7 +184,7 @@ Do not create HNSW or other approximate indexes solely because they are availabl
 
 ## 5. Migration and retention rules
 
-- Every schema change has an Alembic migration and an upgrade test. Revisions `0001_compensation_preference` and `0002_comp_evidence_trust` have clean-install SQLite and legacy-assessment upgrade coverage; PostgreSQL integration remains unverified until a test database is available.
+- Every schema change has an Alembic migration and an upgrade test. Revisions `0001_compensation_preference` and `0002_comp_evidence_trust` have clean-install SQLite and legacy-assessment upgrade coverage. Hosted CI verified the PostgreSQL suite at `f47b9d1` on 2026-10-28; local Compose migration execution remains unverified.
 - Prefer additive migrations, backfills, then cleanup in separate releases.
 - When introducing the versioned minimum-compensation setting, default new profiles to INR 100,000/year. Preserve any valid existing user-configured preference; do not silently clamp it. If a legacy value is invalid or a historical assessment lacks a threshold snapshot, preserve available records and mark the missing/uncertain provenance rather than fabricating a value.
 - Never change vector dimensions or embedding model in place without a migration/rehydration plan.

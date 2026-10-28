@@ -35,16 +35,19 @@
 - **Needs verification** means the team must validate the fact against the selected provider, terms, live behavior, or measured benchmark before relying on it.
 - **Release gate** means a condition that must pass before moving to the next stage.
 
-The documents are the product requirements and architecture baseline. Only the backend compensation-preference API, deterministic evaluator, migration, audit and assessment snapshot slice is currently implemented and locally tested. The frontend, other product features, source integrations and application submission are not implemented. No third-party endpoint is approved by this implementation. The source capability registry must be verified before use. Do not treat similarity scores, generated text, or a successful browser click as proof of eligibility or successful submission.
+The documents are the product requirements and architecture baseline. The backend implements the compensation-preference/assessment slice and a narrow candidate-evidence metadata slice. The frontend, source integrations and application submission are not implemented. No third-party endpoint is approved by this implementation. The source capability registry must be verified before use. Do not treat similarity scores, generated text, a stored document, or a successful browser click as proof of eligibility or successful submission.
 
 ## Current implementation status and limitations
 
 Foundation 1 implements the configurable compensation preference and deterministic assessment backend. The default minimum is INR 100,000 per year, and the preference can be changed, including to zero. Foundation 2 adds a local PostgreSQL Compose service, an explicit PostgreSQL integration-test suite, a CI workflow, and database readiness reporting.
 
+Foundation 3 adds local-only candidate-document metadata, immutable UTF-8 `text/plain` versions, closed-shape unreviewed facts, and byte-span provenance. Uploads use a configured external storage root, 10 MiB per-version cap, 100 MiB service-managed reservation budget, server-computed hashes, and operator-only stale-reservation reconciliation. Stored documents and provenance links are not fact verification; no parser, OCR, model, extraction worker, or user-verification workflow exists.
+
 - Compensation evidence supplied through the public API remains unverified. Public assessments return `REVIEW_REQUIRED` and cannot authorize submission. There is no trusted compensation evidence verifier or ingestion path yet.
 - There is no frontend, job-source integration, AI provider integration, or application-submission workflow. Live applications remain disabled.
+- Candidate-evidence PostgreSQL migration/concurrency tests are present but unverified locally because the dedicated `JOBPILOT_TEST_DATABASE_URL` and Docker engine are unavailable. The single-process reservation limit is not an operating-system disk quota or a multi-process storage protocol.
 - The Compose service and CI workflow are development infrastructure, not a production-ready setup. Authentication, production secret management, backup/restore, monitoring, and remote deployment hardening remain out of scope.
-- The routine local suite uses SQLite. PostgreSQL-specific migration, decimal, transaction, locking, concurrency, and trust-boundary tests are present but have not been verified against a running PostgreSQL server in this workspace. The CI workflow has not yet run on GitHub.
+- The routine local suite uses SQLite. Hosted GitHub Actions verified commit `f47b9d1` on 2026-10-28: its PostgreSQL service became healthy and `uv run --locked pytest -q` reported **73 passed, 0 failed**, with one upstream Starlette/AnyIO deprecation warning. The workflow-run URL is not available in the repository context. This does not verify local Docker Compose startup, backups, recovery, or production operation.
 
 `GET/PATCH /api/v1/settings/policies` reads and updates the persisted preference. `POST /api/v1/compensation/assessments` records a deterministic assessment using the saved server value; the API rejects client-supplied thresholds and AI decision fields. Assessment records retain their threshold snapshot. This evaluator is not wired into job matching, scheduling, the dashboard, application preparation, or a submission gate; no submission route exists.
 
@@ -95,6 +98,12 @@ Run fast unit and SQLite-backed API/migration tests:
 
 ```powershell
 uv run --locked pytest -m "not postgres" -q
+```
+
+Candidate-evidence uploads require an absolute `EVIDENCE_STORAGE_ROOT` outside this checkout. The current implementation accepts only UTF-8 `text/plain` document versions. To reconcile stale reservation-accounted files after a crash, use the explicit local operator command; it refuses to change storage without `--apply` and never deletes a blob referenced by database metadata:
+
+```powershell
+uv run --locked python -m backend.app.reconcile_evidence_storage --apply
 ```
 
 PostgreSQL integration tests require a separate database named exactly `jobpilot_test`. Create it once in the local Compose server, set the dedicated test URL, and run only those tests. Each test uses and removes its own temporary schema; it does not drop the database:

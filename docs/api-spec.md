@@ -1,11 +1,11 @@
 # Hire-steward — Internal API Specification (Proposed)
 
-**Status:** Partial implementation. Foundation 1 implements liveness, compensation policy settings, and compensation-only assessment endpoints. Foundation 2 adds database readiness. Other routes below remain proposals.
+**Status:** Partial implementation. Foundation 1 implements liveness, compensation policy settings, and compensation-only assessment endpoints. Foundation 2 adds database readiness. Foundation 3 implements the narrow local candidate-evidence routes below; other routes remain proposals.
 
 ## 1. API conventions
 
 - Prefix all endpoints with `/api/v1`.
-- Use JSON for structured data and multipart upload for documents.
+- Use JSON for structured data. Foundation 3 document versions use a bounded raw `text/plain` body; multipart remains a future proposal, not an implemented contract.
 - Use Pydantic request/response schemas and stable error codes.
 - All state-changing requests should accept an idempotency key where repeated client requests could duplicate work.
 - Long-running tasks return a run/task ID and `202 Accepted`; UI polls status or consumes a future push channel. Do not keep a request open while crawling sources or waiting for an LLM/human.
@@ -78,15 +78,14 @@ The assessment endpoint and read endpoint do not establish eligibility to submit
 
 ### Candidate evidence
 
-- `GET /api/v1/documents`
-- `POST /api/v1/documents` — upload file, validate size/media type, return document and ingest task IDs.
-- `GET /api/v1/documents/{document_id}`
-- `GET /api/v1/documents/{document_id}/versions`
-- `POST /api/v1/documents/{document_id}/reprocess` — explicit reprocessing task; must be non-destructive.
-- `GET /api/v1/facts`
-- `PATCH /api/v1/facts/{fact_id}` — correct/verify fact with version check and provenance.
-- `POST /api/v1/facts/{fact_id}/resolve-conflict`
-- `GET /api/v1/facts/{fact_id}/evidence`
+Foundation 3 implements only the following local routes. Every write requires matching local `Host`/`Origin`; this guard is not authentication.
+
+- `POST /api/v1/documents` accepts strict JSON `{ "display_name": "..." }` and returns active logical-document metadata (`201`). `GET /api/v1/documents`, `GET /api/v1/documents/{document_id}`, and `GET /api/v1/documents/{document_id}/versions` return metadata only. `POST /api/v1/documents/{document_id}/retire` retires a document idempotently; it does not delete versions or blobs.
+- `POST /api/v1/documents/{document_id}/versions` accepts a non-empty, incrementally consumed `text/plain` or `text/plain; charset=utf-8` raw body and required safe `X-Original-Filename`. Actual bytes, not `Content-Length`, are capped at 10 MiB; invalid UTF-8, NUL, empty input, unsafe names, unsupported media, retired documents, or unavailable quota fail safely. Responses return no raw text, absolute path, temporary key, or storage key.
+- `POST /api/v1/facts` accepts strict closed fact values for `SKILL`, `EDUCATION`, `EMPLOYMENT`, `PROJECT`, and `CERTIFICATION`; the server computes its value hash and returns only `UNREVIEWED` facts. Caller/model state, confidence, hash, extraction, verifier, or storage-key claims are rejected.
+- `GET /api/v1/facts`, `GET /api/v1/facts/{fact_id}`, `POST /api/v1/facts/{fact_id}/provenance`, and `GET /api/v1/facts/{fact_id}/provenance` provide metadata. Provenance validates a stored-version byte span, rehashes immutable content, derives the span hash server-side, and discards any matching client excerpt. It never promotes the fact from `UNREVIEWED` or proves semantic support/truth.
+
+There is no multipart route, raw-file download, reprocess/extraction task, verification endpoint, fact-edit/verification workflow, or source/document parser in this implementation.
 
 ### Sources and discovery
 

@@ -2,7 +2,7 @@
 
 **Status:** Proposed roadmap. Complete each phase's acceptance gate before building the next high-risk capability. Timelines are intentionally omitted until repository and workload are inspected.
 
-**Current implementation:** Phase 1 is `IN_PROGRESS` as of 2026-10-28. Foundation 1 implements configurable compensation preference and a public evidence trust boundary. Foundation 2 adds PostgreSQL Compose configuration, readiness reporting, PostgreSQL test code, and CI workflow configuration. Phase 0 remains incomplete; these local foundation changes do not approve any source/provider integration or live external action. Current test results and the unverified PostgreSQL/CI status are recorded in `docs/memory.md`. Public compensation assessments remain unverified until a real evidence-verification path exists.
+**Current implementation:** Phase 1 is `IN_PROGRESS` as of 2026-10-28. Foundation 1 implements configurable compensation preference and public evidence trust boundary. Foundation 2 adds PostgreSQL Compose/readiness/test/CI; hosted CI verified `f47b9d1` against PostgreSQL (73 passed, 0 failed, one upstream warning). Local Compose remains unverified. Foundation 3 implements local text-only candidate documents, unreviewed facts, provenance, and reservation storage; its PostgreSQL integration has not run locally. Phase 0 remains incomplete; no source/provider/live action is approved. Public compensation assessments remain unverified until real verifier exists.
 
 ## Delivery principle
 

@@ -110,7 +110,7 @@ def test_readiness_fails_when_required_table_is_missing_after_migration(
     with migrated_engine.begin() as connection:
         connection.exec_driver_sql("DROP TABLE compensation_assessments")
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-            "0002_comp_evidence_trust"
+            "0003_candidate_evidence"
         )
         assert connection.scalar(
             text("SELECT amount FROM compensation_preferences WHERE id = 1")
@@ -132,7 +132,7 @@ def test_readiness_fails_when_required_column_is_missing_after_migration(
             "ALTER TABLE compensation_assessments DROP COLUMN evidence_reference"
         )
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-            "0002_comp_evidence_trust"
+            "0003_candidate_evidence"
         )
 
     with TestClient(create_app(session_factory=migrated_factory)) as client:
