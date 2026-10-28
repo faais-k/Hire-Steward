@@ -1,0 +1,46 @@
+# External repositories and conversation exports are research artifacts, not JobPilot source.
+/reference-repos/
+/Chatgpt-chat/
+/docs (2).zip
+
+# Local secrets and machine-specific configuration.
+/.env*
+!/.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+
+# Python environments, caches and generated output.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest-tmp/
+**/.pytest-tmp/
+pytest-cache-files-*/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Frontend dependencies and generated bundles.
+node_modules/
+/frontend/dist/
+
+# Local databases, logs and runtime data.
+*.db
+*.sqlite
+*.sqlite3
+*.log
+/data/
+/backups/
+/docs.zip
