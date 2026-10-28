@@ -26,7 +26,7 @@ def test_upgrade_from_0002_adds_candidate_evidence_schema(postgres_database: Pos
     upgrade(postgres_database, "0002_comp_evidence_trust")
     with postgres_database.engine.connect() as connection:
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0002_comp_evidence_trust"
-    upgrade(postgres_database)
+    upgrade(postgres_database, "0003_candidate_evidence")
     inspector = inspect(postgres_database.engine)
     names = set(inspector.get_table_names(schema=postgres_database.schema))
     assert {

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -123,7 +124,7 @@ class CompensationAssessment(Base):
     conversion_basis: Mapped[str | None] = mapped_column(String(64))
     outcome: Mapped[str] = mapped_column(String(24), nullable=False)
     reason_code: Mapped[str] = mapped_column(String(48), nullable=False)
-    explanation: Mapped[str] = mapped_column(Text, nullable=False)
+    explanation: Mapped[Text] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -322,5 +323,273 @@ class CandidateFactEvidence(Base):
     evidence_hash: Mapped[str] = mapped_column(String(64), nullable=False)
     method: Mapped[str] = mapped_column(String(32), nullable=False, server_default="LOCAL_API_REPORTED")
     created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class JobSource(Base):
+    __tablename__ = "job_sources"
+    __table_args__ = (
+        PrimaryKeyConstraint("source_name", name="pk_job_sources"),
+        CheckConstraint(
+            "capability_status IN ('NEEDS_REVIEW', 'VERIFIED_READ_ONLY', 'MANUAL_ONLY', 'BLOCKED', 'DISABLED_BY_USER')",
+            name="ck_job_sources_status",
+        ),
+        CheckConstraint(
+            "(is_enabled = TRUE AND capability_status = 'VERIFIED_READ_ONLY') OR (is_enabled = FALSE)",
+            name="ck_job_sources_active_gate",
+        ),
+        CheckConstraint(
+            "rate_limit_requests_per_minute > 0 AND min_poll_interval_seconds >= 60",
+            name="ck_job_sources_rate_positive",
+        ),
+    )
+
+    source_name: Mapped[str] = mapped_column(String(32), primary_key=True)
+    display_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    capability_status: Mapped[str] = mapped_column(
+        String(24), nullable=False, server_default="NEEDS_REVIEW"
+    )
+    is_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=func.false()
+    )
+    terms_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    terms_review_reference: Mapped[str | None] = mapped_column(String(256))
+    rate_limit_requests_per_minute: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="10"
+    )
+    min_poll_interval_seconds: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="43200"
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class EmployerSubscription(Base):
+    __tablename__ = "employer_subscriptions"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_employer_subscriptions"),
+        ForeignKeyConstraint(
+            ["source_name"], ["job_sources.source_name"],
+            ondelete="RESTRICT", name="fk_subscriptions_source",
+        ),
+        UniqueConstraint("source_name", "employer_handle", name="uq_employer_subscriptions_identity"),
+        CheckConstraint(
+            "employer_handle ~ '^[a-z0-9][a-z0-9_-]{0,127}$' AND employer_handle NOT IN ('.', '..')",
+            name="ck_subscriptions_handle_format",
+        ),
+        CheckConstraint(
+            "(lease_token IS NULL AND lease_expires_at IS NULL) OR "
+            "(lease_token IS NOT NULL AND lease_expires_at IS NOT NULL)",
+            name="ck_subscriptions_lease_pair",
+        ),
+        Index("ix_subscriptions_pollable", "is_enabled", "source_name"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    source_name: Mapped[str] = mapped_column(String(32), nullable=False)
+    employer_handle: Mapped[str] = mapped_column(String(128), nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(128))
+    is_enabled: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=func.true()
+    )
+    lease_token: Mapped[str | None] = mapped_column(String(36))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class DiscoveryCheckpoint(Base):
+    __tablename__ = "discovery_checkpoints"
+    __table_args__ = (
+        PrimaryKeyConstraint("subscription_id", name="pk_discovery_checkpoints"),
+        ForeignKeyConstraint(
+            ["subscription_id"], ["employer_subscriptions.id"],
+            ondelete="CASCADE", name="fk_checkpoints_subscription",
+        ),
+        CheckConstraint("consecutive_failure_count >= 0", name="ck_checkpoints_failures_nonneg"),
+        CheckConstraint(
+            "(circuit_breaker_tripped = FALSE AND circuit_breaker_reason IS NULL AND circuit_breaker_tripped_at IS NULL) OR "
+            "(circuit_breaker_tripped = TRUE AND circuit_breaker_reason IS NOT NULL AND circuit_breaker_tripped_at IS NOT NULL)",
+            name="ck_checkpoints_cb_consistency",
+        ),
+    )
+
+    subscription_id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    last_successful_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    consecutive_failure_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    circuit_breaker_tripped: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=func.false()
+    )
+    circuit_breaker_reason: Mapped[str | None] = mapped_column(String(64))
+    circuit_breaker_tripped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class DiscoveryRun(Base):
+    __tablename__ = "discovery_runs"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_discovery_runs"),
+        ForeignKeyConstraint(
+            ["subscription_id"], ["employer_subscriptions.id"],
+            ondelete="RESTRICT", name="fk_discovery_runs_subscription",
+        ),
+        UniqueConstraint("id", "subscription_id", name="uq_discovery_runs_id_subscription"),
+        CheckConstraint(
+            "status IN ('PENDING', 'RUNNING', 'SUCCEEDED', 'FAILED', 'INTERRUPTED', 'SKIPPED_CONCURRENT_LEASE')",
+            name="ck_discovery_runs_status",
+        ),
+        CheckConstraint("page_limit >= 1 AND page_limit <= 100", name="ck_discovery_runs_page_limit"),
+        CheckConstraint(
+            "current_skip >= 0 AND current_page_index >= 0",
+            name="ck_discovery_runs_skip_nonneg",
+        ),
+        CheckConstraint(
+            "items_seen_count >= 0 AND items_new_count >= 0 AND items_updated_count >= 0 AND items_duplicate_count >= 0",
+            name="ck_discovery_runs_counts_nonneg",
+        ),
+        CheckConstraint(
+            "(status IN ('SUCCEEDED', 'FAILED', 'INTERRUPTED', 'SKIPPED_CONCURRENT_LEASE') AND finished_at IS NOT NULL) OR "
+            "(status IN ('PENDING', 'RUNNING') AND finished_at IS NULL)",
+            name="ck_discovery_runs_termination",
+        ),
+        Index("ix_discovery_runs_sub_started", "subscription_id", "started_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    subscription_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(28), nullable=False, server_default="PENDING"
+    )
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    current_skip: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    current_page_index: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    page_limit: Mapped[int] = mapped_column(Integer, nullable=False, server_default="100")
+    items_seen_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    items_new_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    items_updated_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    items_duplicate_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    error_message_redacted: Mapped[str | None] = mapped_column(Text)
+
+
+class JobPosting(Base):
+    __tablename__ = "job_postings"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_job_postings"),
+        ForeignKeyConstraint(
+            ["subscription_id"], ["employer_subscriptions.id"],
+            ondelete="RESTRICT", name="fk_job_postings_subscription",
+        ),
+        UniqueConstraint("subscription_id", "posting_id", name="uq_job_postings_identity"),
+        UniqueConstraint("id", "subscription_id", name="uq_job_postings_id_subscription"),
+        ForeignKeyConstraint(
+            ["last_seen_run_id", "subscription_id"],
+            ["discovery_runs.id", "discovery_runs.subscription_id"],
+            ondelete="RESTRICT",
+            name="fk_job_postings_run_composite",
+        ),
+        CheckConstraint("posting_id ~ '^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$'", name="ck_job_postings_posting_id"),
+        CheckConstraint("current_raw_hash ~ '^[0-9a-f]{64}$'", name="ck_job_postings_hash_format"),
+        CheckConstraint(
+            "lifecycle_status IN ('ACTIVE', 'REMOVED', 'STALE', 'UNKNOWN', 'CLOSED_CONFIRMED')",
+            name="ck_job_postings_lifecycle",
+        ),
+        CheckConstraint("consecutive_misses_count >= 0", name="ck_job_postings_misses_nonneg"),
+        CheckConstraint("version >= 1", name="ck_job_postings_version_positive"),
+        Index("ix_job_postings_sub_status", "subscription_id", "lifecycle_status"),
+        Index("ix_job_postings_last_observed", "last_observed_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    subscription_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    posting_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    current_raw_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    lifecycle_status: Mapped[str] = mapped_column(
+        String(24), nullable=False, server_default="ACTIVE"
+    )
+    consecutive_misses_count: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default="0"
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    first_observed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_observed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_seen_run_id: Mapped[str] = mapped_column(String(36), nullable=False)
+
+
+class JobPostingSnapshot(Base):
+    __tablename__ = "job_posting_snapshots"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_job_posting_snapshots"),
+        ForeignKeyConstraint(
+            ["posting_id", "subscription_id"],
+            ["job_postings.id", "job_postings.subscription_id"],
+            ondelete="RESTRICT",
+            name="fk_snapshots_posting_composite",
+        ),
+        ForeignKeyConstraint(
+            ["run_id", "subscription_id"],
+            ["discovery_runs.id", "discovery_runs.subscription_id"],
+            ondelete="RESTRICT",
+            name="fk_snapshots_run_composite",
+        ),
+        UniqueConstraint("posting_id", "source_raw_hash", name="uq_snapshots_posting_hash"),
+        CheckConstraint("length(trim(title)) > 0", name="ck_snapshots_title_nonempty"),
+        CheckConstraint("source_raw_hash ~ '^[0-9a-f]{64}$'", name="ck_snapshots_hash_format"),
+        CheckConstraint(
+            "publication_date_status IN ('EXACT', 'UNKNOWN', 'INVALID')",
+            name="ck_snapshots_pub_status",
+        ),
+        CheckConstraint(
+            "(publication_date_status = 'EXACT' AND published_at IS NOT NULL) OR "
+            "(publication_date_status IN ('UNKNOWN', 'INVALID') AND published_at IS NULL)",
+            name="ck_snapshots_pub_exact",
+        ),
+        Index("ix_snapshots_posting_captured", "posting_id", "captured_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    subscription_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    posting_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    run_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    source_raw_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    title: Mapped[str] = mapped_column(String(500), nullable=False)
+    location: Mapped[str | None] = mapped_column(String(256))
+    commitment: Mapped[str | None] = mapped_column(String(64))
+    team: Mapped[str | None] = mapped_column(String(128))
+    department: Mapped[str | None] = mapped_column(String(128))
+    level: Mapped[str | None] = mapped_column(String(64))
+    workplace_type: Mapped[str | None] = mapped_column(String(64))
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    publication_date_status: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default="UNKNOWN"
+    )
+    raw_created_at_ms: Mapped[int | None] = mapped_column(BigInteger)
+    canonical_url: Mapped[str | None] = mapped_column(String(2048))
+    apply_url: Mapped[str | None] = mapped_column(String(2048))
+    description_plain: Mapped[str] = mapped_column(Text, nullable=False)
+    description_html: Mapped[str | None] = mapped_column(Text)
+    lists_json: Mapped[list[dict[str, object]]] = mapped_column(JSON, nullable=False, server_default="[]")
+    additional_plain: Mapped[str | None] = mapped_column(Text)
+    captured_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

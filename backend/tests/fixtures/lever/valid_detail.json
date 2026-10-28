@@ -1,0 +1,22 @@
+{
+  "id": "lever-detail-999",
+  "text": "Principal Systems Architect",
+  "createdAt": 1700200000000,
+  "descriptionPlain": "Lead architecture for local-first resilient systems.",
+  "description": "<div><p>Lead architecture for <em>local-first</em> resilient systems.</p></div>",
+  "categories": {
+    "location": "Remote",
+    "commitment": "Full-time",
+    "team": "Architecture",
+    "level": "Principal"
+  },
+  "workplaceType": "remote",
+  "hostedUrl": "https://jobs.lever.co/example-corp/lever-detail-999",
+  "applyUrl": "https://jobs.lever.co/example-corp/lever-detail-999/apply",
+  "lists": [
+    {
+      "text": "Core Responsibilities",
+      "content": "<ul><li>Set technical standards</li><li>Drive modular monolith patterns</li></ul>"
+    }
+  ]
+}

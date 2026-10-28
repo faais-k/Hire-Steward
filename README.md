@@ -1,6 +1,6 @@
 # Hire-steward — Product and Engineering Documentation
 
-**Status:** Foundation 1 includes a locally tested backend compensation-preference slice; the product remains incomplete.  
+**Status:** Foundations 1, 2, and 3 implemented and hosted-CI verified on feature branch `foundation-3-candidate-evidence`; product remains incomplete.
 **Documentation baseline date:** 2026-10-27  
 **Initial deployment target:** Local-first Docker Compose  
 **Primary objective:** A reliable, explainable, privacy-conscious job discovery and application preparation system with carefully gated submission automation.
@@ -45,9 +45,9 @@ Foundation 3 adds local-only candidate-document metadata, immutable UTF-8 `text/
 
 - Compensation evidence supplied through the public API remains unverified. Public assessments return `REVIEW_REQUIRED` and cannot authorize submission. There is no trusted compensation evidence verifier or ingestion path yet.
 - There is no frontend, job-source integration, AI provider integration, or application-submission workflow. Live applications remain disabled.
-- Candidate-evidence PostgreSQL migration/concurrency tests are present but unverified locally because the dedicated `JOBPILOT_TEST_DATABASE_URL` and Docker engine are unavailable. The single-process reservation limit is not an operating-system disk quota or a multi-process storage protocol.
+- Candidate-evidence PostgreSQL migration/concurrency tests passed in hosted CI (commit `fe0baf0`) but remain unverified locally because the dedicated `JOBPILOT_TEST_DATABASE_URL` and Docker engine are unavailable. The single-process reservation limit is not an operating-system disk quota or a multi-process storage protocol.
 - The Compose service and CI workflow are development infrastructure, not a production-ready setup. Authentication, production secret management, backup/restore, monitoring, and remote deployment hardening remain out of scope.
-- The routine local suite uses SQLite. Hosted GitHub Actions verified commit `f47b9d1` on 2026-10-28: its PostgreSQL service became healthy and `uv run --locked pytest -q` reported **73 passed, 0 failed**, with one upstream Starlette/AnyIO deprecation warning. The workflow-run URL is not available in the repository context. This does not verify local Docker Compose startup, backups, recovery, or production operation.
+- The routine local suite uses SQLite. Hosted GitHub Actions verified commit `fe0baf0` (`foundation-3-candidate-evidence`) on 2026-10-28: its PostgreSQL service became healthy and `uv run --locked pytest -q` reported **95 passed, 0 failed**, with one upstream Starlette/AnyIO deprecation warning (workflow run: https://github.com/faais-k/Hire-Steward/actions/runs/40664831364). All 13 PostgreSQL integration tests passed. Foundation 3 remains on its feature branch and has not yet been merged into `main`. This does not verify local Docker Compose startup, backups, recovery, or production operation.
 
 `GET/PATCH /api/v1/settings/policies` reads and updates the persisted preference. `POST /api/v1/compensation/assessments` records a deterministic assessment using the saved server value; the API rejects client-supplied thresholds and AI decision fields. Assessment records retain their threshold snapshot. This evaluator is not wired into job matching, scheduling, the dashboard, application preparation, or a submission gate; no submission route exists.
 

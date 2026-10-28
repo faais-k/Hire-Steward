@@ -49,7 +49,7 @@
 
 ### Work order
 
-1. Add repository hygiene and tooling: non-empty `.gitignore`, root Python lock strategy, pytest suite, repository instructions, and CI configuration. The root `uv.lock`, focused tests, `AGENTS.md`, and CI workflow now exist. Hosted CI verified `f47b9d1` on 2026-10-28 (73 passed, 0 failed, one upstream warning); formatting/lint/type checks and frontend lock/runtime remain unselected.
+1. Add repository hygiene and tooling: non-empty `.gitignore`, root Python lock strategy, pytest suite, repository instructions, and CI configuration. The root `uv.lock`, focused tests, `AGENTS.md`, and CI workflow now exist. Hosted CI verified `fe0baf0` (`foundation-3-candidate-evidence`) on 2026-10-28 (95 passed, 0 failed, one upstream warning; workflow run 40664831364) including all 13 PostgreSQL tests; formatting/lint/type checks and frontend lock/runtime remain unselected.
 2. Create minimal typed backend/API and database boundaries. The compensation-only backend modules now exist; the frontend remains empty and no broad skeleton was created.
 3. Persist the minimum-compensation preference as exact INR/year decimal, default to INR 100,000/year, allow zero, validate at the API boundary and enforce the stored value on assessments. **Implemented and locally tested in Foundation 1.**
 4. Persist setting changes and immutable assessment snapshots transactionally. **Implemented and locally tested in Foundation 1.**
@@ -87,14 +87,14 @@
 - Invalid config fails clearly and safely. Compensation settings accept zero and other finite non-negative values; reject malformed, negative, NaN, infinite and otherwise invalid values. The unpaid-role prohibition is independent of the setting.
 - Logs/errors expose correlation IDs and safe error codes but not environment values, tokens or candidate text.
 - Clean-install and migration-upgrade paths are described with a single root lockfile and a pinned PostgreSQL image. **Lockfile checks, SQLite paths, and hosted PostgreSQL migration execution are verified; local Compose migration execution remains pending.**
-- CI runs locked dependencies, compilation, SQLite tests, and PostgreSQL integration tests. **Hosted CI passed for `f47b9d1`; it is not evidence of local Compose or production readiness.**
+- CI runs locked dependencies, compilation, SQLite tests, and PostgreSQL integration tests. **Hosted CI passed for `fe0baf0` with 95 passed (all 13 PostgreSQL integration tests); it is not evidence of local Compose or production readiness.**
 - Unit/integration tests cover settings validation, health/readiness, logging redaction, DB session isolation and initial constraints. CI does not contact live sources/providers.
 
 ## Stage C — Core product
 
 ### Phase 2 — Candidate evidence and provenance
 
-**Depends on:** Foundation, storage permissions, selected extractors and file limits. Foundation 3 implemented the approved text-only metadata/provenance subset from `docs/superpowers/plans/2026-10-28-candidate-evidence-vertical-slice.md`; PostgreSQL verification and owner review remain before commit. Extractors and verified review remain separate decisions.
+**Depends on:** Foundation, storage permissions, selected extractors and file limits. Foundation 3 implemented the approved text-only metadata/provenance subset from `docs/superpowers/plans/2026-10-28-candidate-evidence-vertical-slice.md`; committed as `890ed36`, corrected in `fe0baf0`, and verified in hosted CI (Run 40664831364: 95 passed, 0 failed, 1 warning) on branch `foundation-3-candidate-evidence`. It has not yet been merged into `main`. Extractors and verified review remain separate decisions.
 
 - Implement document registry, safe file ingestion, hash/version metadata and staged filesystem writes.
 - Store raw extraction separately from accepted facts; attach evidence ID, source version/span, confidence, sensitivity and verification state.

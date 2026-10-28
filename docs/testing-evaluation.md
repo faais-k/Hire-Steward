@@ -22,7 +22,7 @@ Target pure or narrowly scoped components:
 - Provider error normalization, retry budgets and privacy dispatch rules.
 - Import manifest/schema/path validation.
 
-Foundation 3 current coverage uses synthetic text only: candidate-document creation, bounded text-only upload validation, closed fact schemas, `UNREVIEWED` provenance, filename/media/body rejection, and readiness failure when candidate table is absent. PostgreSQL-marked coverage adds `0002 -> 0003` upgrade, synthetic destructive downgrade, reservation quota admission, and candidate-schema readiness drift. Those tests are unverified locally without dedicated `JOBPILOT_TEST_DATABASE_URL`.
+Foundation 3 current coverage uses synthetic text only: candidate-document creation, bounded text-only upload validation, closed fact schemas, `UNREVIEWED` provenance, filename/media/body rejection, and readiness failure when candidate table is absent. PostgreSQL-marked coverage adds `0002 -> 0003` upgrade, synthetic destructive downgrade, reservation quota admission, and candidate-schema readiness drift. All 4 Foundation 3 PostgreSQL integration tests passed in hosted CI (commit `fe0baf0`, workflow run 40664831364, 95 passed total); they remain skipped in local runs when `JOBPILOT_TEST_DATABASE_URL` is unset.
 
 ### Integration tests
 

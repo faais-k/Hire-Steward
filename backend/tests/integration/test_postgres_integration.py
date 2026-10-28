@@ -75,7 +75,7 @@ def test_fresh_migration_matches_models_and_seeds_exact_default(postgres_databas
     assert preference.amount == Decimal("100000.00")
     assert preference.currency == "INR"
     assert preference.period == "YEAR"
-    assert revision == "0003_candidate_evidence"
+    assert revision == "0004_job_discovery_persistence"
 
 
 def test_readiness_fails_closed_when_required_table_is_dropped_after_migration(
@@ -85,7 +85,7 @@ def test_readiness_fails_closed_when_required_table_is_dropped_after_migration(
     with postgres_database.engine.begin() as connection:
         connection.exec_driver_sql("DROP TABLE compensation_assessments")
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-            "0003_candidate_evidence"
+            "0004_job_discovery_persistence"
         )
         assert connection.scalar(
             text("SELECT amount FROM compensation_preferences WHERE id = 1")
