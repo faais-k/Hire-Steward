@@ -1,10 +1,12 @@
-# JobPilot — Visual Design System
+# Hire-steward — Visual Design System
 
 **Status:** Proposed design baseline for a productivity-focused, trustworthy, desktop-first web app.
 
+The future interface should use the exact product name **Hire-steward**. This is a design specification only; no frontend or visual UI has been implemented.
+
 ## 1. Design intent
 
-JobPilot should feel like a calm professional workbench, not a flashy AI demo or a sales dashboard. The interface should put the user's evidence, decisions, and next actions first. It should be information-dense without being cramped, visually quiet, and explicit about the difference between successful, uncertain, blocked, and pending work.
+Hire-steward should feel like a calm professional workbench, not a flashy AI demo or a sales dashboard. The interface should put the user's evidence, decisions, and next actions first. It should be information-dense without being cramped, visually quiet, and explicit about the difference between successful, uncertain, blocked, and pending work.
 
 ### Experience principles
 

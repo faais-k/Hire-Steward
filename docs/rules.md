@@ -1,4 +1,4 @@
-# JobPilot — Engineering, Dependency, and AI Rules
+# Hire-steward — Engineering, Dependency, and AI Rules
 
 **Status:** Normative engineering baseline. Any exception requires a short written rationale and an ADR when it changes architecture or safety behavior.
 

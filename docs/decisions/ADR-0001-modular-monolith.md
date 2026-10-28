@@ -6,7 +6,7 @@
 
 ## Context
 
-JobPilot initially serves one local user, with a modest schedule, low daily application cap and relatively small evidence set. Its highest risk is correctness of state transitions and external actions, not serving high web request volume. Microservices add deployment, authentication, network, tracing and data-consistency complexity.
+Hire-steward initially serves one local user, with a modest schedule, low daily application cap and relatively small evidence set. Its highest risk is correctness of state transitions and external actions, not serving high web request volume. Microservices add deployment, authentication, network, tracing and data-consistency complexity.
 
 ## Decision
 

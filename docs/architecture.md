@@ -1,6 +1,6 @@
-# JobPilot — System Architecture
+# Hire-steward — System Architecture
 
-**Status:** Overall architecture remains proposed. Foundation 1 implements and locally tests only the compensation-preference backend slice; PostgreSQL and broader product behavior remain unverified.
+**Status:** Overall architecture remains proposed. Foundation 1 implements and locally tests the compensation-preference backend slice. Foundation 2 defines a PostgreSQL Compose service, schema-aware readiness, isolated PostgreSQL integration tests, and CI; the actual PostgreSQL suite and GitHub workflow have not yet run.
 
 ## 1. Design goals
 
@@ -149,7 +149,7 @@ A file removal from the watched directory does not automatically erase historica
 The current code is intentionally smaller than this future structure: root `pyproject.toml`/`uv.lock`; `backend/app/{api,db,domain,services}`; `backend/migrations/`; and `backend/tests/{unit,integration}`. `frontend/` remains empty. ADR-0008 records the concrete schema and local request guard for this first slice.
 
 ```text
-jobpilot/
+hire-steward/
 ├── README.md
 ├── pyproject.toml
 ├── uv.lock                         # or the selected single lockfile; do not keep multiple conflicting locks

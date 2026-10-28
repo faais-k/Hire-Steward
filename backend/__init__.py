@@ -1,1 +1,1 @@
-"""JobPilot backend package."""
+"""Hire-steward backend package."""

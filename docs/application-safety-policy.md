@@ -1,4 +1,4 @@
-# JobPilot — Application Safety and External Action Policy
+# Hire-steward — Application Safety and External Action Policy
 
 **Status:** Normative. This policy is enforced in backend code; UI and AI prompts are not enforcement mechanisms.
 

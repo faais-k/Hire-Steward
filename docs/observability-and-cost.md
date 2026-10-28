@@ -1,4 +1,4 @@
-# JobPilot — Observability, Usage, and Cost Controls
+# Hire-steward — Observability, Usage, and Cost Controls
 
 **Status:** Proposed operational specification.
 

@@ -1,4 +1,4 @@
-# JobPilot — Security, Privacy and Threat Model
+# Hire-steward — Security, Privacy and Threat Model
 
 **Status:** Security baseline. Revisit before any remote deployment, new provider integration, or live submission feature.
 
@@ -39,6 +39,8 @@
 - API keys and OAuth tokens are not application facts and must not be sent to the LLM.
 - Use OS credential manager or an encrypted local vault for durable personal use. Environment variables may be used to inject secrets into containers at runtime but should not be treated as a durable secure vault.
 - `.env.example` contains variable names and placeholders only; real `.env` is ignored by Git.
+- Compose binds the development PostgreSQL port to loopback. The sample password is a local placeholder, not a production credential. GitHub Actions uses a disposable test-only password; it does not contain user or service credentials.
+- PostgreSQL tests require the explicit `JOBPILOT_TEST_DATABASE_URL` variable and exact `jobpilot_test` database name. They use unique temporary schemas and remove only those schemas; do not point the test variable at a developer's normal database.
 - For remote hosting, use platform secrets or a dedicated secret manager and least-privilege service accounts.
 - Do not store long-lived tokens in browser local storage.
 - Never export credentials, cookies, tokens, OTPs or browser profiles by default.
@@ -143,3 +145,4 @@ Document how to: globally stop submissions; disable a source adapter/provider; r
 - Unauthenticated non-loopback access is blocked in default deployment.
 - Concurrent submit requests cannot exceed cap or create duplicate attempts.
 - Database/file access permissions and backup encryption behave as documented.
+- Compose configuration and readiness fail safely when PostgreSQL is unavailable; PostgreSQL-specific migration, transaction and concurrency assertions require a run against a real PostgreSQL server.

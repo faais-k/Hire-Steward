@@ -1,14 +1,14 @@
-# JobPilot — Operations and Deployment Runbook
+# Hire-steward — Operations and Deployment Runbook
 
-**Status:** Initial local-first operational baseline.
+**Status:** Foundation 2 defines a local PostgreSQL service, readiness behavior, test isolation, and CI. PostgreSQL execution and GitHub CI remain unverified in the current workspace.
 
 ## 1. Deployment stages
 
 ### Local development
 
-- Frontend dev server, FastAPI API, PostgreSQL and worker run through one documented development setup.
+- Foundation 2 Compose currently starts PostgreSQL only. Run the API from the locked local Python environment; no frontend or worker service exists yet.
 - Watch/reload features may be enabled only in development.
-- Bind development services to localhost by default.
+- PostgreSQL's host port binds to loopback. Run the API on `127.0.0.1` during local development.
 
 ### Local daily-use profile
 
@@ -28,14 +28,9 @@ Docker's official Compose guidance recommends production-specific overrides such
 
 ## 2. Compose services
 
-Initial suggested services:
+The current root `compose.yaml` defines one service, `db`, using the PostgreSQL `17.11-bookworm` image, an environment-configured database/user/password/host port, a named data volume, loopback-only host binding, and a `pg_isready` health check. Compose reads the ignored root `.env` file; `.env.example` contains development placeholders only. The image and isolation decision is recorded in ADR-0010.
 
-- `frontend` — static assets or dev server depending on profile.
-- `api` — FastAPI HTTP service.
-- `worker` — scheduler and durable background work.
-- `db` — PostgreSQL, with pgvector extension only if chosen and migrations include it.
-
-Do not add Redis or a broker to the initial Compose file by default. If later required, introduce it in an ADR and update backup/recovery/monitoring procedures.
+No API, frontend, worker, Redis, or broker container exists. Add a service only when its implementation and operational need are approved. Do not add Redis or a broker by default.
 
 ## 3. Configuration
 
@@ -53,7 +48,48 @@ Use validated settings, grouped by concerns:
 
 The committed `.env.example` must contain placeholders only. Start-up should fail with a clear safe message when critical configuration is missing. Do not print secret-bearing settings as part of diagnostic output.
 
-## 4. Startup and upgrade procedure
+`DATABASE_URL` is the single SQLAlchemy/Alembic URL. `backend/alembic.ini` does not contain a second fallback URL; Alembic receives the URL through the runtime environment. Keep the URL host port, database, username, and password aligned with the corresponding Compose `POSTGRES_*` values. Never commit `.env` or use its development password outside a local environment.
+
+## 4. Local database and API commands
+
+From the repository root in PowerShell:
+
+```powershell
+uv lock --check
+uv sync --locked --python 3.12
+Copy-Item .env.example .env
+docker compose up -d db
+docker compose ps
+docker compose logs db
+docker compose exec db pg_isready -U jobpilot -d jobpilot
+uv run --locked --env-file .env alembic -c backend/alembic.ini upgrade head
+uv run --locked --env-file .env alembic -c backend/alembic.ini current
+uv run --locked --env-file .env uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+`GET /health` is process liveness and does not connect to PostgreSQL. `GET /ready` checks a database connection, all tables and columns required by the current model metadata plus `alembic_version`, applied Alembic heads, and the valid singleton INR/year preference row. It performs no schema repair or migration and returns a safe `503` code when any readiness condition fails. Stop the API with `Ctrl+C`.
+
+Fast local tests use SQLite:
+
+```powershell
+uv run --locked pytest -m "not postgres" -q
+```
+
+For PostgreSQL integration tests, create the dedicated database once and set its URL only in the test process:
+
+```powershell
+docker compose exec db createdb -U jobpilot jobpilot_test
+$env:JOBPILOT_TEST_DATABASE_URL = "postgresql+psycopg://jobpilot:local_dev_only@127.0.0.1:5432/jobpilot_test"
+uv run --locked pytest -m postgres -q
+```
+
+The fixture requires the exact `jobpilot_test` database name and creates a unique temporary schema per test. It removes that schema on teardown and never drops the database. Do not set `JOBPILOT_TEST_DATABASE_URL` to a normal development or user database. CI uses the same PostgreSQL image and creates its own disposable service database.
+
+Common connection errors: if the port is occupied, choose another `POSTGRES_PORT` and change the `DATABASE_URL` port; if credentials or database names change after a data volume was initialized, update both Compose settings and the URL to match the existing database; if tables are missing, apply Alembic migrations before starting the API. Do not delete a data volume to resolve a connection problem unless its data is disposable.
+
+To stop the local DB while preserving data, use `docker compose stop db`; `docker compose down` removes the container and network but keeps the named volume. `docker compose down --volumes` **permanently deletes the development database volume and its data**.
+
+## 5. Startup and upgrade procedure
 
 1. Confirm Docker/Compose versions and free disk space.
 2. Back up database and evidence store before schema upgrades.
@@ -68,7 +104,7 @@ The committed `.env.example` must contain placeholders only. Start-up should fai
 
 Never auto-retry a pending submission after an upgrade merely because the worker restarted.
 
-## 5. Backup and restore
+## 6. Backup and restore
 
 Back up:
 
@@ -95,7 +131,7 @@ Restore rehearsal:
 4. Start API in safe mode with external side effects disabled.
 5. Reconcile any historical uncertain attempts manually before enabling submission.
 
-## 6. Health and failure response
+## 7. Health and failure response
 
 ### Source failures
 
@@ -117,11 +153,11 @@ Pause document ingestion and submissions; preserve database integrity and audit.
 
 Disable the adapter's submission capability immediately. Discovery may continue only if safe and separately permitted. Provide manual handoff. Re-enable only after contract/browser tests pass.
 
-## 7. Versioning and rollback
+## 8. Versioning and rollback
 
 Each build records application version, commit ID, dependency lock hash, schema migration version, prompt/scoring/policy versions. Keep previous known-good images/commits available for rollback. Rollback must account for irreversible database changes and existing `CONFIRMATION_UNKNOWN` attempts; never reset application history to hide an uncertain side effect.
 
-## 8. Operational maintenance
+## 9. Operational maintenance
 
 - Review source terms/capabilities and provider privacy/quota metadata periodically and whenever errors indicate a change.
 - Check backup recency and run restore drills.
@@ -130,6 +166,6 @@ Each build records application version, commit ID, dependency lock hash, schema 
 - Review manual corrections and evaluation regressions before changing model prompts/scoring.
 - Update `memory.md` after a release, incident, source capability change, provider change, or architecture decision.
 
-## 9. Developer diagnostics
+## 10. Developer diagnostics
 
 Provide `doctor`/diagnostic output that reports safe actionable facts: Docker available, DB connectivity, migration status, storage writable, worker heartbeat, timezone, upcoming run, source permission state, provider configuration present (not values), quota/budget mode, backup age, and unresolved uncertain submissions. Redact environment variable values and credentials.

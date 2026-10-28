@@ -1,4 +1,4 @@
-# JobPilot — Product and Engineering Documentation
+# Hire-steward — Product and Engineering Documentation
 
 **Status:** Foundation 1 includes a locally tested backend compensation-preference slice; the product remains incomplete.  
 **Documentation baseline date:** 2026-10-27  
@@ -39,29 +39,84 @@ The documents are the product requirements and architecture baseline. Only the b
 
 ## Current implementation status and limitations
 
-Foundation 1 implements the compensation preference and compensation-assessment backend only. The default minimum is INR 100,000 per year, and the preference is configurable, including zero.
+Foundation 1 implements the configurable compensation preference and deterministic assessment backend. The default minimum is INR 100,000 per year, and the preference can be changed, including to zero. Foundation 2 adds a local PostgreSQL Compose service, an explicit PostgreSQL integration-test suite, a CI workflow, and database readiness reporting.
 
-- Compensation evidence supplied through the public API is treated as unverified. Public assessments currently return `REVIEW_REQUIRED` and cannot authorize application submission. There is no trusted compensation evidence-ingestion or verification service yet.
-- There is no frontend, job-source integration, or application-submission workflow. Live applications remain disabled.
-- The local API and migration instructions below are development guidance, not a production-ready setup. No Docker Compose database service, CI pipeline, or production hardening is implemented.
-- Automated tests currently use SQLite. PostgreSQL-specific migration, locking, and concurrency behavior have not been verified because the Docker engine is unavailable.
+- Compensation evidence supplied through the public API remains unverified. Public assessments return `REVIEW_REQUIRED` and cannot authorize submission. There is no trusted compensation evidence verifier or ingestion path yet.
+- There is no frontend, job-source integration, AI provider integration, or application-submission workflow. Live applications remain disabled.
+- The Compose service and CI workflow are development infrastructure, not a production-ready setup. Authentication, production secret management, backup/restore, monitoring, and remote deployment hardening remain out of scope.
+- The routine local suite uses SQLite. PostgreSQL-specific migration, decimal, transaction, locking, concurrency, and trust-boundary tests are present but have not been verified against a running PostgreSQL server in this workspace. The CI workflow has not yet run on GitHub.
 
-`GET/PATCH /api/v1/settings/policies` reads and updates the persisted preference. `POST /api/v1/compensation/assessments` records a deterministic compensation-only assessment using the saved server value; the API rejects client-supplied thresholds and AI decision fields. Assessment records retain the threshold version and conversion basis when one is established. This evaluator is not wired into job matching, scheduling, the dashboard, application preparation, or a submission gate; no submission route exists.
+`GET/PATCH /api/v1/settings/policies` reads and updates the persisted preference. `POST /api/v1/compensation/assessments` records a deterministic assessment using the saved server value; the API rejects client-supplied thresholds and AI decision fields. Assessment records retain their threshold snapshot. This evaluator is not wired into job matching, scheduling, the dashboard, application preparation, or a submission gate; no submission route exists.
 
-The application is loopback-only by default and state-changing requests require matching local `Host` and `Origin` headers. This is not authentication and does not make remote exposure safe. The server needs a PostgreSQL database and an applied Alembic migration; no Compose database service has been added yet.
+The API binds to loopback when run with the commands below. `/health` reports process liveness; `/ready` checks database connectivity, the complete required table and column shape, current Alembic migration heads, and a valid migrated compensation-preference row. The local same-origin write check is not authentication and does not make remote exposure safe.
 
-```powershell
-uv sync --python 3.12
-$env:DATABASE_URL = "postgresql+psycopg://USER:PASSWORD@HOST:5432/DATABASE"
-uv run --locked alembic -c backend/alembic.ini upgrade head
-uv run --locked uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
-```
+## Local development setup
 
-Run local unit and SQLite migration/API integration tests with:
+The following PowerShell commands are the intended setup. They have not been run end to end in this workspace because Docker Desktop's engine is unavailable; Compose syntax and non-PostgreSQL tests are verified separately in `docs/memory.md`.
+
+Install the locked Python dependencies and check the lockfile:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest -q
+uv lock --check
+uv sync --locked --python 3.12
 ```
+
+Create the ignored local environment file and replace the development-only password if desired. Keep `DATABASE_URL` consistent with the PostgreSQL variables and host port:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Start and inspect the PostgreSQL service. Its host binding is loopback-only:
+
+```powershell
+docker compose up -d db
+docker compose ps
+docker compose logs db
+docker compose exec db pg_isready -U jobpilot -d jobpilot
+```
+
+Apply and inspect migrations, then run the API on localhost:
+
+```powershell
+uv run --locked --env-file .env alembic -c backend/alembic.ini upgrade head
+uv run --locked --env-file .env alembic -c backend/alembic.ini current
+uv run --locked --env-file .env uvicorn backend.app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Run `/health` and `/ready` checks in another PowerShell window:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health
+Invoke-RestMethod http://127.0.0.1:8000/ready
+```
+
+Run fast unit and SQLite-backed API/migration tests:
+
+```powershell
+uv run --locked pytest -m "not postgres" -q
+```
+
+PostgreSQL integration tests require a separate database named exactly `jobpilot_test`. Create it once in the local Compose server, set the dedicated test URL, and run only those tests. Each test uses and removes its own temporary schema; it does not drop the database:
+
+```powershell
+docker compose exec db createdb -U jobpilot jobpilot_test
+$env:JOBPILOT_TEST_DATABASE_URL = "postgresql+psycopg://jobpilot:local_dev_only@127.0.0.1:5432/jobpilot_test"
+uv run --locked pytest -m postgres -q
+```
+
+If the password, username, or host port differs from `.env.example`, update the test URL accordingly. The test harness refuses URLs whose database name is not `jobpilot_test`.
+
+Stop the database while preserving its named volume, or remove the service container while keeping the data:
+
+```powershell
+docker compose stop db
+docker compose down
+```
+
+To reset local development data, run `docker compose down --volumes`. **This permanently deletes the PostgreSQL volume and all database data in it.** Do not use this command unless that data is disposable.
+
+Common issues: a host-port collision can be resolved by changing `POSTGRES_PORT` and the port in `DATABASE_URL`; connection-refused errors usually mean the container is not healthy or the URL points to the wrong port; missing-table, stale-migration, or missing-preference errors require applying Alembic migrations before starting the API. `/health` intentionally remains available while the DB is down; `/ready` returns `503` with a safe database error code.
 
 ## Core principles
 
@@ -70,4 +125,4 @@ Run local unit and SQLite migration/API integration tests with:
 3. Missing evidence is `unknown`, not automatically `false` and not permission to invent a fact.
 4. Every consequential action is attributable, reviewable, and reconciled against external evidence.
 5. Start simple, measure bottlenecks, and scale only where data demonstrates a need.
-6. Company-owned material is confidential; this repository should contain only authorized concepts and original implementation. Do not copy proprietary code, secrets, or internal data into JobPilot without explicit authorization.
+6. Company-owned material is confidential; this repository should contain only authorized concepts and original implementation. Do not copy proprietary code, secrets, or internal data into Hire-steward without explicit authorization.

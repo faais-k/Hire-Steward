@@ -19,6 +19,8 @@ if config.config_file_name is not None:
 database_url = os.getenv("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
+elif not config.get_main_option("sqlalchemy.url") and config.attributes.get("connection") is None:
+    raise RuntimeError("DATABASE_URL is required to run Alembic migrations")
 
 target_metadata = Base.metadata
 

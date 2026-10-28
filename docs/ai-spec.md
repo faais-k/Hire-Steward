@@ -1,4 +1,4 @@
-# JobPilot — AI and Retrieval Specification
+# Hire-steward — AI and Retrieval Specification
 
 **Status:** Proposed design; provider/model choices remain provisional until evaluated against privacy, quotas, quality and price.
 

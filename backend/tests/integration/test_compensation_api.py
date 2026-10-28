@@ -15,20 +15,24 @@ from backend.app.services.preferences import set_minimum_compensation
 
 
 @pytest.fixture
-def migrated_factory():
+def migrated_engine():
     engine = create_engine(
         "sqlite+pysqlite://",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    factory = sessionmaker(bind=engine, expire_on_commit=False)
     config = Config("backend/alembic.ini")
     config.set_main_option("sqlalchemy.url", "sqlite+pysqlite://")
     with engine.connect() as connection:
         config.attributes["connection"] = connection
         command.upgrade(config, "head")
-    yield factory
+    yield engine
     engine.dispose()
+
+
+@pytest.fixture
+def migrated_factory(migrated_engine):
+    return sessionmaker(bind=migrated_engine, expire_on_commit=False)
 
 
 @pytest.fixture
@@ -40,6 +44,151 @@ def client(migrated_factory):
 
 def local_headers():
     return {"host": "localhost", "origin": "http://localhost"}
+
+
+def test_ready_reports_database_and_required_compensation_state(migrated_factory):
+    with TestClient(create_app(session_factory=migrated_factory)) as client:
+        response = client.get("/ready", headers={"host": "localhost"})
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "ready"}
+
+
+def test_openapi_uses_hire_steward_product_metadata():
+    with TestClient(create_app()) as client:
+        response = client.get("/openapi.json", headers={"host": "localhost"})
+
+    assert response.status_code == 200
+    assert response.json()["info"]["title"] == "Hire-steward API"
+    assert "Hire-steward" in response.json()["info"]["description"]
+
+
+def test_liveness_stays_available_when_database_is_unavailable():
+    app = create_app(
+        database_url=(
+            "postgresql+psycopg://jobpilot:invalid@127.0.0.1:1/jobpilot"
+            "?connect_timeout=1"
+        )
+    )
+    with TestClient(app) as client:
+        health = client.get("/health", headers={"host": "localhost"})
+        ready = client.get("/ready", headers={"host": "localhost"})
+
+    assert health.status_code == 200
+    assert health.json() == {"status": "ok"}
+    assert ready.status_code == 503
+    assert ready.json() == {"detail": "DATABASE_NOT_READY"}
+    assert "invalid" not in ready.text
+    assert "connection refused" not in ready.text.lower()
+
+
+def test_readiness_fails_when_database_is_not_configured(monkeypatch):
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    with TestClient(create_app()) as client:
+        response = client.get("/ready", headers={"host": "localhost"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "DATABASE_NOT_CONFIGURED"}
+
+
+def test_readiness_fails_when_required_schema_is_missing():
+    engine = create_engine("sqlite+pysqlite://")
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    try:
+        with TestClient(create_app(session_factory=factory)) as client:
+            response = client.get("/ready", headers={"host": "localhost"})
+
+        assert response.status_code == 503
+        assert response.json() == {"detail": "DATABASE_NOT_READY"}
+    finally:
+        engine.dispose()
+
+
+def test_readiness_fails_when_required_table_is_missing_after_migration(
+    migrated_engine, migrated_factory
+):
+    with migrated_engine.begin() as connection:
+        connection.exec_driver_sql("DROP TABLE compensation_assessments")
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
+            "0002_compensation_evidence_trust_state"
+        )
+        assert connection.scalar(
+            text("SELECT amount FROM compensation_preferences WHERE id = 1")
+        ) == Decimal("100000.00")
+
+    with TestClient(create_app(session_factory=migrated_factory)) as client:
+        response = client.get("/ready", headers={"host": "localhost"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "DATABASE_NOT_READY"}
+    assert "compensation_assessments" not in response.text
+
+
+def test_readiness_fails_when_required_column_is_missing_after_migration(
+    migrated_engine, migrated_factory
+):
+    with migrated_engine.begin() as connection:
+        connection.exec_driver_sql(
+            "ALTER TABLE compensation_assessments DROP COLUMN evidence_reference"
+        )
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
+            "0002_compensation_evidence_trust_state"
+        )
+
+    with TestClient(create_app(session_factory=migrated_factory)) as client:
+        response = client.get("/ready", headers={"host": "localhost"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "DATABASE_NOT_READY"}
+
+
+def test_readiness_fails_when_preference_row_is_missing(migrated_engine, migrated_factory):
+    with migrated_engine.begin() as connection:
+        connection.execute(text("DELETE FROM compensation_preferences WHERE id = 1"))
+
+    with TestClient(create_app(session_factory=migrated_factory)) as client:
+        response = client.get("/ready", headers={"host": "localhost"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "DATABASE_NOT_READY"}
+
+
+def test_readiness_fails_when_preference_violates_backend_assumptions(
+    migrated_engine, migrated_factory
+):
+    with migrated_engine.begin() as connection:
+        connection.exec_driver_sql("PRAGMA ignore_check_constraints = ON")
+        connection.execute(
+            text("UPDATE compensation_preferences SET currency = 'USD' WHERE id = 1")
+        )
+
+    with TestClient(create_app(session_factory=migrated_factory)) as client:
+        response = client.get("/ready", headers={"host": "localhost"})
+
+    assert response.status_code == 503
+    assert response.json() == {"detail": "DATABASE_NOT_READY"}
+
+
+def test_readiness_fails_when_migrations_are_behind():
+    engine = create_engine(
+        "sqlite+pysqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    factory = sessionmaker(bind=engine, expire_on_commit=False)
+    config = Config("backend/alembic.ini")
+    config.set_main_option("sqlalchemy.url", "sqlite+pysqlite://")
+    with engine.connect() as connection:
+        config.attributes["connection"] = connection
+        command.upgrade(config, "0001_compensation_preference")
+    try:
+        with TestClient(create_app(session_factory=factory)) as client:
+            response = client.get("/ready", headers={"host": "localhost"})
+
+        assert response.status_code == 503
+        assert response.json() == {"detail": "DATABASE_NOT_READY"}
+    finally:
+        engine.dispose()
 
 
 def test_migration_seeds_default_inr_annual_preference(client):

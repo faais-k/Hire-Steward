@@ -1,0 +1,51 @@
+name: Backend CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_DB: jobpilot_test
+          POSTGRES_USER: jobpilot
+          POSTGRES_PASSWORD: jobpilot_ci_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready --username=jobpilot --dbname=jobpilot_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+          --health-start-period 5s
+    env:
+      JOBPILOT_TEST_DATABASE_URL: postgresql+psycopg://jobpilot:jobpilot_ci_only@127.0.0.1:5432/jobpilot_test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1; action.yml uses node24
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.12"
+          version: "0.13.5"
+
+      - name: Verify lockfile
+        run: uv lock --check
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: Compile backend and migrations
+        run: uv run --locked python -m compileall -q backend/app backend/migrations
+
+      - name: Run unit, SQLite, and PostgreSQL tests
+        run: uv run --locked pytest -q

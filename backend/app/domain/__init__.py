@@ -1,1 +1,1 @@
-"""Deterministic JobPilot domain policies."""
+"""Deterministic Hire-steward domain policies."""

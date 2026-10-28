@@ -1,6 +1,6 @@
-# JobPilot — Internal API Specification (Proposed)
+# Hire-steward — Internal API Specification (Proposed)
 
-**Status:** Partial implementation. Foundation 1 implements health, compensation policy settings, and compensation-only assessment endpoints; other routes below remain proposals.
+**Status:** Partial implementation. Foundation 1 implements liveness, compensation policy settings, and compensation-only assessment endpoints. Foundation 2 adds database readiness. Other routes below remain proposals.
 
 ## 1. API conventions
 
@@ -43,6 +43,10 @@ Do not return stack traces, secret values, full provider requests, raw resumes o
 - `GET /api/v1/compensation/assessments/{assessment_id}` — returns the threshold snapshot and reported observation. Legacy rows without verification provenance are treated as unverified by the effective API result; original stored assessment fields are preserved but are not authoritative for eligibility.
 
 These assessment endpoints are not connected to job discovery, matching, the dashboard, scheduling, application preparation, or submission. There is no submission route in the current backend. The backend currently has **no complete trusted compensation evidence-ingestion or verification path**. The public API can only record an unverified observation; even a `MEETS_THRESHOLD` result from the pure domain evaluator for an internally trusted test fixture would not authorize application submission. Assessment is not application eligibility, user consent, or permission to submit.
+
+### Implemented in Foundation 2
+
+- `GET /ready` — checks database connectivity, the tables and columns required by the current SQLAlchemy model metadata plus `alembic_version`, the applied Alembic revision against local migration heads, and the valid singleton INR/year compensation-preference setting. It performs no migration, repair, or write. Returns `200 {"status":"ready"}` only when all checks pass; otherwise returns safe `503` error codes. `/health` remains a process-liveness check and does not require a database.
 
 ### Health and system
 

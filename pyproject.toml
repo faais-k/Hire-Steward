@@ -1,7 +1,7 @@
 [project]
-name = "jobpilot"
+name = "hire-steward"
 version = "0.1.0"
-description = "Local-first AI-assisted job discovery and application management"
+description = "Hire-steward local-first AI-assisted job discovery and application management"
 requires-python = ">=3.12"
 dependencies = [
   "alembic>=1.14,<2.0",
@@ -21,6 +21,9 @@ dev = [
 testpaths = ["backend/tests"]
 pythonpath = ["."]
 addopts = "-ra -p no:cacheprovider"
+markers = [
+  "postgres: requires an isolated PostgreSQL test database",
+]
 
 [tool.uv]
 package = false

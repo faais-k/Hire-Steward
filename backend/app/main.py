@@ -17,7 +17,15 @@ def create_app(
     session_factory: sessionmaker[Session] | None = None,
 ) -> FastAPI:
     resolved_database_url = database_url or os.getenv("DATABASE_URL")
-    app = FastAPI(title="JobPilot API", version="0.1.0")
+    app = FastAPI(
+        title="Hire-steward API",
+        description=(
+            "Hire-steward is a local-first, user-controlled job discovery and "
+            "application-management platform. Public compensation assessments "
+            "remain review-required and cannot authorize application submission."
+        ),
+        version="0.1.0",
+    )
     app.state.session_factory = (
         session_factory
         if session_factory is not None

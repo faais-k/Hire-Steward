@@ -1,4 +1,4 @@
-# JobPilot — Data Model and Persistence Specification
+# Hire-steward — Data Model and Persistence Specification
 
 **Status:** The full product schema remains conceptual. The focused compensation-preference tables are implemented in Alembic revisions `0001_compensation_preference` and `0002_compensation_evidence_trust_state`; other entities remain proposed.
 

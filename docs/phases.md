@@ -1,8 +1,8 @@
-# JobPilot — Implementation Phases and Release Gates
+# Hire-steward — Implementation Phases and Release Gates
 
 **Status:** Proposed roadmap. Complete each phase's acceptance gate before building the next high-risk capability. Timelines are intentionally omitted until repository and workload are inspected.
 
-**Current implementation:** Phase 1 is `IN_PROGRESS` as of 2026-10-28 under the owner's direct authorization for Foundation 1 (configurable compensation preference and public evidence trust boundary). Phase 0 remains incomplete; this isolated local backend slice does not approve any source/provider integration or live external action. Current unit and SQLite migration/API test results are recorded in `docs/memory.md`; PostgreSQL verification remains pending. Public compensation assessments remain unverified until a real evidence-verification path exists.
+**Current implementation:** Phase 1 is `IN_PROGRESS` as of 2026-10-28. Foundation 1 implements configurable compensation preference and a public evidence trust boundary. Foundation 2 adds PostgreSQL Compose configuration, readiness reporting, PostgreSQL test code, and CI workflow configuration. Phase 0 remains incomplete; these local foundation changes do not approve any source/provider integration or live external action. Current test results and the unverified PostgreSQL/CI status are recorded in `docs/memory.md`. Public compensation assessments remain unverified until a real evidence-verification path exists.
 
 ## Delivery principle
 
@@ -31,7 +31,7 @@ Build vertical slices that prove the core lifecycle and safety properties. Do no
 
 ## Phase 1 — Foundation and local runtime
 
-Foundation 1 currently implements only the compensation setting, deterministic compensation-only evaluation, change audit, migrations, assessment snapshot, and a fail-closed public evidence boundary. Trusted source ingestion/verification, frontend, general readiness/logging/Compose/CI foundation, and other Phase 1 acceptance criteria remain incomplete. See `implementation-plan.md`, ADR-0008 and ADR-0009.
+Foundation 1 implements the compensation setting, deterministic compensation-only evaluation, change audit, migrations, assessment snapshot, and a fail-closed public evidence boundary. Foundation 2 implements local PostgreSQL Compose configuration, database readiness, an isolated PostgreSQL integration suite, CI workflow configuration, and operator guidance. PostgreSQL execution, GitHub CI execution, trusted source ingestion/verification, frontend, structured logging, and other Phase 1 acceptance criteria remain incomplete. See `implementation-plan.md`, ADR-0008, ADR-0009 and ADR-0010.
 
 ### Work
 - Create backend/frontend skeleton, configuration validation, health/readiness endpoints, structured logs, migrations, Compose, and local persistent volume.

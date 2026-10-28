@@ -3,7 +3,7 @@
 - **Status:** Accepted owner policy; preference backend implemented; trusted evidence provenance and broader workflow integration pending
 - **Date:** 2026-10-28
 - **Supersedes:** ADR-0006
-- **Decision source:** Current owner instruction in the JobPilot documentation correction request
+- **Decision source:** Current owner instruction in the Hire-steward documentation correction request
 
 ## Context
 

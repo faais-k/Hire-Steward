@@ -1,1 +1,1 @@
-"""JobPilot application package."""
+"""Hire-steward application package."""

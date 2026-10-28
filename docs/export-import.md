@@ -1,10 +1,10 @@
-# JobPilot — Portable Export and Import Specification
+# Hire-steward — Portable Export and Import Specification
 
 **Status:** Planned; implementation belongs to the portability phase.
 
 ## 1. Goals
 
-- Move a user's history and selected evidence between JobPilot installations.
+- Move a user's history and selected evidence between Hire-steward installations.
 - Preserve provenance, application outcomes, exact submitted artifacts, policy/model versions and timestamps.
 - Validate package integrity and schema compatibility before mutating destination state.
 - Exclude credentials and secrets by default.
@@ -15,7 +15,7 @@
 Illustrative versioned archive:
 
 ```text
-jobpilot-export-<date>-<id>.zip
+hire-steward-export-<date>-<id>.zip
 ├── manifest.json
 ├── checksums.sha256
 ├── data/

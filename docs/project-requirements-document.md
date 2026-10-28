@@ -1,4 +1,4 @@
-# JobPilot — Project Requirements Document (PRD)
+# Hire-steward — Project Requirements Document (PRD)
 
 **Status:** Draft baseline for implementation planning  
 **Owner:** Product owner / project maintainer  
@@ -7,7 +7,7 @@
 
 ## 1. Executive summary
 
-JobPilot is a local-first, user-controlled job discovery and application workflow platform. It discovers relevant jobs from explicitly configured and permitted sources, normalizes job information, compares requirements against evidence-backed candidate facts, explains the match, prepares tailored application materials, and can submit an application only when the source supports a permitted submission path and every policy gate passes.
+Hire-steward is a local-first, user-controlled job discovery and application workflow platform. It discovers relevant jobs from explicitly configured and permitted sources, normalizes job information, compares requirements against evidence-backed candidate facts, explains the match, prepares tailored application materials, and can submit an application only when the source supports a permitted submission path and every policy gate passes.
 
 The product is not a blind bulk-apply bot. It is an evidence-led job search workspace with controlled automation, transparent scoring, duplicate prevention, auditable outcomes, secure handling of candidate information, and a clear handoff when a human decision or site interaction is required.
 
@@ -15,7 +15,7 @@ The product is not a blind bulk-apply bot. It is an evidence-led job search work
 
 Job searches require repeated work across fragmented career pages: finding new vacancies, checking role and experience fit, evaluating sponsorship and compensation, tailoring resumes, answering repeated questions, avoiding duplicate applications, and tracking submission outcomes. Manual processes are slow and inconsistent. Uncontrolled automation creates different risks: false claims, duplicate applications, violations of site rules, untracked submissions, data exposure, and wasted model/API quota.
 
-JobPilot should reduce repetitive effort while preserving the user's control over facts, commitments, identity data, and external actions.
+Hire-steward should reduce repetitive effort while preserving the user's control over facts, commitments, identity data, and external actions.
 
 ## 3. Target user and non-goals
 
