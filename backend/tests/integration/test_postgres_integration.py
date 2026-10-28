@@ -339,5 +339,7 @@ def test_public_salary_report_stays_unverified_and_cannot_authorize_submission(
     assert result["reason_code"] == "EVIDENCE_UNVERIFIED"
     assert result["eligible_to_submit"] is False
     assert result["reported_evidence_reference"] == "claim:example.invalid:jobs:123"
-    assert "reported" in result["explanation"].lower()
-    assert "verified annualized compensation" not in result["explanation"].lower()
+    explanation = result["explanation"].lower()
+    assert "unverified observation" in explanation
+    assert "cannot authorize an action" in explanation
+    assert "verified annualized compensation" not in explanation
