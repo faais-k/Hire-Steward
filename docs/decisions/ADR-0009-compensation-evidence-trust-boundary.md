@@ -17,7 +17,7 @@ Foundation 1 accepted caller-supplied compensation status, amounts and an arbitr
 - The pure domain evaluator remains deterministic and may evaluate an internally trusted `CompensationEvidence` object. No production service currently creates one. Do not add a test-only or hard-coded trust bypass to the public API.
 - A future controlled source-ingestion/verifier must establish permitted source/method, retrieval and source/version provenance, retain an immutable source snapshot/hash and exact supporting text/span, validate paid status and amount/currency/period, and record verifier method/version/time before it marks evidence trusted. Source-specific permission and authenticity rules remain outstanding.
 - A trusted, confirmed unpaid classification remains blocked independently of the configurable INR/year minimum. An unverified report of unpaid remains review-required and cannot proceed.
-- Migration `0002_compensation_evidence_trust_state` adds a constrained state with `UNVERIFIED` server default/backfill. Existing assessment facts and threshold snapshots remain intact; the effective API view treats legacy assessments as unverified and suppresses old normalized values/conversion assumptions. Stored legacy outcomes remain historical database data and are not exposed as authoritative API results.
+- Migration `0002_comp_evidence_trust` adds a constrained state with `UNVERIFIED` server default/backfill. Existing assessment facts and threshold snapshots remain intact; the effective API view treats legacy assessments as unverified and suppresses old normalized values/conversion assumptions. Stored legacy outcomes remain historical database data and are not exposed as authoritative API results.
 
 ## Rationale and alternatives
 

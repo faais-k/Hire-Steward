@@ -1,6 +1,6 @@
 """Add explicit evidence verification state to compensation assessments.
 
-Revision ID: 0002_compensation_evidence_trust_state
+Revision ID: 0002_comp_evidence_trust
 Revises: 0001_compensation_preference
 Create Date: 2026-10-28
 """
@@ -11,7 +11,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "0002_compensation_evidence_trust_state"
+revision: str = "0002_comp_evidence_trust"
 down_revision: str | None = "0001_compensation_preference"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
