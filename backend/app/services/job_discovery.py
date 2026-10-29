@@ -1,6 +1,8 @@
 """Service and repository operations for job discovery persistence and execution."""
 
 from collections.abc import Sequence
+import hashlib
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -22,6 +24,8 @@ from backend.app.domain.job_posting import (
     CircuitBreakerTrippedError,
     ClosedPostingReappearedError,
     DiscoveryRunStatus,
+    DuplicateJobPostingError,
+    InvalidJobIntakeError,
     InvalidPaginationBoundsError,
     InvalidPostingPayloadError,
     LeaseFencingError,
@@ -33,6 +37,9 @@ from backend.app.domain.job_posting import (
     SourceNotApprovedError,
     SourceTermsReviewStaleError,
     SubscriptionDisabledError,
+    UserJobIntake,
+    extract_sections_from_plain_text,
+    validate_reference_url,
 )
 
 
@@ -1010,3 +1017,166 @@ def orchestrate_discovery_run(
             error_code=error_code,
             error_message=str(exc),
         )
+
+
+def create_user_job_intake(
+    session: Session,
+    intake: UserJobIntake,
+) -> tuple[JobPosting, JobPostingSnapshot]:
+    """Create a user-controlled job intake record without live source access.
+
+    Enforces:
+    1. Input validation & boundaries (title 1-500 chars, description 20-50,000 chars, safe URL).
+    2. Idempotent source record under capability_status='MANUAL_ONLY' and is_enabled=False.
+    3. Normalization of employer handle matching ^[a-z0-9][a-z0-9_-]{0,127}$.
+    4. Deterministic content hash and duplicate detection.
+    5. Pure offline storage with provenance explicitly marked 'User-entered job intake; unverified by external source.'
+    """
+    clean_title = intake.title.strip()
+    clean_desc = intake.description_plain.strip()
+    clean_employer = (intake.employer_name or "user-provided").strip()
+
+    # Generate valid employer handle conforming to ^[a-z0-9][a-z0-9_-]{0,127}$
+    raw_handle = re.sub(r"[^a-z0-9_-]+", "-", clean_employer.lower()).strip("-_")
+    if not raw_handle or not raw_handle[0].isalnum() or raw_handle in {".", ".."}:
+        employer_handle = "user-provided"
+    else:
+        employer_handle = raw_handle[:128].rstrip("-_")
+        if not employer_handle or not employer_handle[0].isalnum():
+            employer_handle = "user-provided"
+
+    # Deterministic content hash
+    canonical_str = f"manual_intake\n{employer_handle}\n{clean_title}\n{clean_desc}"
+    raw_hash = hashlib.sha256(canonical_str.encode("utf-8")).hexdigest()
+
+    # Check for duplicate posting
+    existing_posting = session.scalar(
+        select(JobPosting)
+        .join(EmployerSubscription, JobPosting.subscription_id == EmployerSubscription.id)
+        .where(
+            EmployerSubscription.source_name == "manual_intake",
+            JobPosting.current_raw_hash == raw_hash,
+        )
+        .limit(1)
+    )
+    if existing_posting is not None:
+        raise DuplicateJobPostingError(
+            f"Job posting already exists with ID '{existing_posting.id}'",
+            code="DUPLICATE_JOB_POSTING",
+            posting_id=existing_posting.id,
+        )
+
+    now = datetime.now(timezone.utc)
+
+    # Ensure JobSource: manual_intake in MANUAL_ONLY status (globally disabled)
+    source = session.get(JobSource, "manual_intake")
+    if source is None:
+        source = JobSource(
+            source_name="manual_intake",
+            display_name="User Job Intake",
+            capability_status=SourceCapabilityStatus.MANUAL_ONLY.value,
+            is_enabled=False,
+            terms_reviewed_at=None,
+            terms_review_reference="User-entered job intake; unverified by external source.",
+            rate_limit_requests_per_minute=10,
+            min_poll_interval_seconds=43200,
+        )
+        session.add(source)
+        session.flush()
+
+    # Ensure EmployerSubscription
+    sub = session.scalar(
+        select(EmployerSubscription).where(
+            EmployerSubscription.source_name == "manual_intake",
+            EmployerSubscription.employer_handle == employer_handle,
+        ).limit(1)
+    )
+    if sub is None:
+        sub = EmployerSubscription(
+            id=str(uuid4()),
+            source_name="manual_intake",
+            employer_handle=employer_handle,
+            is_enabled=False,
+        )
+        session.add(sub)
+        session.flush()
+
+        checkpoint = DiscoveryCheckpoint(
+            subscription_id=sub.id,
+            last_successful_run_at=now,
+            consecutive_failure_count=0,
+            circuit_breaker_tripped=False,
+        )
+        session.add(checkpoint)
+        session.flush()
+
+    # Ensure a DiscoveryRun record for foreign key constraints
+    run = session.scalar(
+        select(DiscoveryRun).where(
+            DiscoveryRun.subscription_id == sub.id,
+            DiscoveryRun.status == "SUCCEEDED",
+        ).order_by(DiscoveryRun.started_at.desc()).limit(1)
+    )
+    if run is None:
+        run = DiscoveryRun(
+            id=str(uuid4()),
+            subscription_id=sub.id,
+            status="SUCCEEDED",
+            started_at=now,
+            finished_at=now,
+            items_seen_count=1,
+            items_new_count=1,
+            page_limit=50,
+        )
+        session.add(run)
+        session.flush()
+
+    # Create JobPosting
+    posting_id_slug = f"user_{raw_hash[:16]}"
+    posting = JobPosting(
+        id=str(uuid4()),
+        subscription_id=sub.id,
+        posting_id=posting_id_slug,
+        current_raw_hash=raw_hash,
+        lifecycle_status="ACTIVE",
+        last_seen_run_id=run.id,
+        first_observed_at=now,
+        last_observed_at=now,
+    )
+    session.add(posting)
+    session.flush()
+
+    # Create JobPostingSnapshot
+    lists_json = intake.lists_json
+    if not lists_json:
+        lists_json = extract_sections_from_plain_text(clean_desc)
+
+    clean_url = validate_reference_url(intake.canonical_url)
+
+    snapshot = JobPostingSnapshot(
+        id=str(uuid4()),
+        subscription_id=sub.id,
+        posting_id=posting.id,
+        run_id=run.id,
+        source_raw_hash=raw_hash,
+        title=clean_title,
+        location=intake.location.strip() if intake.location else None,
+        workplace_type=intake.workplace_type.strip().lower() if intake.workplace_type else None,
+        commitment=intake.commitment.strip() if intake.commitment else None,
+        team=intake.team.strip() if intake.team else None,
+        department=intake.department.strip() if intake.department else None,
+        level=intake.level.strip() if intake.level else None,
+        published_at=None,
+        publication_date_status="UNKNOWN",
+        canonical_url=clean_url,
+        apply_url=clean_url,
+        description_plain=clean_desc,
+        description_html=None,
+        lists_json=lists_json,
+        additional_plain="User-entered job intake; unverified by external source.",
+        captured_at=now,
+    )
+    session.add(snapshot)
+    session.flush()
+
+    return posting, snapshot

@@ -18,13 +18,39 @@ from backend.app.db.models import (
     JobPostingSnapshot,
     JobSource,
 )
+from pydantic import BaseModel, ConfigDict, Field
 from backend.app.domain.application_preparation import ApplicationPreparationError
 from backend.app.domain.job_matching import assess_job_match
+from backend.app.domain.job_posting import (
+    DuplicateJobPostingError,
+    InvalidJobIntakeError,
+    UserJobIntake,
+)
 from backend.app.services.application_preparation import prepare_application_draft
+from backend.app.services.job_discovery import create_user_job_intake
 from backend.app.services.job_matching import (
     evaluate_job_posting_match,
     load_candidate_evidence,
 )
+
+
+class JobIntakeRequest(BaseModel):
+    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+
+    title: str = Field(..., description="Job title")
+    description_plain: str | None = Field(None, alias="description", description="Job description")
+    description: str | None = Field(None, description="Job description alternative field")
+    employer_name: str | None = Field(None, alias="company", description="Employer or company name")
+    company: str | None = Field(None, description="Company alternative field")
+    location: str | None = None
+    workplace_type: str | None = None
+    commitment: str | None = None
+    team: str | None = None
+    department: str | None = None
+    level: str | None = None
+    canonical_url: str | None = Field(None, alias="url", description="Reference URL")
+    url: str | None = None
+    lists_json: list[dict[str, Any]] | None = None
 
 
 router = APIRouter(prefix="/api/v1")
@@ -125,9 +151,16 @@ def list_job_postings(
         if snapshot is None:
             continue
 
-        is_fixture = (sub.source_name in {"synthetic_fixtures", "fixture_source"} or "fixture" in sub.source_name.lower())
+        is_fixture = (sub.source_name in {"synthetic_fixtures", "fixture_source"} or "fixture" in (sub.source_name or "").lower()) if sub else False
+        is_user_entered = (sub.source_name in {"manual_intake", "user_import"} or "manual" in (sub.source_name or "").lower()) if sub else False
         if is_fixture:
             has_fixtures = True
+        if not sub:
+            source_verification_status = "UNKNOWN"
+            source_type = "UNKNOWN"
+        else:
+            source_verification_status = "UNVERIFIED_USER_SUPPLIED" if is_user_entered else ("SYNTHETIC" if is_fixture else "SOURCE_VERIFIED")
+            source_type = "USER_INTAKE" if is_user_entered else ("SYNTHETIC_FIXTURE" if is_fixture else "ATS_DISCOVERY")
 
         # Perform deterministic assessment against current candidate profile
         assessment = assess_job_match(
@@ -168,8 +201,10 @@ def list_job_postings(
         items.append({
             "id": posting.id,
             "posting_id": posting.posting_id,
-            "employer_handle": sub.employer_handle,
-            "source_name": sub.source_name,
+            "employer_handle": sub.employer_handle if sub else "unknown",
+            "source_name": sub.source_name if sub else "unknown",
+            "source_type": source_type,
+            "source_verification_status": source_verification_status,
             "lifecycle_status": posting.lifecycle_status,
             "title": snapshot.title,
             "location": snapshot.location,
@@ -179,6 +214,8 @@ def list_job_postings(
             "first_observed_at": posting.first_observed_at.isoformat(),
             "last_observed_at": posting.last_observed_at.isoformat(),
             "is_synthetic_fixture": is_fixture,
+            "is_user_entered": is_user_entered,
+            "is_reference_url_only": bool(snapshot.canonical_url and is_user_entered),
             "assessment": {
                 "fit_tier": assessment.fit_tier.value,
                 "overall_score": assessment.overall_score,
@@ -246,7 +283,14 @@ def get_job_detail(
         raise HTTPException(status_code=404, detail="SNAPSHOT_NOT_FOUND")
 
     assessment = evaluate_job_posting_match(session, posting.id)
-    is_fixture = (sub.source_name in {"synthetic_fixtures", "fixture_source"} or "fixture" in sub.source_name.lower()) if sub else False
+    is_fixture = (sub.source_name in {"synthetic_fixtures", "fixture_source"} or "fixture" in (sub.source_name or "").lower()) if sub else False
+    is_user_entered = (sub.source_name in {"manual_intake", "user_import"} or "manual" in (sub.source_name or "").lower()) if sub else False
+    if not sub:
+        source_verification_status = "UNKNOWN"
+        source_type = "UNKNOWN"
+    else:
+        source_verification_status = "UNVERIFIED_USER_SUPPLIED" if is_user_entered else ("SYNTHETIC" if is_fixture else "SOURCE_VERIFIED")
+        source_type = "USER_INTAKE" if is_user_entered else ("SYNTHETIC_FIXTURE" if is_fixture else "ATS_DISCOVERY")
 
     pub_iso = snapshot.published_at.isoformat() if snapshot.published_at else None
 
@@ -256,11 +300,14 @@ def get_job_detail(
             "posting_id": posting.posting_id,
             "employer_handle": sub.employer_handle if sub else "unknown",
             "source_name": sub.source_name if sub else "unknown",
+            "source_type": source_type,
+            "source_verification_status": source_verification_status,
             "lifecycle_status": posting.lifecycle_status,
             "version": posting.version,
             "first_observed_at": posting.first_observed_at.isoformat(),
             "last_observed_at": posting.last_observed_at.isoformat(),
             "is_synthetic_fixture": is_fixture,
+            "is_user_entered": is_user_entered,
         },
         "snapshot": {
             "id": snapshot.id,
@@ -275,6 +322,7 @@ def get_job_detail(
             "publication_date_status": snapshot.publication_date_status,
             "canonical_url": snapshot.canonical_url,
             "apply_url": snapshot.apply_url,
+            "is_reference_url_only": bool(snapshot.canonical_url and is_user_entered),
             "description_plain": snapshot.description_plain,
             "lists_json": snapshot.lists_json,
             "additional_plain": snapshot.additional_plain,
@@ -562,4 +610,113 @@ def seed_synthetic_fixtures(
         "postings_seeded": postings_created,
         "source": "synthetic_fixtures",
         "message": "Seeded synthetic job postings for offline demonstration.",
+    }
+
+
+
+@router.post("/jobs/intake", status_code=status.HTTP_201_CREATED)
+def intake_user_job(
+    request: JobIntakeRequest,
+    session: Session = Depends(get_session),
+    _guard: None = Depends(require_local_same_origin),
+) -> dict[str, Any]:
+    """Create a user-controlled job intake record for matching and review without live source access."""
+    clean_title = (request.title or "").strip()
+    if not clean_title:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="MISSING_TITLE: Job title cannot be empty or whitespace only",
+        )
+    if len(clean_title) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="TITLE_TOO_LONG: Job title exceeds 500 characters",
+        )
+
+    raw_desc = request.description_plain or request.description or ""
+    clean_desc = raw_desc.strip()
+    if not clean_desc or len(clean_desc) < 20:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="MISSING_DESCRIPTION: Job description must be at least 20 characters",
+        )
+    if len(clean_desc) > 50000:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="DESCRIPTION_TOO_LARGE: Job description exceeds 50,000 characters",
+        )
+
+    clean_employer = (request.employer_name or request.company or "").strip() or None
+    raw_url = request.canonical_url or request.url or None
+
+    clean_wp = request.workplace_type.strip().lower() if request.workplace_type else None
+    if clean_wp and clean_wp not in VALID_WORKPLACE_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"INVALID_WORKPLACE_TYPE: Must be one of {sorted(VALID_WORKPLACE_TYPES)}",
+        )
+
+    try:
+        intake_domain = UserJobIntake(
+            title=clean_title,
+            description_plain=clean_desc,
+            employer_name=clean_employer,
+            location=request.location.strip() if request.location else None,
+            workplace_type=clean_wp,
+            commitment=request.commitment.strip() if request.commitment else None,
+            team=request.team.strip() if request.team else None,
+            department=request.department.strip() if request.department else None,
+            level=request.level.strip() if request.level else None,
+            canonical_url=raw_url,
+            lists_json=request.lists_json,
+        )
+        posting, snapshot = create_user_job_intake(session, intake_domain)
+        assessment = evaluate_job_posting_match(session, posting.id)
+        session.commit()
+    except DuplicateJobPostingError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"DUPLICATE_JOB_POSTING: Job posting already exists with ID '{exc.posting_id}'",
+        )
+    except InvalidJobIntakeError as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"{exc.code}: {exc.message}",
+        )
+    except Exception as exc:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(exc),
+        )
+
+    sub = session.get(EmployerSubscription, posting.subscription_id)
+
+    return {
+        "status": "SUCCESS",
+        "id": posting.id,
+        "posting_id": posting.posting_id,
+        "employer_handle": sub.employer_handle if sub else "user-provided",
+        "source_name": "manual_intake",
+        "source_type": "USER_INTAKE",
+        "source_verification_status": "UNVERIFIED_USER_SUPPLIED",
+        "is_synthetic_fixture": False,
+        "is_user_entered": True,
+        "lifecycle_status": posting.lifecycle_status,
+        "title": snapshot.title,
+        "location": snapshot.location,
+        "workplace_type": snapshot.workplace_type,
+        "canonical_url": snapshot.canonical_url,
+        "created_at": snapshot.captured_at.isoformat(),
+        "assessment": {
+            "fit_tier": assessment.fit_tier.value,
+            "overall_score": assessment.overall_score,
+            "confidence_level": assessment.confidence_level.value,
+            "required_coverage": assessment.scores.required_coverage,
+            "preferred_coverage": assessment.scores.preferred_coverage,
+            "gaps_count": len(assessment.qualification_gaps),
+            "uncertainties_count": len(assessment.uncertainties),
+        },
     }

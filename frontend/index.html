@@ -50,7 +50,7 @@
       <div class="sidebar-bottom">
         <div class="fixture-notice">
           <strong>Offline Mode</strong><br>
-          Synthetic fixtures only. Live employer scraping disabled.
+          Synthetic fixtures &amp; user intake. Live employer scraping disabled.
         </div>
       </div>
     </aside>
@@ -61,7 +61,7 @@
       <header class="topbar">
         <div class="topbar-title">
           <h1 class="topbar-heading">Job Discovery Workbench</h1>
-          <span class="tag" style="background:#fef3c7; color:#92400e; font-weight:600;">Synthetic Fixtures</span>
+          <span class="tag" style="background:#fef3c7; color:#92400e; font-weight:600;">Synthetic Fixtures &amp; Offline Intake</span>
         </div>
 
         <div class="topbar-search">
@@ -88,6 +88,13 @@
               <path d="M8 2v12M2 8h12" stroke-width="1.7" stroke-linecap="round"/>
             </svg>
             <span>Load Demo Fixtures</span>
+          </button>
+
+          <button type="button" id="add-job-btn" class="btn-primary" style="background:#4338ca; gap:6px;" title="Add a user-supplied job for offline matching and review">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="14" height="14">
+              <path d="M8 3v10M3 8h10" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>+ Add Job</span>
           </button>
         </div>
       </header>

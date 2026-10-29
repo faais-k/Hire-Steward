@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 import re
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -100,6 +100,26 @@ class SnapshotIntegrityError(JobDiscoveryError):
     """Raised when snapshot immutability or payload hash validation fails."""
 
     def __init__(self, message: str, code: str = "SNAPSHOT_INTEGRITY_ERROR") -> None:
+        super().__init__(message, code)
+
+
+class DuplicateJobPostingError(JobDiscoveryError):
+    """Raised when attempting to add an identical job posting that already exists."""
+
+    def __init__(
+        self,
+        message: str = "This job posting has already been added.",
+        code: str = "DUPLICATE_JOB_POSTING",
+        posting_id: str | None = None,
+    ) -> None:
+        super().__init__(message, code)
+        self.posting_id = posting_id
+
+
+class InvalidJobIntakeError(JobDiscoveryError):
+    """Raised when user job intake fields violate validation or size limits."""
+
+    def __init__(self, message: str, code: str = "INVALID_JOB_INTAKE") -> None:
         super().__init__(message, code)
 
 
@@ -310,6 +330,204 @@ class NormalizedPosting(BaseModel):
     @classmethod
     def validate_apply_url(cls, value: object) -> str | None:
         return validate_safe_https_url(value, "apply_url")
+
+
+def validate_reference_url(url: object, field_name: str = "canonical_url") -> str | None:
+    """Validate that a URL is a well-formed reference URL (HTTP or HTTPS) without network access.
+
+    Performs strict syntax and scheme verification purely in-memory.
+    Never opens network sockets, contacts DNS, or makes external HTTP requests.
+    """
+    if url is None:
+        return None
+    if not isinstance(url, str):
+        raise InvalidJobIntakeError(
+            f"{field_name} must be a string", "INVALID_URL_TYPE"
+        )
+    stripped = url.strip()
+    if not stripped:
+        return None
+
+    if len(stripped) > 2048:
+        raise InvalidJobIntakeError(
+            f"{field_name} exceeds maximum length of 2048 characters", "URL_TOO_LONG"
+        )
+
+    if any(ord(c) <= 32 or ord(c) == 127 for c in stripped):
+        raise InvalidJobIntakeError(
+            f"{field_name} must not contain whitespace or control characters",
+            "INVALID_URL_CHARACTERS",
+        )
+    if any(c in {"<", ">", '"', "'"} for c in stripped):
+        raise InvalidJobIntakeError(
+            f"{field_name} contains invalid characters", "INVALID_URL_CHARACTERS"
+        )
+
+    try:
+        parts = urlsplit(stripped)
+    except ValueError as exc:
+        raise InvalidJobIntakeError(
+            f"{field_name} is malformed", "MALFORMED_URL"
+        ) from exc
+
+    if parts.scheme.lower() not in {"http", "https"}:
+        raise InvalidJobIntakeError(
+            f"{field_name} must use http or https scheme, got '{parts.scheme}'",
+            "INVALID_URL_SCHEME",
+        )
+    if not parts.netloc or not parts.hostname:
+        raise InvalidJobIntakeError(
+            f"{field_name} must have a valid hostname", "MISSING_HOSTNAME"
+        )
+    if parts.username or parts.password:
+        raise InvalidJobIntakeError(
+            f"{field_name} must not contain user credentials", "CREDENTIALS_IN_URL"
+        )
+
+    return stripped
+
+
+SECTION_HEADING_PATTERN = re.compile(
+    r"^(?:(?:[0-9]+[.)]\s*)?(?:requirements?|qualifications?|nice to have|preferred qualifications?|responsibilities|what you'?ll do|about the role|skills|experience))\s*:?$",
+    re.IGNORECASE,
+)
+BULLET_PREFIX_PATTERN = re.compile(r"^[-*••‣◦⁃∙]\s*|\A[0-9]+[.)]\s*")
+
+
+def extract_sections_from_plain_text(description_plain: str) -> list[dict[str, Any]]:
+    """Parse structured list sections from plain text descriptions.
+
+    Identifies standard qualification/responsibility headers and groups subsequent
+    bullet points into structured sections.
+    """
+    if not description_plain or not description_plain.strip():
+        return []
+
+    sections: list[dict[str, Any]] = []
+    current_title: str | None = None
+    current_items: list[str] = []
+
+    for line in description_plain.splitlines():
+        trimmed = line.strip()
+        if not trimmed:
+            continue
+
+        # Check if line is a section heading
+        is_heading = bool(SECTION_HEADING_PATTERN.match(trimmed)) or (
+            len(trimmed) < 60 and trimmed.endswith(":") and not trimmed.startswith(("-", "*", "•"))
+        )
+        if is_heading:
+            if current_title and current_items:
+                sections.append({"title": current_title, "items": current_items})
+            current_title = trimmed.rstrip(":")
+            current_items = []
+            continue
+
+        # Check if line is a bullet item
+        if BULLET_PREFIX_PATTERN.match(trimmed) or (current_title is not None and len(trimmed) > 5):
+            item_text = BULLET_PREFIX_PATTERN.sub("", trimmed).strip()
+            if item_text:
+                if current_title is None:
+                    current_title = "Requirements"
+                current_items.append(item_text)
+
+    if current_title and current_items:
+        sections.append({"title": current_title, "items": current_items})
+
+    return sections
+
+
+class UserJobIntake(BaseModel):
+    """User-supplied job intake data for matching and review without live source access."""
+
+    model_config = ConfigDict(extra="ignore", frozen=True)
+
+    title: str = Field(..., min_length=1, max_length=500)
+    description_plain: str = Field(..., min_length=20, max_length=50000)
+    employer_name: str | None = Field(None, max_length=128)
+    location: str | None = Field(None, max_length=256)
+    workplace_type: str | None = Field(None, max_length=64)
+    commitment: str | None = Field(None, max_length=64)
+    team: str | None = Field(None, max_length=128)
+    department: str | None = Field(None, max_length=128)
+    level: str | None = Field(None, max_length=64)
+    canonical_url: str | None = Field(None, max_length=2048)
+    lists_json: list[dict[str, Any]] | None = None
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        if not isinstance(value, str):
+            raise InvalidJobIntakeError("title must be a string", "INVALID_TITLE_TYPE")
+        if "\x00" in value:
+            raise InvalidJobIntakeError("title must not contain null bytes", "INVALID_CHARACTERS")
+        stripped = value.strip()
+        if not stripped:
+            raise InvalidJobIntakeError("title cannot be empty or whitespace only", "MISSING_TITLE")
+        if len(stripped) > 500:
+            raise InvalidJobIntakeError("title exceeds 500 characters", "TITLE_TOO_LONG")
+        return stripped
+
+    @field_validator("description_plain")
+    @classmethod
+    def validate_description(cls, value: str) -> str:
+        if not isinstance(value, str):
+            raise InvalidJobIntakeError("description_plain must be a string", "INVALID_DESCRIPTION_TYPE")
+        if "\x00" in value:
+            raise InvalidJobIntakeError("description_plain must not contain null bytes", "INVALID_CHARACTERS")
+        stripped = value.strip()
+        if not stripped or len(stripped) < 20:
+            raise InvalidJobIntakeError("description_plain must be at least 20 characters", "MISSING_DESCRIPTION")
+        if len(stripped) > 50000:
+            raise InvalidJobIntakeError("description_plain exceeds 50,000 characters", "DESCRIPTION_TOO_LARGE")
+        return stripped
+
+    @field_validator("employer_name", "location", "commitment", "team", "department", "level")
+    @classmethod
+    def validate_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if "\x00" in value:
+            raise InvalidJobIntakeError("field must not contain null bytes", "INVALID_CHARACTERS")
+        return value.strip() or None
+
+    @field_validator("lists_json", mode="before")
+    @classmethod
+    def validate_lists(cls, value: object) -> list[dict[str, Any]] | None:
+        if value is None:
+            return None
+        if not isinstance(value, list):
+            raise InvalidJobIntakeError("lists_json must be a list of sections", "INVALID_LISTS_FORMAT")
+        validated: list[dict[str, Any]] = []
+        for sec in value:
+            if not isinstance(sec, dict):
+                continue
+            title = str(sec.get("title", "")).strip()[:100]
+            raw_items = sec.get("items", [])
+            if not isinstance(raw_items, list):
+                continue
+            items = [str(it).strip()[:1000] for it in raw_items if str(it).strip()]
+            if title and items:
+                validated.append({"title": title, "items": items})
+        return validated or None
+
+    @field_validator("canonical_url", mode="before")
+    @classmethod
+    def validate_url(cls, value: object) -> str | None:
+        return validate_reference_url(value, "canonical_url")
+
+    @field_validator("workplace_type")
+    @classmethod
+    def validate_workplace(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        lowered = value.strip().lower()
+        if lowered not in {"remote", "hybrid", "onsite"}:
+            raise InvalidJobIntakeError(
+                f"workplace_type must be one of ['remote', 'hybrid', 'onsite'], got '{value}'",
+                "INVALID_WORKPLACE_TYPE",
+            )
+        return lowered
 
 
 PostingKey = tuple[str, str, str]

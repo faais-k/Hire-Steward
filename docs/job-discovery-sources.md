@@ -117,8 +117,8 @@ The proposed initial product model across all candidate sources (formalized in [
 ### Source 3: Ashby (Public Job Posting API vs. Authenticated API)
 
 * **Official Documentation References:**
-  * [Ashby Public Job Posting API Guide](https://developers.ashbyhq.com/docs/public-job-posting-api) (reviewed 2026-10-28).
-  * [Ashby `jobPosting.list` RPC Reference](https://developers.ashbyhq.com/reference/jobpostinglist) and [Authentication Reference](https://developers.ashbyhq.com/reference/authentication) (reviewed 2026-10-28).
+  * [Ashby Public Job Posting API Guide](https://developers.ashbyhq.com/docs/public-job-posting-api) (reviewed 2026-10-28, re-verified 2026-10-29).
+  * [Ashby jobPosting.list RPC Reference](https://developers.ashbyhq.com/reference/jobpostinglist) and [Authentication Reference](https://developers.ashbyhq.com/reference/authentication) (reviewed 2026-10-28, re-verified 2026-10-29).
 * **Distinction Between Ashby's Two APIs:**
   1. **Public Job Posting API (Keyless):**
      * Endpoint: `GET https://api.ashbyhq.com/posting-api/job-board/{JOB_BOARD_NAME}`
@@ -154,65 +154,160 @@ The proposed initial product model across all candidate sources (formalized in [
 
 ---
 
-### Comparable Three-Source Capability and Permission Matrix (2026-10-28)
+### Source 4: Direct Employer Career Pages & Syndication Feeds
+
+* **Official Documentation & Technical References:**
+  * Workable Master XML Job Feed: `https://www.workable.com/boards/workable.xml` (reviewed 2026-10-29).
+  * Workable SPI REST API: `https://{subdomain}.workable.com/spi/v3/jobs` (reviewed 2026-10-29).
+  * Schema.org `JobPosting` Structured Data Standard: `https://schema.org/JobPosting` (reviewed 2026-10-29).
+  * Standard Enterprise Career Portals (Workday, SAP SuccessFactors, Taleo, iCIMS) Terms of Use (reviewed 2026-10-29).
+* **Public Interface Availability:**
+  * *Global Multi-Tenant Feeds:* Workable publishes a global XML job feed (`workable.xml`) containing public postings across participating customers. However, there is no native per-company RSS/Atom feed; extracting one employer requires downloading and parsing a monolithic global XML file (>100MB), which violates local storage, bandwidth efficiency, and candidate privacy boundaries.
+  * *Direct Employer Feeds (RSS/Atom):* Standard per-employer RSS or Atom syndication feeds are largely legacy or unmaintained across modern ATS providers. Where career sites publish listings, they typically embed JavaScript single-page applications (SPAs) rather than static feeds.
+  * *Structured Data (Schema.org / JSON-LD):* Embedded `JobPosting` markup is designed for search engine indexers (e.g., Google for Jobs). Parsing this requires general web scraping of HTML, which violates Hire-Steward's anti-scraping and bounded-interface principles.
+  * *Enterprise ATS Portals (Workday, Taleo, SuccessFactors):* Require complex session cookies, anti-bot challenge completion (Cloudflare, Akamai, PerimeterX), and strict terms of use explicitly prohibiting automated or script-based access.
+* **Authentication:**
+  * Workable REST API (`spi/v3/jobs`): Requires an authenticated Bearer Token with `r_jobs` scope issued by a Super Admin.
+  * Global XML: Unauthenticated, but requires unconstrained bulk processing.
+  * Enterprise Career Portals: Enforce user account creation or anti-automation barriers.
+* **Terms & Policy Distinction:**
+  * Enterprise career portals explicitly prohibit automated access, scraping, and bulk extraction in their Terms of Use.
+  * Schema.org embedded metadata does not grant a license for autonomous recurring retrieval by third-party agents.
+* **Remaining Permission Uncertainties:**
+  * Direct employer career pages without documented public developer APIs cannot be accessed programmatically without violating site terms or relying on fragile, anti-evasive scraping.
+* **Initial Access Capability State:** `NEEDS_REVIEW` (and `MANUAL_ONLY` for general career portals).
+
+---
+
+### Comparable Four-Source Capability and Permission Matrix (2026-10-29)
 
 All sources remain in `NEEDS_REVIEW`. No adapter, schema, or automated crawler is enabled.
 
-| Evidence Category | Greenhouse (Job Board API) | Lever (Postings API v0) | Ashby (Public Job Posting API) |
-|---|---|---|---|
-| **Official Documentation Reference** | https://docs.greenhouse.io/job-board (2026-10-28) | https://github.com/lever/postings-api (2026-10-28) | https://developers.ashbyhq.com/docs/public-job-posting-api (2026-10-28) |
-| **Documented Listing Endpoint** | `GET /v1/boards/{board_token}/jobs` | `GET /v0/postings/{company}` | `GET /posting-api/job-board/{JOB_BOARD_NAME}` |
-| **Listing Authentication** | None (Unauthenticated) | None (Unauthenticated) | None (Unauthenticated) |
-| **Job Description Availability** | Full HTML included via `?content=true` or individual `GET /jobs/{id}` | HTML (`description`), text (`descriptionPlain`), and bullet lists (`lists`) included | Both `descriptionHtml` and `descriptionPlain` included directly in listing |
-| **Stable Identifiers** | Integer job `id` | Alphanumeric string posting `id` | Alphanumeric string job `id` |
-| **Publication Dates** | `updated_at` (ISO 8601) | `createdAt` (Unix epoch milliseconds) | `publishedAt` (ISO 8601) |
-| **Structured Compensation** | Not documented in public schema | Not documented in public schema | Documented via `?includeCompensation=true` |
-| **Pagination Parameters** | None documented | `skip` and `limit` query parameters | None documented |
-| **Documented Rate Limits** | NOT ESTABLISHED BY REVIEWED SOURCES | NOT ESTABLISHED BY REVIEWED SOURCES | NOT ESTABLISHED BY REVIEWED SOURCES |
-| **Documented Application Endpoint** | `POST /boards/{board_token}/jobs/{id}` | `POST /v0/postings/{company}/{posting_id}?key=APIKEY` | Out of scope (developer RPC requires API key) |
-| **Application Authentication** | HTTP Basic Auth (Employer API Key) | API Key parameter (`?key=APIKEY`) | Employer API Key (RPC) |
-| **Explicit Documented Intended Use** | Build custom career sites, job boards, or sync job data for a Greenhouse account | Build custom jobs site; notes published jobs are public and may be scraped by third parties | Build a custom job board for a single organization |
-| **Terms Governing Unauthenticated Access** | NOT ESTABLISHED BY REVIEWED SOURCES | Docs state published postings may be scraped by third parties; broader terms NOT ESTABLISHED BY REVIEWED SOURCES | NOT ESTABLISHED BY REVIEWED SOURCES |
-| **Initial Capability State** | `NEEDS_REVIEW` | `NEEDS_REVIEW` | `NEEDS_REVIEW` |
+| Evidence Category | Greenhouse (Job Board API) | Lever (Postings API v0) | Ashby (Public Job Posting API) | Direct Employer Feeds / Career Pages |
+|---|---|---|---|---|
+| **Official Documentation Reference** | https://docs.greenhouse.io/job-board (checked 2026-10-29) | https://github.com/lever/postings-api (checked 2026-10-29) | https://developers.ashbyhq.com/docs/public-job-posting-api (checked 2026-10-29) | Workable XML / Schema.org / Enterprise Portals (checked 2026-10-29) |
+| **Documented Listing Endpoint** | `GET /v1/boards/{board_token}/jobs` | `GET /v0/postings/{company}` | `GET /posting-api/job-board/{JOB_BOARD_NAME}` | Monolithic XML (`workable.xml`) or HTML scraping |
+| **Listing Authentication** | None (Unauthenticated) | None (Unauthenticated) | None (Unauthenticated) | None for XML; Bearer token for REST API; Session/anti-bot for portals |
+| **Job Description Availability** | Full HTML included via `?content=true` or individual `GET /jobs/{id}` | HTML (`description`), text (`descriptionPlain`), and bullet lists (`lists`) included | Both `descriptionHtml` and `descriptionPlain` included directly in listing | Varies; HTML extraction or massive XML |
+| **Stable Identifiers** | Integer job `id` | Alphanumeric string posting `id` | Alphanumeric string job `id` | Variable or transient URL slugs |
+| **Publication Dates** | `updated_at` (ISO 8601) | `createdAt` (Unix epoch milliseconds) | `publishedAt` (ISO 8601) | Inconsistent or missing |
+| **Structured Compensation** | Not documented in public schema | Not documented in public schema | Documented via `?includeCompensation=true` | Unreliable or unparsed text |
+| **Pagination Parameters** | None documented | `skip` and `limit` query parameters | None documented | N/A (single bulk file or web pages) |
+| **Documented Rate Limits** | NOT ESTABLISHED BY REVIEWED SOURCES | NOT ESTABLISHED BY REVIEWED SOURCES | NOT ESTABLISHED BY REVIEWED SOURCES | Highly restrictive or WAF-blocked |
+| **Documented Application Endpoint** | `POST /boards/{board_token}/jobs/{id}` | `POST /v0/postings/{company}/{posting_id}?key=APIKEY` | Out of scope (developer RPC requires API key) | Web form / portal submission |
+| **Application Authentication** | HTTP Basic Auth (Employer API Key) | API Key parameter (`?key=APIKEY`) | Employer API Key (RPC) | Candidate login / CAPTCHA |
+| **Explicit Documented Intended Use** | Build custom career sites, job boards, or sync job data for a Greenhouse account | Build custom jobs site; notes published jobs are public and may be scraped by third parties | Build a custom job board for a single organization | Syndication to partner boards (XML); human browsing (portals) |
+| **Terms Governing Unauthenticated Access** | NOT ESTABLISHED BY REVIEWED SOURCES | Docs state published postings may be scraped by third parties; broader terms NOT ESTABLISHED BY REVIEWED SOURCES | NOT ESTABLISHED BY REVIEWED SOURCES | Terms explicitly prohibit automated access on major enterprise portals |
+| **Initial Capability State** | `NEEDS_REVIEW` | `NEEDS_REVIEW` | `NEEDS_REVIEW` | `NEEDS_REVIEW` / `MANUAL_ONLY` |
 
 ---
 
-### Unverified Claims & Explicit Unknowns
+### Detailed Breakdown: Permitted, Prohibited, and Uncertain Actions by Source
 
-1. **Public Endpoint Rate Limits & Throttling**:
-   * None of the three official documentation sources publishes a specific numeric rate limit or request quota for its public listing GET endpoint.
-   * Treating undocumented limits as "unlimited" or borrowing authenticated API quotas (Harvest 50 req/10s, Lever v1 10 rps, Ashby 1,000 rpm) is invalid. The real-world throttling, CDN/WAF thresholds, and burst limits for public GET requests are `NOT ESTABLISHED BY REVIEWED SOURCES` and remain **unverified**.
-2. **Third-Party Autonomous Aggregation Rights**:
-   * While Lever documentation explicitly acknowledges that published postings "may be scraped by third parties," that statement cannot be converted into blanket legal authorization for every automated aggregation pattern. Neither Greenhouse nor Ashby explicitly licenses automated third-party aggregation across arbitrary employer accounts.
-   * Public accessibility of an endpoint does not constitute formal legal permission for continuous multi-board polling. All three sources remain contractually unconfirmed for automated multi-company indexing.
-3. **Structured Compensation Reliability**:
-   * Only Ashby documents a structured query parameter (`?includeCompensation=true`), but whether employers consistently populate it across varied postings is unverified.
-   * For Greenhouse and Lever, compensation is not established as a structured field in standard public schemas.
+#### 1. Lever (Postings API v0)
+- **Permitted (Documented Technical Capabilities):**
+  - Querying active published postings for a designated company handle via `GET /v0/postings/{company}`.
+  - Querying detailed posting metadata and structured text sections via `GET /v0/postings/{company}/{posting_id}`.
+  - Paginating through results using `skip` and `limit`.
+  - CORS-enabled client-side querying from custom web interfaces.
+- **Prohibited:**
+  - Automated application submission without a Super Admin API key (`POST /v0/postings/...` requires `?key=APIKEY`).
+  - High-frequency polling loops, denial-of-service level request bursts, and stealth / evasion techniques.
+  - Harvesting internal, closed, or draft jobs (which require the authenticated v1 Data API).
+- **Uncertain / NOT ESTABLISHED BY REVIEWED SOURCES:**
+  - Affirmative contractual license for multi-employer recurring aggregation by third-party personal agents. (The documentation note that jobs "may be scraped by third parties" acknowledges reality but does not constitute a bilateral license or warranty).
+  - Numeric rate limits, burst thresholds, and CDN/WAF throttling rules for unauthenticated v0 requests.
+
+#### 2. Greenhouse (Job Board API)
+- **Permitted (Documented Technical Capabilities):**
+  - Exporting published jobs, offices, and departments in lightweight JSON via `GET /v1/boards/{board_token}/jobs`.
+  - Fetching full HTML descriptions by appending `?content=true`.
+  - Retrieving custom application questions via `?questions=true`.
+- **Prohibited:**
+  - Submitting job applications programmatically without employer-issued Job Board API keys (HTTP Basic Auth required).
+  - Uncredentialed access to internal candidate data or non-public requisitions (requires Harvest API).
+- **Uncertain / NOT ESTABLISHED BY REVIEWED SOURCES:**
+  - Authorization for third parties to aggregate across arbitrary customer boards without customer instruction or agreement.
+  - Public endpoint request quotas, burst limits, and WAF blocking thresholds.
+
+#### 3. Ashby (Public Job Posting API)
+- **Permitted (Documented Technical Capabilities):**
+  - Fetching all currently published job postings for a single organization via `GET /posting-api/job-board/{JOB_BOARD_NAME}`.
+  - Retrieving structured compensation tiers and salary ranges via `?includeCompensation=true`.
+  - Reading plain text and HTML descriptions in a single payload.
+- **Prohibited:**
+  - Automated application submission via the public posting API (no public submit endpoint; application must occur via `jobUrl`/`applyUrl` or authenticated partner RPC).
+  - Bypassing authentication for administrative job operations (requires `jobsRead` API key).
+- **Uncertain / NOT ESTABLISHED BY REVIEWED SOURCES:**
+  - Aggregating job postings across multiple organizations. (The documentation explicitly frames the API as "meant for building a custom job board for a single organization").
+  - Rate limits and throttling thresholds for unauthenticated public requests.
+
+#### 4. Direct Employer Career Pages & Syndication Feeds
+- **Permitted:**
+  - Manual candidate navigation and browser-based job review (`MANUAL_ONLY`).
+  - Downloading authorized open syndication feeds where explicitly licensed for candidate tools.
+- **Prohibited:**
+  - Automated headless browser scraping of employer career pages (violates enterprise portal terms of use and Hire-Steward's anti-scraping policy).
+  - Evading CAPTCHAs, Cloudflare/Akamai bot detection, or login requirements.
+  - Ingesting massive multi-tenant XML dumps (>100MB) that compromise candidate privacy, storage budgets, or local machine stability.
+- **Uncertain / NOT ESTABLISHED BY REVIEWED SOURCES:**
+  - Whether any individual employer provides an explicitly permitted, machine-readable personal candidate discovery interface without bespoke agreements.
 
 ---
 
-### First Source Recommendation for Additional Feasibility Evaluation
+### First Source Recommendation and Smallest Viable Pilot
 
-* **Recommendation**: **Lever** is recorded as the **recommended first candidate for additional read-only source-feasibility evaluation**, based on its official documentation expressly stating that published postings are publicly viewable and may be scraped by third parties (*"all job postings in the published state are publicly viewable. These jobs may be scraped by third parties"*).
-* **Architecture Decision Record**: The proposed source-access model, evaluation candidate, safety controls, and activation gates are drafted in [ADR-0012](decisions/ADR-0012-job-discovery-source-access-and-lever-evaluation.md).
-* **Scope & Limitation**: This statement makes Lever the most explicitly open candidate documented, but it does **not** grant blanket legal authorization for unconstrained aggregation or evade terms against abusive traffic. Lever's capability state remains strictly **`NEEDS_REVIEW`** until the remaining permission question is resolved.
-* **Greenhouse and Ashby**: Both Greenhouse and Ashby also remain strictly **`NEEDS_REVIEW`**.
-* **Proposed Product Model**: The proposed initial integration model across any selected source is:
-  1. User-specified employer board identifiers (user configures the specific company handles to track);
-  2. Read-only job listing discovery;
-  3. Manual application handoff (`MANUAL_ONLY` link to the canonical posting URL);
-  4. No global scraper, no permission evasion, no credential collection, and no automated application submissions.
+* **Recommended Initial Candidate**: **Lever (Postings API v0)** is recommended as the candidate source requiring **explicit written clarification / formal owner risk acceptance** before activation.
+* **Technical & Governance Rationale**:
+  1. *Explicit Public Scrape Acknowledgement:* Lever is the only evaluated ATS whose official technical documentation expressly recognizes third-party automated access (*"all job postings in the published state are publicly viewable. These jobs may be scraped by third parties"*).
+  2. *Deterministic Offset Pagination:* Lever supports integer `skip` and `limit`, enabling bounded, incremental batching with loop detection.
+  3. *Structured Text Separation:* Lever separates HTML descriptions, plain-text descriptions, and bulleted lists (`lists`), enabling deterministic keyword matching and compensation evaluation without error-prone HTML sanitization.
+  4. *Clean Manual Handoff:* Lever returns canonical `hostedUrl` and `applyUrl` links, allowing clean `MANUAL_ONLY` browser handoff without attempting automated submission.
+* **Why Lever Cannot Be Activated Automatically**:
+  - Lever's third-party scraping statement does not constitute an affirmative bilateral contract, warranty, or blanket legal indemnification.
+  - Unauthenticated public rate limits remain undocumented.
+  - Consequently, Lever must remain in **`NEEDS_REVIEW`** and disabled until the Phase 0 acceptance gate is formally resolved by the product owner.
+
+#### Smallest Viable Pilot Boundaries
+
+To prove read-only live discovery safely without widening scope or creating operational risk, any future pilot must strictly enforce:
+
+1. **Candidate-Managed Token List Only**:
+   - The pilot must NOT crawl the web or discover companies automatically.
+   - The candidate must explicitly configure **1 to 3 specific employer handles** (e.g., `company_handle`).
+2. **Strictly Bounded Polling Frequency**:
+   - Polling frequency is restricted to **at most once every 24 hours** per configured employer handle.
+   - Continuous polling loops, daemon watchers, and high-frequency triggers are prohibited.
+3. **Rigid Request Budgets & Timeouts**:
+   - Maximum 2 HTTP GET requests per employer handle per run (offset limit: 100 postings per page).
+   - Maximum request rate: 1 request per second.
+   - TCP connect timeout: maximum 5 seconds; HTTP read timeout: maximum 15 seconds.
+4. **Honest Attribution**:
+   - Transparent `User-Agent` header disclosing identity: `Hire-Steward/1.0 (+https://github.com/faais-k/Hire-Steward)`.
+5. **Read-Only Scope**:
+   - Strictly HTTP GET requests. Zero POST requests, zero application submission attempts, zero credential harvesting.
+6. **Manual-Only Application Handoff**:
+   - The candidate is directed to the canonical `hostedUrl` in their personal web browser. Automated submission is strictly out of scope.
+7. **Fail-Closed Circuit Breaker**:
+   - Three consecutive network or HTTP failures for an employer handle immediately trips the circuit breaker, halts polling for that board, and requires manual candidate inspection or reset.
 
 ---
 
-### Phase 0 Exit Gate Status
+### Phase 0 Exit Gate Status and Concrete Acceptance Criteria
 
-* **Status:** **IN_PROGRESS / NOT PASSED**.
-* The Phase 0 roadmap exit gate ("No unresolved license or source-permission blocker for the first source") is **not satisfied** merely because documentation research was performed or an ADR was drafted.
-* **Exact remaining owner decision needed to close Phase 0**:
-  1. Formally review and resolve the third-party read-only polling permission question for the chosen initial source (recommended: Lever) by approving [ADR-0012](decisions/ADR-0012-job-discovery-source-access-and-lever-evaluation.md);
-  2. Formally approve the user-specified employer token model for read-only discovery with `MANUAL_ONLY` application handoff;
-  3. Approve the activation gate criteria (owner sign-off, live test protocol approval, offline fixture verification, and contractual risk acceptance) before setting the source to `VERIFIED_READ_ONLY` and implementing adapter code, schemas, or migrations.
+* **Current Status:** **`IN_PROGRESS / NOT PASSED`**.
+* **Core Rule:** The Phase 0 roadmap exit gate (*"No unresolved license or source-permission blocker for the first source"*) **CANNOT pass while any material source-permission blocker remains unresolved**.
+* **Concrete Acceptance Criteria Required to Close Phase 0**:
+  1. **Criterion 1 — Owner Source-Access Decision & Risk Posture Resolution**:
+     - The product owner must formally review [ADR-0012](decisions/ADR-0012-job-discovery-source-access-and-lever-evaluation.md) and execute a formal written decision:
+       - Either obtaining source-specific clarification or formal legal advice confirming that read-only polling of user-specified Lever boards complies with applicable terms; OR
+       - Formally accepting the residual contractual risk of unauthenticated read-only polling under Lever's documented third-party scraping statement, constrained by the Smallest Viable Pilot boundaries.
+  2. **Criterion 2 — Approved Single-Request Live Test Protocol**:
+     - The owner must approve an isolated, single-request live inspection protocol executed against an agreed employer board to observe real-world HTTP headers, caching behavior (`ETag`, `Last-Modified`), and schema conformity without recurring polling.
+  3. **Criterion 3 — Verified Offline Invariant Suite**:
+     - Offline adapter tests with recorded fixtures must pass, demonstrating bounded pagination, loop detection, circuit breaking, honest `User-Agent` attribution, and deterministic error handling. *(Satisfied: 88 Lever adapter tests passing in test suite).*
+
+Until Criteria 1 and 2 are explicitly executed and approved, Lever remains **`NEEDS_REVIEW`** and disabled, and Phase 0 remains **`IN_PROGRESS / NOT PASSED`**.
 
 ## 3. Initial and recurring discovery
 

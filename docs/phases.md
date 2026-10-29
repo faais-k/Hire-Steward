@@ -2,7 +2,7 @@
 
 **Status:** Proposed roadmap. Complete each phase's acceptance gate before building the next high-risk capability. Timelines are intentionally omitted until repository and workload are inspected.
 
-**Current implementation:** Phase 1 is `IN_PROGRESS` as of 2026-10-28. Foundation 1 implements configurable compensation preference and public evidence trust boundary. Foundation 2 adds PostgreSQL Compose/readiness/test/CI. Foundation 3 implements local text-only candidate documents, unreviewed facts, provenance, and reservation storage; it was committed as `890ed36`, corrected in `fe0baf0`, and verified in hosted CI on branch `foundation-3-candidate-evidence` (95 passed, 0 failed, 1 upstream warning; workflow run: https://github.com/faais-k/Hire-Steward/actions/runs/40664831364). All 13 PostgreSQL tests passed in CI. Foundation 3 has not been merged into `main`. Local Compose startup and local PostgreSQL remain unverified. Phase 0 remains `IN_PROGRESS` until its source-permission exit gate is satisfied; technical source documentation for Greenhouse, Lever, and Ashby has been researched, but source permission is not approved and all candidates remain `NEEDS_REVIEW`. No live ATS requests or adapters are activated. Documentation changes remain uncommitted until explicitly approved. Public compensation assessments remain unverified until a real verifier exists.
+**Current implementation:** Milestone 5 (Application Tracking and Pipeline Lifecycle) is committed and pushed as `7182b65` on branch `foundation-3-candidate-evidence`, passing 313 tests locally and verified in hosted GitHub Actions CI (Run 40867692556: 313 passed, 0 failed, all 24 PostgreSQL integration tests passing). Offline discovery (Milestone 1, `214dfea`), deterministic matching (Milestone 2, `e022a47`), review workbench (Milestones 3 & 3.1, `8f19559` & `3dba991`), and evidence-grounded application preparation (Milestones 4 & 4.1, `b8a9b59`) are completed and committed. Phase 0 remains `IN_PROGRESS / NOT PASSED` until its source-permission exit gate is formally resolved by the product owner; Phase 4.1 feasibility assessment re-verified candidate sources (Greenhouse, Lever, Ashby, Direct Feeds), keeping all sources in `NEEDS_REVIEW`. No live ATS requests or adapters are activated. Live discovery cannot begin while Phase 0 is not passed.
 
 ## Delivery principle
 
@@ -25,7 +25,9 @@ Build vertical slices that prove the core lifecycle and safety properties. Do no
 - Updated `memory.md` with verified repo state.
 
 ### Exit gate
-- No unresolved license or source-permission blocker for the first source.
+- No unresolved license or source-permission blocker for the first source (Criterion 1: Owner formal source-access decision / legal risk acceptance).
+- Approved single-request live test protocol (Criterion 2: Owner sign-off on isolated live test against agreed board).
+- Verified offline invariant suite (Criterion 3: 88 Lever adapter tests passing with loop detection, pagination bounds, and honest attribution).
 - Stack versions selected with compatibility confirmed.
 - Data handling and provider-sharing behavior understood.
 

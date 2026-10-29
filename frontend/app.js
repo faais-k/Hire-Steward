@@ -74,6 +74,7 @@
     sortSelect: document.getElementById("sort-select"),
     tierPills: document.querySelectorAll(".tier-pills .pill-btn"),
     seedBtn: document.getElementById("seed-btn"),
+    addJobBtn: document.getElementById("add-job-btn"),
     totalVisible: document.getElementById("total-visible"),
     sidebarCount: document.getElementById("sidebar-count"),
     candidateFactsCount: document.getElementById("candidate-facts-count"),
@@ -90,6 +91,12 @@
   };
 
   // Helpers
+  function isSafeUrl(url) {
+    if (!url || typeof url !== "string") return false;
+    const trimmed = url.trim().toLowerCase();
+    return trimmed.startsWith("http://") || trimmed.startsWith("https://");
+  }
+
   function escapeHtml(str) {
     if (str === null || str === undefined) return "";
     return String(str)
@@ -494,6 +501,159 @@
     elements.modalContainer.innerHTML = "";
   }
 
+  function openJobIntakeModal() {
+    elements.modalContainer.style.display = "block";
+    elements.modalContainer.innerHTML = `
+      <div class="modal-backdrop" id="intake-modal-backdrop">
+        <div class="modal-dialog" style="max-width: 640px;">
+          <div class="modal-header">
+            <div class="modal-title">Add Job Opportunity (Offline Intake)</div>
+            <button type="button" class="btn-secondary" id="intake-close-btn" style="padding:4px 8px;">✕</button>
+          </div>
+          <div class="modal-body">
+            <div class="heuristic-banner" style="background:#e0e7ff; border-color:#c7d2fe; color:#3730a3; margin-bottom:12px;">
+              <strong>Offline User Intake:</strong> Paste any job opportunity to evaluate deterministic fit, inspect requirement coverage, and draft tailored materials. No external websites are contacted and URLs are stored strictly as unverified text references.
+            </div>
+
+            <div id="intake-error-banner" style="display:none; padding:8px 12px; background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; color:#991b1b; font-size:12px; margin-bottom:12px;"></div>
+
+            <div style="display:flex; gap:12px; margin-bottom:10px;">
+              <div style="flex:2;">
+                <label for="intake-title" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Job Title *</label>
+                <input type="text" id="intake-title" class="filter-select" style="width:100%; box-sizing:border-box;" placeholder="e.g. Senior Backend Engineer" required maxlength="500">
+              </div>
+              <div style="flex:1;">
+                <label for="intake-employer" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Company / Employer</label>
+                <input type="text" id="intake-employer" class="filter-select" style="width:100%; box-sizing:border-box;" placeholder="e.g. Acme Corp" maxlength="128">
+              </div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-bottom:10px;">
+              <div style="flex:1;">
+                <label for="intake-location" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Location</label>
+                <input type="text" id="intake-location" class="filter-select" style="width:100%; box-sizing:border-box;" placeholder="e.g. Berlin, Germany or Worldwide" maxlength="256">
+              </div>
+              <div style="flex:1;">
+                <label for="intake-workplace" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Workplace Arrangement</label>
+                <select id="intake-workplace" class="filter-select" style="width:100%; box-sizing:border-box;">
+                  <option value="">Unspecified</option>
+                  <option value="remote">Remote</option>
+                  <option value="hybrid">Hybrid</option>
+                  <option value="onsite">Onsite</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <label for="intake-url" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">
+                Reference URL (Optional)
+                <span style="font-weight:400; color:var(--muted); font-size:11px;">— stored strictly as text; no network requests made</span>
+              </label>
+              <input type="url" id="intake-url" class="filter-select" style="width:100%; box-sizing:border-box;" placeholder="https://example.com/careers/job-123" maxlength="2048">
+            </div>
+
+            <div style="margin-bottom:4px;">
+              <label for="intake-desc" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">
+                Job Description &amp; Requirements *
+                <span style="font-weight:400; color:var(--muted); font-size:11px;">(min 20 characters)</span>
+              </label>
+              <textarea id="intake-desc" class="filter-select" style="width:100%; height:160px; font-family:inherit; font-size:12px; line-height:1.4; padding:8px; box-sizing:border-box; resize:vertical;" placeholder="Paste the job requirements, responsibilities, and qualifications here..." required></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="intake-cancel-btn">Cancel</button>
+            <button type="button" class="btn-primary" id="intake-submit-btn" style="background:#4338ca;">Save &amp; Match</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const closeBtn = document.getElementById("intake-close-btn");
+    const cancelBtn = document.getElementById("intake-cancel-btn");
+    const backdrop = document.getElementById("intake-modal-backdrop");
+    const submitBtn = document.getElementById("intake-submit-btn");
+    const errorBanner = document.getElementById("intake-error-banner");
+
+    closeBtn.addEventListener("click", closeModal);
+    cancelBtn.addEventListener("click", closeModal);
+    setTimeout(() => {
+      const titleInput = document.getElementById("intake-title");
+      if (titleInput) titleInput.focus();
+    }, 50);
+    backdrop.addEventListener("click", e => {
+      if (e.target.id === "intake-modal-backdrop") closeModal();
+    });
+
+    submitBtn.addEventListener("click", async () => {
+      const title = document.getElementById("intake-title").value.trim();
+      const company = document.getElementById("intake-employer").value.trim();
+      const location = document.getElementById("intake-location").value.trim();
+      const workplace_type = document.getElementById("intake-workplace").value;
+      const url = document.getElementById("intake-url").value.trim();
+      const description = document.getElementById("intake-desc").value.trim();
+
+      errorBanner.style.display = "none";
+      errorBanner.textContent = "";
+
+      if (!title) {
+        errorBanner.textContent = "Please enter a job title.";
+        errorBanner.style.display = "block";
+        document.getElementById("intake-title").focus();
+        return;
+      }
+
+      if (!description || description.length < 20) {
+        errorBanner.textContent = "Job description must be at least 20 characters.";
+        errorBanner.style.display = "block";
+        document.getElementById("intake-desc").focus();
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Evaluating match...";
+
+      try {
+        const payload = {
+          title,
+          description_plain: description,
+          employer_name: company || null,
+          location: location || null,
+          workplace_type: workplace_type || null,
+          canonical_url: url || null,
+        };
+
+        const res = await fetch("/api/v1/jobs/intake", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server returned ${res.status}`);
+        }
+
+        const data = await res.json();
+        closeModal();
+        if (state.currentView !== "opportunities") {
+          switchView("opportunities");
+        }
+        await fetchJobs();
+        if (data.id) {
+          selectJob(data.id, true);
+        }
+      } catch (err) {
+        errorBanner.textContent = err.message || "Failed to add job.";
+        errorBanner.style.display = "block";
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Save & Match";
+      }
+    });
+  }
+
+
   // Application Preparation Client & Persistence
   async function fetchApplicationDraft(jobId) {
     state.isLoadingDraft = true;
@@ -744,6 +904,7 @@
             <span class="tag">${escapeHtml(wpLabel)}</span>
             <span class="tag">${escapeHtml(locLabel)}</span>
             ${job.is_synthetic_fixture ? `<span class="tag" style="background:#fef3c7; color:#78350f;">Synthetic</span>` : ""}
+            ${job.is_user_entered ? `<span class="tag tag-user">User Added</span>` : ""}
           </div>
 
           <div class="job-match-row">
@@ -866,6 +1027,20 @@
           <span class="tag">${escapeHtml(snapshot.commitment || "Full-time")}</span>
           <span class="tag">Status: ${escapeHtml(posting.lifecycle_status)}</span>
           ${posting.is_synthetic_fixture ? `<span class="tag" style="background:#fef3c7; color:#78350f;">Synthetic Fixture</span>` : ""}
+          ${posting.is_user_entered ? `<span class="tag tag-user">User-Provided (Unverified)</span>` : ""}
+          ${snapshot.canonical_url ? (
+            isSafeUrl(snapshot.canonical_url) ? `
+              <span class="tag" title="${snapshot.is_reference_url_only ? 'User reference URL (stored offline only)' : 'Canonical URL'}">
+                🔗 <a href="${escapeHtml(snapshot.canonical_url)}" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline;">
+                  ${snapshot.is_reference_url_only ? 'Reference Link' : 'Job Source'}
+                </a>
+              </span>
+            ` : `
+              <span class="tag" title="Unverified reference URL (non-http)">
+                🔗 ${escapeHtml(snapshot.canonical_url)}
+              </span>
+            `
+          ) : ""}
         </div>
       </div>
 
@@ -1751,6 +1926,9 @@
 
     // Seed fixtures button
     elements.seedBtn.addEventListener("click", seedDemoFixtures);
+    if (elements.addJobBtn) {
+      elements.addJobBtn.addEventListener("click", openJobIntakeModal);
+    }
 
     // Pipeline navigation
     if (elements.navOpportunitiesBtn) {
