@@ -586,6 +586,14 @@ def evaluate_requirement(
 
         if is_general_experience:
             # Pure tenure requirement
+            if not matched_emp:
+                return RequirementEvaluation(
+                    requirement=req,
+                    status=RequirementMatchStatus.INSUFFICIENT_EVIDENCE,
+                    explanation="No candidate employment records found to assess years of experience.",
+                    is_uncertain=True,
+                    provenance_status="NO_EVIDENCE",
+                )
             if total_exp_years >= req.min_years_experience:
                 uncertain_note = " (Note: some employment dates are incomplete/uncertain)" if has_uncertain_dates else ""
                 return RequirementEvaluation(
@@ -622,6 +630,18 @@ def evaluate_requirement(
                     explanation=(
                         f"Candidate lacks evidence for required skill/domain in '{req.text}'. "
                         f"(Tenure record: {total_exp_years:.1f} years recorded, but required skill has no matching evidence)."
+                    ),
+                    is_uncertain=True,
+                    provenance_status="NO_EVIDENCE",
+                )
+            elif not matched_emp:
+                return RequirementEvaluation(
+                    requirement=req,
+                    status=RequirementMatchStatus.INSUFFICIENT_EVIDENCE,
+                    matched_evidence=matched,
+                    explanation=(
+                        f"Candidate matches required domain ({', '.join(item.display_label for item in matched)}), "
+                        f"but profile lacks employment records to verify {req.min_years_experience:.1f}+ years tenure."
                     ),
                     is_uncertain=True,
                     provenance_status="NO_EVIDENCE",
@@ -830,7 +850,10 @@ def assess_job_match(
     calc_parts: list[str] = []
     composite_score: float | None = None
 
-    if r_total > 0:
+    if not candidate_evidence:
+        calc_parts.append("Candidate evidence profile is empty; insufficient data to calculate match score.")
+        composite_score = None
+    elif r_total > 0:
         base_req = (r_met / r_total) * 0.70
         calc_parts.append(f"Required qualifications coverage: {r_met}/{r_total} ({r_met/r_total:.1%}) * 70%")
 
@@ -883,7 +906,7 @@ def assess_job_match(
     # Missing even one required qualification precludes STRONG_MATCH to prevent misleading users!
     if r_contradicted > 0 or s_contradicted > 0 or p_contradicted > 0:
         fit_tier = FitTier.BLOCKED_OR_CONTRADICTED
-    elif is_incomplete or (r_total == 0 and p_total == 0):
+    elif is_incomplete or (r_total == 0 and p_total == 0) or not candidate_evidence:
         fit_tier = FitTier.INSUFFICIENT_DATA
     elif r_total > 0 and r_met == 0:
         fit_tier = FitTier.WEAK_MATCH

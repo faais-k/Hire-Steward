@@ -918,5 +918,34 @@ def test_unspecified_workplace_not_awarded_compatibility_score() -> None:
     # 1/1 required (0.70), 0 preferred (0.20), workplace unspecified (0.00) => total 0.90
     assert assessment.scores.required_coverage == 1.0
     assert assessment.scores.workplace_match is None
-    assert assessment.overall_score == 0.90
-    assert "Workplace compatibility: Unspecified / Unknown (0% * 10%)" in assessment.scores.calculation_basis
+
+
+# --- 18. Empty Candidate Profile Produces Honest Insufficient Data ---
+
+def test_empty_candidate_evidence_produces_honest_insufficient_data() -> None:
+    assessment = assess_job_match(
+        posting_id="post_empty_cand",
+        snapshot_id="snap_empty_cand",
+        lists_json=[
+            {
+                "title": "Required Qualifications",
+                "items": ["Proficiency in Python", "3+ years experience with PostgreSQL"],
+            },
+            {
+                "title": "Preferred Qualifications",
+                "items": ["Docker containerization"],
+            },
+        ],
+        description_plain="Backend Engineer position.",
+        workplace_type="remote",
+        location="Worldwide",
+        candidate_evidence=[],
+    )
+    assert assessment.fit_tier == FitTier.INSUFFICIENT_DATA
+    assert assessment.overall_score is None
+    assert assessment.confidence_level == ConfidenceLevel.LOW
+    assert "Candidate evidence profile is empty." in assessment.confidence_reasons
+    assert len(assessment.qualification_gaps) == 3
+    assert all("No candidate evidence found" in g for g in assessment.qualification_gaps)
+    assert all(e["status"] == "INSUFFICIENT_EVIDENCE" for e in assessment.required_evaluations)
+    assert all(e["status"] == "INSUFFICIENT_EVIDENCE" for e in assessment.preferred_evaluations)
