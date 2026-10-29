@@ -8,6 +8,8 @@ from sqlalchemy import Engine, create_engine, event, inspect, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 
+from alembic import command
+from alembic.config import Config
 from conftest import PostgresDatabase, local_headers, upgrade
 
 from backend.app.db.base import Base
@@ -75,7 +77,7 @@ def test_fresh_migration_matches_models_and_seeds_exact_default(postgres_databas
     assert preference.amount == Decimal("100000.00")
     assert preference.currency == "INR"
     assert preference.period == "YEAR"
-    assert revision == "0004_job_discovery_persistence"
+    assert revision == "0005_application_tracking"
 
 
 def test_readiness_fails_closed_when_required_table_is_dropped_after_migration(
@@ -85,7 +87,7 @@ def test_readiness_fails_closed_when_required_table_is_dropped_after_migration(
     with postgres_database.engine.begin() as connection:
         connection.exec_driver_sql("DROP TABLE compensation_assessments")
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) == (
-            "0004_job_discovery_persistence"
+            "0005_application_tracking"
         )
         assert connection.scalar(
             text("SELECT amount FROM compensation_preferences WHERE id = 1")
@@ -281,3 +283,42 @@ def test_public_salary_report_stays_unverified_and_cannot_authorize_submission(
     assert "unverified observation" in explanation
     assert "cannot authorize an action" in explanation
     assert "verified annualized compensation" not in explanation
+
+
+def test_application_tracking_upgrade_and_downgrade_postgres(postgres_database):
+    """Verify 0004 -> 0005 upgrade, constraint verification, and downgrade on PostgreSQL."""
+    upgrade(postgres_database, "0004_job_discovery_persistence")
+    inspector = inspect(postgres_database.engine)
+    assert "tracked_applications" not in inspector.get_table_names(schema=postgres_database.schema)
+
+    upgrade(postgres_database, "0005_application_tracking")
+    inspector = inspect(postgres_database.engine)
+    table_names = set(inspector.get_table_names(schema=postgres_database.schema))
+    assert {"tracked_applications", "application_status_history"} <= table_names
+
+    # Check constraints and foreign keys on tracked_applications
+    fks = inspector.get_foreign_keys("tracked_applications", schema=postgres_database.schema)
+    assert len(fks) == 1
+    assert fks[0]["referred_table"] == "job_postings"
+    assert fks[0]["options"]["ondelete"].upper() == "RESTRICT"
+
+    uqs = inspector.get_unique_constraints("tracked_applications", schema=postgres_database.schema)
+    uq_names = {u["name"] for u in uqs}
+    assert "uq_tracked_applications_posting" in uq_names
+
+    # Check foreign keys on application_status_history
+    hist_fks = inspector.get_foreign_keys("application_status_history", schema=postgres_database.schema)
+    assert len(hist_fks) == 1
+    assert hist_fks[0]["referred_table"] == "tracked_applications"
+    assert hist_fks[0]["options"]["ondelete"].upper() == "CASCADE"
+
+    # Downgrade back to 0004_job_discovery_persistence
+    config = Config("backend/alembic.ini")
+    with postgres_database.engine.begin() as connection:
+        config.attributes["connection"] = connection
+        command.downgrade(config, "0004_job_discovery_persistence")
+        downgraded_tables = set(inspect(connection).get_table_names(schema=postgres_database.schema))
+
+    assert "tracked_applications" not in downgraded_tables
+    assert "application_status_history" not in downgraded_tables
+    assert "job_postings" in downgraded_tables

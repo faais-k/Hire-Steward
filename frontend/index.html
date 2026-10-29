@@ -17,13 +17,24 @@
       </div>
 
       <nav>
-        <button type="button" class="nav-item" aria-current="page">
+        <button type="button" class="nav-item active" id="nav-opportunities-btn" aria-current="page">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
             <rect x="2" y="3" width="12" height="10" rx="1.5" stroke-width="1.5"/>
             <path d="M5 6h6M5 9h4" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           <span>Opportunities</span>
           <span class="nav-count num" id="sidebar-count">0</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-pipeline-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M2 4h12M2 8h12M2 12h12" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="5" cy="4" r="1.5" fill="currentColor"/>
+            <circle cx="9" cy="8" r="1.5" fill="currentColor"/>
+            <circle cx="13" cy="12" r="1.5" fill="currentColor"/>
+          </svg>
+          <span>Pipeline</span>
+          <span class="nav-count num" id="pipeline-count">0</span>
         </button>
 
         <button type="button" class="nav-item" id="nav-profile-btn">
@@ -82,7 +93,7 @@
       </header>
 
       <!-- Workbench Split View -->
-      <main class="workbench">
+      <main class="workbench" id="workbench-view">
         <!-- Left Pane: Job List -->
         <section class="jobs-pane" aria-label="Opportunities list">
           <div class="jobs-pane-header">
@@ -109,8 +120,43 @@
           </div>
         </section>
       </main>
+
+      <!-- Pipeline Tracker View (Milestone 5) -->
+      <main class="pipeline-container" id="pipeline-view" style="display: none;" aria-label="Application Pipeline Tracker">
+        <div class="pipeline-header-bar">
+          <div class="pipeline-title-group">
+            <h2 class="pipeline-heading">Application Pipeline</h2>
+            <span class="pipeline-subheading" id="pipeline-total-indicator">0 tracked applications</span>
+          </div>
+
+          <div class="pipeline-controls">
+            <div class="pipeline-status-pills" role="tablist" aria-label="Filter applications by status">
+              <button type="button" class="pill-btn active" data-pipeline-status="" role="tab" aria-selected="true">All Active</button>
+              <button type="button" class="pill-btn" data-pipeline-status="SAVED" role="tab" aria-selected="false">Saved</button>
+              <button type="button" class="pill-btn" data-pipeline-status="PREPARING" role="tab" aria-selected="false">Preparing</button>
+              <button type="button" class="pill-btn" data-pipeline-status="READY_FOR_REVIEW" role="tab" aria-selected="false">Ready</button>
+              <button type="button" class="pill-btn" data-pipeline-status="APPLIED" role="tab" aria-selected="false">Applied</button>
+              <button type="button" class="pill-btn" data-pipeline-status="INTERVIEWING" role="tab" aria-selected="false">Interviewing</button>
+              <button type="button" class="pill-btn" data-pipeline-status="OFFER_RECEIVED" role="tab" aria-selected="false">Offers</button>
+              <button type="button" class="pill-btn" data-pipeline-status="ARCHIVED" role="tab" aria-selected="false">Archived</button>
+            </div>
+
+            <select id="pipeline-sort-select" class="filter-select" aria-label="Sort tracked applications">
+              <option value="updated_at">Last Updated</option>
+              <option value="last_status_change_at">Recent Status Change</option>
+              <option value="created_at">Date Tracked</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="pipeline-cards-container" class="pipeline-cards-grid" tabindex="0" role="region" aria-label="Tracked applications list">
+          <!-- Dynamically injected pipeline cards -->
+        </div>
+      </main>
     </div>
   </div>
+
+  <div id="modal-container" style="display:none;" role="dialog" aria-modal="true"></div>
 
   <script src="app.js"></script>
 </body>

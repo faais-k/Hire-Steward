@@ -13,6 +13,7 @@ from backend.app.api.routes.compensation import router as compensation_router
 from backend.app.api.routes.candidate_evidence import router as candidate_evidence_router
 from backend.app.api.routes.health import router as health_router
 from backend.app.api.routes.job_discovery import router as job_discovery_router
+from backend.app.api.routes.application_tracking import router as application_tracking_router
 from backend.app.db.session import make_session_factory
 from backend.app.adapters.storage import EvidenceStorage
 from backend.app.evidence_config import EvidenceSettings, evidence_settings_from_environment
@@ -124,6 +125,7 @@ def create_app(
     app.include_router(compensation_router)
     app.include_router(candidate_evidence_router)
     app.include_router(job_discovery_router)
+    app.include_router(application_tracking_router)
 
     # Mount static frontend workbench if directory exists
     frontend_dir = os.path.abspath(

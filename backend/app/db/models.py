@@ -593,3 +593,81 @@ class JobPostingSnapshot(Base):
     captured_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+class TrackedApplication(Base):
+    __tablename__ = "tracked_applications"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_tracked_applications"),
+        UniqueConstraint("job_posting_id", name="uq_tracked_applications_posting"),
+        ForeignKeyConstraint(
+            ["job_posting_id"],
+            ["job_postings.id"],
+            ondelete="RESTRICT",
+            name="fk_tracked_applications_posting",
+        ),
+        CheckConstraint(
+            "status IN ('SAVED', 'PREPARING', 'READY_FOR_REVIEW', 'APPLIED', 'INTERVIEWING', 'OFFER_RECEIVED', 'REJECTED', 'WITHDRAWN', 'ARCHIVED')",
+            name="ck_tracked_applications_status",
+        ),
+        CheckConstraint("version >= 1", name="ck_tracked_applications_version_positive"),
+        Index("ix_tracked_applications_status", "status"),
+        Index("ix_tracked_applications_updated_at", "updated_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    job_posting_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, server_default="SAVED")
+    notes: Mapped[str | None] = mapped_column(Text)
+    follow_up_deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    next_interview_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    applied_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_status_change_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    submitted_resume_snapshot: Mapped[str | None] = mapped_column(Text)
+    submitted_cover_letter_snapshot: Mapped[str | None] = mapped_column(Text)
+    submitted_resume_sha256: Mapped[str | None] = mapped_column(String(64))
+    submitted_cover_letter_sha256: Mapped[str | None] = mapped_column(String(64))
+    reviewed_resume_markdown: Mapped[str | None] = mapped_column(Text)
+    reviewed_cover_letter_markdown: Mapped[str | None] = mapped_column(Text)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class ApplicationStatusHistory(Base):
+    __tablename__ = "application_status_history"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_application_status_history"),
+        ForeignKeyConstraint(
+            ["application_id"],
+            ["tracked_applications.id"],
+            ondelete="CASCADE",
+            name="fk_app_status_history_application",
+        ),
+        CheckConstraint(
+            "to_status IN ('SAVED', 'PREPARING', 'READY_FOR_REVIEW', 'APPLIED', 'INTERVIEWING', 'OFFER_RECEIVED', 'REJECTED', 'WITHDRAWN', 'ARCHIVED')",
+            name="ck_app_status_history_to_status",
+        ),
+        CheckConstraint(
+            "from_status IS NULL OR from_status IN ('SAVED', 'PREPARING', 'READY_FOR_REVIEW', 'APPLIED', 'INTERVIEWING', 'OFFER_RECEIVED', 'REJECTED', 'WITHDRAWN', 'ARCHIVED')",
+            name="ck_app_status_history_from_status",
+        ),
+        Index("ix_app_status_history_app_id", "application_id"),
+        Index("ix_app_status_history_created_at", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    application_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    from_status: Mapped[str | None] = mapped_column(String(32))
+    to_status: Mapped[str] = mapped_column(String(32), nullable=False)
+    transition_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
