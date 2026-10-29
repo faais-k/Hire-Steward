@@ -291,6 +291,174 @@ a { color: inherit; text-decoration: none; }
 
 .btn-secondary:hover { background: var(--raised); }
 
+.btn-primary {
+  height: var(--control-height);
+  padding: 0 12px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-control);
+  background: var(--primary);
+  color: var(--primary-ink);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 120ms ease;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled, .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Application Preparation Draft Styles */
+.draft-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 8px;
+}
+
+.draft-subtabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.draft-subtab-btn {
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.draft-subtab-btn:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.draft-subtab-btn.active {
+  background: var(--active);
+  color: var(--text);
+  font-weight: 600;
+  border-color: var(--border);
+}
+
+.draft-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.draft-toolbar-left, .draft-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.draft-editor-textarea {
+  width: 100%;
+  min-height: 380px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 12px;
+  border: 1px solid var(--control);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  color: var(--text);
+  resize: vertical;
+}
+
+.draft-editor-textarea:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.draft-rendered-preview {
+  min-height: 380px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text);
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.draft-rendered-preview h1 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+.draft-rendered-preview h2 { font-size: 15px; margin-top: 14px; margin-bottom: 6px; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+.draft-rendered-preview h3 { font-size: 13px; margin-top: 10px; margin-bottom: 4px; color: var(--text); }
+.draft-rendered-preview p { margin-bottom: 8px; }
+.draft-rendered-preview ul { padding-left: 20px; margin-bottom: 8px; }
+.draft-rendered-preview li { margin-bottom: 3px; }
+.draft-rendered-preview a { color: var(--accent); text-decoration: underline; }
+.draft-rendered-preview code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.save-pill {
+  font-size: 11px;
+  color: var(--faint);
+  font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.req-item-card {
+  padding: 10px 12px;
+  background: var(--ground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  margin-bottom: 8px;
+}
+
+.req-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+
+.req-item-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.claim-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-right: 4px;
+  margin-top: 4px;
+}
+
 /* Workbench Split View */
 .workbench {
   display: grid;

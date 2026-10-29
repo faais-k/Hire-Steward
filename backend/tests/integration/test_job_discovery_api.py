@@ -386,3 +386,202 @@ def test_middleware_fails_closed_when_client_address_is_missing() -> None:
     msgs_local = asyncio.run(invoke_asgi(("127.0.0.1", 12345)))
     start_local = next(m for m in msgs_local if m["type"] == "http.response.start")
     assert start_local["status"] == 200
+
+
+def test_job_application_draft_not_found(api_client: TestClient) -> None:
+    """Non-existent posting ID returns 404."""
+    res = api_client.get("/api/v1/jobs/non-existent-id/application-draft")
+    assert res.status_code == 404
+    assert res.json()["detail"] == "POSTING_NOT_FOUND"
+
+
+def test_job_application_draft_empty_evidence(api_client: TestClient) -> None:
+    """Empty candidate evidence profile honestly returns has_sufficient_evidence=False."""
+    api_client.post("/api/v1/jobs/seed-fixtures", headers=local_headers())
+    list_res = api_client.get("/api/v1/jobs")
+    job_id = list_res.json()["items"][0]["id"]
+
+    res = api_client.get(f"/api/v1/jobs/{job_id}/application-draft")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["has_sufficient_evidence"] is False
+    assert data["resume_markdown"] == ""
+    assert data["cover_letter_markdown"] == ""
+    assert len(data["addressed_requirements"]) == 0
+    assert len(data["evidence_gaps"]) > 0
+    assert "empty" in data["draft_explanation"].lower()
+    assert "Truthful Application Invariant" in data["heuristic_notice"]
+
+
+def test_job_application_draft_with_candidate_evidence(api_client: TestClient) -> None:
+    """Tailors application materials and records strict evidence traceability when facts exist."""
+    import hashlib
+    api_client.post("/api/v1/jobs/seed-fixtures", headers=local_headers())
+    list_res = api_client.get("/api/v1/jobs")
+    py_job = next(j for j in list_res.json()["items"] if "Python" in j["title"])
+    job_id = py_job["id"]
+
+    # Insert candidate document and facts
+    session_factory = api_client.app.state.session_factory
+    real_doc_id = str(uuid4())
+    doc_ver_id = str(uuid4())
+    fact_id = str(uuid4())
+    emp_fact_id = str(uuid4())
+
+    with session_factory() as session:
+        doc = CandidateDocument(id=real_doc_id, display_name="Verified_Profile.txt", state="ACTIVE")
+        session.add(doc)
+
+        blob_content = b"Candidate Facts: 5 years Python experience at CloudCo.\n"
+        b_hash = hashlib.sha256(blob_content).hexdigest()
+        blob = CandidateDocumentBlob(
+            content_hash=b_hash,
+            storage_key=f"blobs/{b_hash}",
+            byte_size=len(blob_content),
+            media_type="text/plain",
+        )
+        session.add(blob)
+
+        ver = CandidateDocumentVersion(
+            id=doc_ver_id,
+            document_id=real_doc_id,
+            version_number=1,
+            blob_hash=b_hash,
+            original_filename="Verified_Profile.txt",
+        )
+        session.add(ver)
+
+        fact = CandidateFact(
+            id=fact_id,
+            fact_type=FactType.SKILL.value,
+            value_json={"name": "Python", "years_experience": 5},
+            value_hash=hashlib.sha256(b"Python").hexdigest(),
+            verification_state=FactVerificationState.DOCUMENT_SUPPORTED.value,
+        )
+        session.add(fact)
+
+        ev = CandidateFactEvidence(
+            id=str(uuid4()),
+            fact_id=fact.id,
+            document_version_id=ver.id,
+            byte_start=25,
+            byte_end=31,
+            evidence_hash=b_hash,
+            method="EXACT_SPAN",
+        )
+        session.add(ev)
+
+        emp_fact = CandidateFact(
+            id=emp_fact_id,
+            fact_type=FactType.EMPLOYMENT.value,
+            value_json={
+                "title": "Lead Software Engineer",
+                "employer": "CloudCo",
+                "start_date": "2019-01-01",
+                "end_date": "2024-06-01",
+                "description": "Led backend architecture.",
+                "skills": ["Python", "FastAPI"],
+            },
+            value_hash=hashlib.sha256(b"CloudCo").hexdigest(),
+            verification_state=FactVerificationState.USER_VERIFIED.value,
+        )
+        session.add(emp_fact)
+        session.commit()
+
+    res = api_client.get(f"/api/v1/jobs/{job_id}/application-draft")
+    assert res.status_code == 200
+    data = res.json()
+
+    assert data["has_sufficient_evidence"] is True
+    assert data["job_posting_id"] == job_id
+    assert "CloudCo" in data["resume_markdown"]
+    assert "Lead Software Engineer" in data["resume_markdown"]
+    assert "Python" in data["resume_markdown"]
+
+    assert "CloudCo" in data["cover_letter_markdown"]
+    assert len(data["addressed_requirements"]) > 0
+    py_req = next(r for r in data["addressed_requirements"] if "Python" in r["requirement_text"])
+    assert py_req["status"] == "MET"
+    assert len(py_req["supporting_claims"]) > 0
+    assert py_req["supporting_claims"][0]["fact_id"] == fact_id
+    assert py_req["supporting_claims"][0]["verification_state"] == FactVerificationState.DOCUMENT_SUPPORTED.value
+    assert py_req["supporting_claims"][0]["provenance_count"] >= 1
+
+
+def test_job_application_draft_adversarial_isolation(api_client: TestClient) -> None:
+    """Confirms non-existent jobs return 404 and rejected/superseded facts are never exposed."""
+    import hashlib
+    # 1. 404 for unknown job
+    res_404 = api_client.get(f"/api/v1/jobs/{uuid4()}/application-draft")
+    assert res_404.status_code == 404
+    assert res_404.json()["detail"] == "POSTING_NOT_FOUND"
+
+    # 2. Add fixture job
+    api_client.post("/api/v1/jobs/seed-fixtures", headers=local_headers())
+    list_res = api_client.get("/api/v1/jobs")
+    job_id = list_res.json()["items"][0]["id"]
+
+    # 3. Insert REJECTED and SUPERSEDED candidate facts
+    session_factory = api_client.app.state.session_factory
+    rej_id = str(uuid4())
+    sup_id = str(uuid4())
+    doc_id = str(uuid4())
+    doc_ver_id = str(uuid4())
+
+    with session_factory() as session:
+        doc = CandidateDocument(id=doc_id, display_name="Dirty_Doc.txt", state="ACTIVE")
+        session.add(doc)
+        blob_content = b"Dirty evidence: MaliciousSkill, DeprecatedSkill\n"
+        b_hash = hashlib.sha256(blob_content).hexdigest()
+        blob = CandidateDocumentBlob(
+            content_hash=b_hash,
+            storage_key=f"blobs/{b_hash}",
+            byte_size=len(blob_content),
+            media_type="text/plain",
+        )
+        session.add(blob)
+        ver = CandidateDocumentVersion(
+            id=doc_ver_id,
+            document_id=doc_id,
+            version_number=1,
+            blob_hash=b_hash,
+            original_filename="Dirty_Doc.txt",
+        )
+        session.add(ver)
+
+        rej_fact = CandidateFact(
+            id=rej_id,
+            fact_type=FactType.SKILL.value,
+            value_json={"name": "MaliciousSkill"},
+            value_hash=hashlib.sha256(b"MaliciousSkill").hexdigest(),
+            verification_state=FactVerificationState.REJECTED.value,
+        )
+        session.add(rej_fact)
+
+        sup_fact = CandidateFact(
+            id=sup_id,
+            fact_type=FactType.SKILL.value,
+            value_json={"name": "DeprecatedSkill"},
+            value_hash=hashlib.sha256(b"DeprecatedSkill").hexdigest(),
+            verification_state=FactVerificationState.SUPERSEDED.value,
+        )
+        session.add(sup_fact)
+        session.commit()
+
+    res = api_client.get(f"/api/v1/jobs/{job_id}/application-draft")
+    assert res.status_code == 200
+    data = res.json()
+
+    # Neither rejected nor superseded facts should appear anywhere in the response
+    assert "MaliciousSkill" not in data["resume_markdown"]
+    assert "MaliciousSkill" not in data["cover_letter_markdown"]
+    assert "DeprecatedSkill" not in data["resume_markdown"]
+    assert "DeprecatedSkill" not in data["cover_letter_markdown"]
+    all_returned_fact_ids = [
+        c["fact_id"]
+        for c in (data.get("unreviewed_claims", []) + data.get("conflicted_claims", []))
+    ]
+    for r in data.get("addressed_requirements", []):
+        all_returned_fact_ids.extend([sc["fact_id"] for sc in r.get("supporting_claims", [])])
+    assert rej_id not in all_returned_fact_ids
+    assert sup_id not in all_returned_fact_ids

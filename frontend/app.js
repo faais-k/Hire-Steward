@@ -19,6 +19,11 @@
     detailError: null,
     candidateEvidenceCount: 0,
     activeTab: "assessment",
+    draftSubTab: "resume",
+    draftViewMode: "edit",
+    draftsByJobId: {},
+    isLoadingDraft: false,
+    draftError: null,
     filters: {
       search: "",
       workplace: "",
@@ -179,6 +184,167 @@
       elements.seedBtn.disabled = false;
       elements.seedBtn.innerHTML = originalText;
     }
+  }
+
+  // Application Preparation Client & Persistence
+  async function fetchApplicationDraft(jobId) {
+    state.isLoadingDraft = true;
+    state.draftError = null;
+    renderJobDetail();
+
+    try {
+      const res = await fetch(`/api/v1/jobs/${encodeURIComponent(jobId)}/application-draft`, {
+        headers: { "Accept": "application/json" },
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || `Server returned ${res.status}`);
+      }
+      const data = await res.json();
+      state.draftsByJobId[jobId] = data;
+    } catch (err) {
+      state.draftError = err.message || "Failed to load application draft.";
+    } finally {
+      state.isLoadingDraft = false;
+      renderJobDetail();
+    }
+  }
+
+  function getDraftStorageKey(jobId) {
+    return `hire_steward_draft_${jobId}`;
+  }
+
+  function getLocalDraftData(jobId, serverDraft) {
+    if (!serverDraft) return { resume: "", coverLetter: "", isEdited: false, updatedAt: null };
+    try {
+      const raw = localStorage.getItem(getDraftStorageKey(jobId));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          resume: parsed.resume !== undefined ? parsed.resume : serverDraft.resume_markdown,
+          coverLetter: parsed.cover_letter !== undefined ? parsed.cover_letter : serverDraft.cover_letter_markdown,
+          isEdited: true,
+          updatedAt: parsed.updated_at,
+        };
+      }
+    } catch {}
+    return {
+      resume: serverDraft.resume_markdown,
+      coverLetter: serverDraft.cover_letter_markdown,
+      isEdited: false,
+      updatedAt: null,
+    };
+  }
+
+  function saveLocalDraft(jobId, resume, coverLetter) {
+    try {
+      const payload = {
+        resume,
+        cover_letter: coverLetter,
+        updated_at: new Date().toISOString(),
+      };
+      localStorage.setItem(getDraftStorageKey(jobId), JSON.stringify(payload));
+    } catch (e) {
+      console.warn("Failed to save draft to localStorage", e);
+    }
+  }
+
+  function resetLocalDraft(jobId) {
+    try {
+      localStorage.removeItem(getDraftStorageKey(jobId));
+    } catch (e) {
+      console.warn("Failed to remove draft from localStorage", e);
+    }
+  }
+
+  async function copyTextToClipboard(text, btnElement) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    const origHtml = btnElement.innerHTML;
+    btnElement.textContent = "Copied!";
+    setTimeout(() => {
+      btnElement.innerHTML = origHtml;
+    }, 1500);
+  }
+
+  function exportMarkdownFile(filename, content) {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function renderMarkdown(md) {
+    if (!md) return "";
+    const lines = md.split("\n");
+    let html = "";
+    let inList = false;
+
+    for (let rawLine of lines) {
+      let line = escapeHtml(rawLine);
+
+      if (line.startsWith("# ")) {
+        if (inList) { html += "</ul>"; inList = false; }
+        html += `<h1>${line.slice(2)}</h1>`;
+        continue;
+      }
+      if (line.startsWith("## ")) {
+        if (inList) { html += "</ul>"; inList = false; }
+        html += `<h2>${line.slice(3)}</h2>`;
+        continue;
+      }
+      if (line.startsWith("### ")) {
+        if (inList) { html += "</ul>"; inList = false; }
+        html += `<h3>${line.slice(4)}</h3>`;
+        continue;
+      }
+      if (line.startsWith("- ") || line.startsWith("* ")) {
+        if (!inList) { html += "<ul>"; inList = true; }
+        html += `<li>${formatInlineMarkdown(line.slice(2))}</li>`;
+        continue;
+      }
+
+      if (inList) { html += "</ul>"; inList = false; }
+
+      if (line.trim() === "") continue;
+
+      html += `<p>${formatInlineMarkdown(line)}</p>`;
+    }
+
+    if (inList) { html += "</ul>"; }
+    return html;
+  }
+
+  function formatInlineMarkdown(text) {
+    let formatted = text.replace(/`([^`]+)`/g, "<code>$1</code>");
+    formatted = formatted.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    formatted = formatted.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, label, href) => {
+      const cleanHref = href.trim();
+      const lowerHref = cleanHref.toLowerCase();
+      if (
+        lowerHref.startsWith("http://") ||
+        lowerHref.startsWith("https://") ||
+        lowerHref.startsWith("mailto:")
+      ) {
+        return `<a href="${cleanHref}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      }
+      return `${label} (${cleanHref})`;
+    });
+    return formatted;
   }
 
   function selectJob(postingId, isUserClick = false) {
@@ -347,9 +513,17 @@
             <h2 class="detail-title">${escapeHtml(snapshot.title)}</h2>
             <div class="detail-employer">${escapeHtml(posting.employer_handle)} • ${escapeHtml(snapshot.department || snapshot.team || "Engineering")}</div>
           </div>
-          <span class="tier-badge tier-${escapeHtml(assessment.fit_tier)}" style="font-size:12px; padding:4px 8px;">
-            ${escapeHtml(formatTierLabel(assessment.fit_tier))}
-          </span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button type="button" class="btn-primary" id="header-prepare-btn" title="Synthesize evidence-grounded resume and cover letter">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="13" height="13">
+                <path d="M11 2H5a2 2 0 00-2 2v8a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2zM5 5h6M5 8h6M5 11h4" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              <span>Prepare Application</span>
+            </button>
+            <span class="tier-badge tier-${escapeHtml(assessment.fit_tier)}" style="font-size:12px; padding:4px 8px;">
+              ${escapeHtml(formatTierLabel(assessment.fit_tier))}
+            </span>
+          </div>
         </div>
 
         <div class="detail-tags">
@@ -414,21 +588,42 @@
           <button type="button" class="tab-btn ${state.activeTab === "assessment" ? "active" : ""}" data-tab="assessment" role="tab">Match Assessment (${reqEvals.length + prefEvals.length})</button>
           <button type="button" class="tab-btn ${state.activeTab === "description" ? "active" : ""}" data-tab="description" role="tab">Stated Description</button>
           <button type="button" class="tab-btn ${state.activeTab === "grounding" ? "active" : ""}" data-tab="grounding" role="tab">Candidate Grounding</button>
+          <button type="button" class="tab-btn ${state.activeTab === "draft" ? "active" : ""}" data-tab="draft" role="tab">Application Draft</button>
         </div>
 
         <div id="tab-content-area">
-          ${renderTabContent(state.activeTab, { reqEvals, prefEvals, gaps, uncertainties, snapshot, assessment })}
+          ${renderTabContent(state.activeTab, { posting, reqEvals, prefEvals, gaps, uncertainties, snapshot, assessment })}
         </div>
       </div>
     `;
+
+    // Attach header prepare button handler
+    const headerPrepareBtn = pane.querySelector("#header-prepare-btn");
+    if (headerPrepareBtn) {
+      headerPrepareBtn.addEventListener("click", () => {
+        state.activeTab = "draft";
+        renderJobDetail();
+        if (!state.draftsByJobId[posting.id]) {
+          fetchApplicationDraft(posting.id);
+        }
+      });
+    }
 
     // Attach tab click handlers
     pane.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         state.activeTab = btn.getAttribute("data-tab");
         renderJobDetail();
+        if (state.activeTab === "draft" && !state.draftsByJobId[posting.id] && !state.isLoadingDraft) {
+          fetchApplicationDraft(posting.id);
+        }
       });
     });
+
+    // Attach draft event handlers if draft tab is active
+    if (state.activeTab === "draft") {
+      attachDraftEventListeners(pane, posting);
+    }
 
     // Attach mobile back button handler
     const backBtn = pane.querySelector("#mobile-back-btn");
@@ -440,6 +635,10 @@
   }
 
   function renderTabContent(tab, data) {
+    if (tab === "draft") {
+      return renderDraftTab(data.posting.id, data.snapshot, data.posting);
+    }
+
     if (tab === "description") {
       const lists = data.snapshot.lists_json || [];
       return `
@@ -581,6 +780,344 @@
         ` : ""}
       </div>
     `;
+  }
+
+  function renderDraftTab(postingId, snapshot, posting) {
+    if (state.isLoadingDraft) {
+      return `
+        <div style="padding: 24px 0; text-align: center;">
+          <div class="skeleton-line" style="margin-bottom:8px;"></div>
+          <div class="skeleton-line mid" style="margin-bottom:8px;"></div>
+          <div style="font-size:12px; color:var(--muted); margin-top:12px;">Synthesizing evidence-grounded application materials...</div>
+        </div>
+      `;
+    }
+
+    if (state.draftError) {
+      return `
+        <div class="state-box" style="margin: 16px 0;">
+          <div class="state-title">Draft Preparation Error</div>
+          <div class="state-desc">${escapeHtml(state.draftError)}</div>
+          <button type="button" class="btn-secondary" id="retry-draft-btn">Retry</button>
+        </div>
+      `;
+    }
+
+    const serverDraft = state.draftsByJobId[postingId];
+    if (!serverDraft) {
+      return `
+        <div style="padding: 24px 0; text-align: center;">
+          <div style="font-size:12px; color:var(--muted); margin-bottom:12px;">Click below to synthesize a tailored, evidence-grounded application draft.</div>
+          <button type="button" class="btn-primary" id="start-draft-btn">Synthesize Tailored Draft</button>
+        </div>
+      `;
+    }
+
+    // If insufficient evidence
+    if (!serverDraft.has_sufficient_evidence) {
+      return `
+        <div class="draft-container">
+          <div class="warning-box" style="background:var(--negative-bg); border-color:#fca5a5; color:var(--negative-ink); padding:14px; border-radius:var(--radius-card);">
+            <div style="font-weight:700; font-size:13px; margin-bottom:4px;">Cannot Generate Truthful Application Materials</div>
+            <div style="font-size:12px; line-height:1.45;">${escapeHtml(serverDraft.draft_explanation)}</div>
+            <div style="font-size:11px; margin-top:8px; font-weight:600; opacity:0.85;">${escapeHtml(serverDraft.heuristic_notice)}</div>
+          </div>
+
+          <h3 style="font-size:13px; font-weight:600; color:var(--text); margin-top:8px;">Identified Qualification Gaps (${serverDraft.evidence_gaps.length})</h3>
+          <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">The candidate profile has no supporting evidence for these stated requirements:</div>
+          <div>
+            ${serverDraft.evidence_gaps.map(gap => `
+              <div class="req-item-card">
+                <div class="req-item-header">
+                  <span class="req-item-title">${escapeHtml(gap.requirement_text)}</span>
+                  <span class="status-badge status-INSUFFICIENT_EVIDENCE">No Evidence</span>
+                </div>
+                <div style="font-size:11px; color:var(--muted);">${escapeHtml(gap.gap_explanation)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // Has sufficient evidence
+    const localData = getLocalDraftData(postingId, serverDraft);
+    const subTab = state.draftSubTab || "resume";
+    const viewMode = state.draftViewMode || "edit";
+
+    let html = `<div class="draft-container">`;
+
+    // Unreviewed warning banner if applicable
+    if (serverDraft.unreviewed_claims && serverDraft.unreviewed_claims.length > 0) {
+      html += `
+        <div class="heuristic-banner" style="background:var(--warning-bg); border-color:#fde68a; color:var(--warning-ink); margin-bottom:8px;" role="alert">
+          <strong>Verification Notice:</strong> ${serverDraft.unreviewed_claims.length} statement(s) in this draft rely on candidate facts currently marked UNREVIEWED. Please verify them before submitting.
+        </div>
+      `;
+    }
+
+    // Conflicted notice if applicable
+    if (serverDraft.conflicted_claims && serverDraft.conflicted_claims.length > 0) {
+      html += `
+        <div class="heuristic-banner" style="background:var(--neutral-bg); border-color:var(--border); color:var(--muted); margin-bottom:8px;">
+          <strong>Excluded Conflicts:</strong> ${serverDraft.conflicted_claims.length} conflicted candidate fact(s) were excluded to maintain truthfulness.
+        </div>
+      `;
+    }
+
+    // Local draft isolation notice
+    html += `
+      <div class="heuristic-banner" style="background:var(--surface-subtle); border-color:var(--border); color:var(--muted); font-size:11px; margin-bottom:10px;">
+        <strong>Local Draft Storage:</strong> Working drafts and user edits are saved in this browser's local storage. Local drafts can persist across browser restarts, can be cleared by the user or browser data settings, and may be accessible to scripts running on the same origin (not encrypted private storage). Edits do not alter underlying candidate evidence records, verification states, or server database models.
+      </div>
+    `;
+
+    // Sub-tabs navigation
+    html += `
+      <div class="draft-subtabs" role="tablist">
+        <button type="button" class="draft-subtab-btn ${subTab === "resume" ? "active" : ""}" data-subtab="resume" role="tab">Tailored Resume</button>
+        <button type="button" class="draft-subtab-btn ${subTab === "cover_letter" ? "active" : ""}" data-subtab="cover_letter" role="tab">Tailored Cover Letter</button>
+        <button type="button" class="draft-subtab-btn ${subTab === "addressed" ? "active" : ""}" data-subtab="addressed" role="tab">Addressed Qualifications (${serverDraft.addressed_requirements.length})</button>
+        <button type="button" class="draft-subtab-btn ${subTab === "gaps" ? "active" : ""}" data-subtab="gaps" role="tab">Evidence Gaps (${serverDraft.evidence_gaps.length})</button>
+        <button type="button" class="draft-subtab-btn ${subTab === "traceability" ? "active" : ""}" data-subtab="traceability" role="tab">Traceability Audit</button>
+      </div>
+    `;
+
+    // Sub-tab content
+    if (subTab === "resume") {
+      const currentText = localData.resume;
+      html += `
+        <div class="draft-toolbar">
+          <div class="draft-toolbar-left">
+            <button type="button" class="btn-secondary" id="toggle-view-btn">
+              ${viewMode === "edit" ? "Preview Markdown" : "Edit Markdown"}
+            </button>
+            <span class="save-pill" id="draft-save-pill">
+              ${localData.isEdited ? "Autosaved in browser" : "Grounded server draft"}
+            </span>
+          </div>
+          <div class="draft-toolbar-right">
+            ${localData.isEdited ? `<button type="button" class="btn-secondary" id="reset-draft-btn" title="Reset edits back to server-generated version">Reset to Original</button>` : ""}
+            <button type="button" class="btn-secondary" id="copy-draft-btn">Copy Resume</button>
+            <button type="button" class="btn-secondary" id="export-draft-btn">Export Markdown</button>
+          </div>
+        </div>
+
+        ${viewMode === "edit" ? `
+          <textarea class="draft-editor-textarea" id="resume-textarea" aria-label="Edit tailored resume markdown">${escapeHtml(currentText)}</textarea>
+        ` : `
+          <div class="draft-rendered-preview">${renderMarkdown(currentText)}</div>
+        `}
+      `;
+    } else if (subTab === "cover_letter") {
+      const currentText = localData.coverLetter;
+      html += `
+        <div class="draft-toolbar">
+          <div class="draft-toolbar-left">
+            <button type="button" class="btn-secondary" id="toggle-view-btn">
+              ${viewMode === "edit" ? "Preview Markdown" : "Edit Markdown"}
+            </button>
+            <span class="save-pill" id="draft-save-pill">
+              ${localData.isEdited ? "Autosaved in browser" : "Grounded server draft"}
+            </span>
+          </div>
+          <div class="draft-toolbar-right">
+            ${localData.isEdited ? `<button type="button" class="btn-secondary" id="reset-draft-btn" title="Reset edits back to server-generated version">Reset to Original</button>` : ""}
+            <button type="button" class="btn-secondary" id="copy-draft-btn">Copy Cover Letter</button>
+            <button type="button" class="btn-secondary" id="export-draft-btn">Export Markdown</button>
+          </div>
+        </div>
+
+        ${viewMode === "edit" ? `
+          <textarea class="draft-editor-textarea" id="cover-textarea" aria-label="Edit tailored cover letter markdown">${escapeHtml(currentText)}</textarea>
+        ` : `
+          <div class="draft-rendered-preview">${renderMarkdown(currentText)}</div>
+        `}
+      `;
+    } else if (subTab === "addressed") {
+      html += `
+        <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+          The following job requirements are directly addressed by verified candidate facts in this draft:
+        </div>
+        ${serverDraft.addressed_requirements.map(item => `
+          <div class="req-item-card">
+            <div class="req-item-header">
+              <span class="req-item-title">${escapeHtml(item.requirement_text)}</span>
+              <span class="status-badge status-MET">Addressed</span>
+            </div>
+            <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">${escapeHtml(item.explanation)}</div>
+            <div>
+              ${item.supporting_claims.map(c => `
+                <span class="claim-chip" title="Fact ID: ${escapeHtml(c.fact_id)}">
+                  <span>${escapeHtml(c.statement)}</span>
+                  <span style="color:var(--faint); font-size:10px;">[${escapeHtml(c.verification_state)}]</span>
+                  ${c.is_unreviewed ? `<span style="color:var(--warning-ink); font-weight:700;">[UNREVIEWED]</span>` : ""}
+                  <span style="color:var(--accent); font-size:10px;">${c.provenance_count} span(s)</span>
+                </span>
+              `).join("")}
+            </div>
+          </div>
+        `).join("")}
+      `;
+    } else if (subTab === "gaps") {
+      html += `
+        <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">
+          The following job requirements lack recorded candidate evidence. The draft honestly acknowledges these without fabricating experience:
+        </div>
+        ${serverDraft.evidence_gaps.map(gap => `
+          <div class="req-item-card">
+            <div class="req-item-header">
+              <span class="req-item-title">${escapeHtml(gap.requirement_text)}</span>
+              <span class="status-badge status-INSUFFICIENT_EVIDENCE">No Evidence</span>
+            </div>
+            <div style="font-size:11px; color:var(--muted);">${escapeHtml(gap.gap_explanation)}</div>
+          </div>
+        `).join("")}
+      `;
+    } else if (subTab === "traceability") {
+      html += `
+        <div class="detail-panel">
+          <div class="panel-header">
+            <span class="panel-title">Evidence Traceability & Audit Ledger</span>
+            <span class="panel-sub">Strict Provenance</span>
+          </div>
+          <div style="font-size:12px; color:var(--text); line-height:1.5; margin-bottom:12px;">
+            ${escapeHtml(serverDraft.draft_explanation)}
+          </div>
+          <div style="font-size:11px; color:var(--faint); line-height:1.45; border-top:1px dashed var(--rule); padding-top:8px;">
+            ${escapeHtml(serverDraft.heuristic_notice)}
+          </div>
+        </div>
+
+        ${serverDraft.unreviewed_claims.length > 0 ? `
+          <div style="margin-top:12px;">
+            <div style="font-size:12px; font-weight:600; color:var(--warning); margin-bottom:6px;">Unreviewed Claims Requiring User Confirmation (${serverDraft.unreviewed_claims.length})</div>
+            ${serverDraft.unreviewed_claims.map(u => `
+              <div class="req-item-card">
+                <span class="req-item-title">${escapeHtml(u.statement)}</span>
+                <div style="font-size:11px; color:var(--muted);">Relevance: ${escapeHtml(u.relevance_reason)} | Provenance: ${u.provenance_count} span(s)</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+
+        ${serverDraft.conflicted_claims.length > 0 ? `
+          <div style="margin-top:12px;">
+            <div style="font-size:12px; font-weight:600; color:var(--negative); margin-bottom:6px;">Excluded Conflicted Candidate Facts (${serverDraft.conflicted_claims.length})</div>
+            ${serverDraft.conflicted_claims.map(c => `
+              <div class="req-item-card">
+                <span class="req-item-title">${escapeHtml(c.statement)}</span>
+                <div style="font-size:11px; color:var(--muted);">${escapeHtml(c.relevance_reason)}</div>
+              </div>
+            `).join("")}
+          </div>
+        ` : ""}
+      `;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  function attachDraftEventListeners(pane, posting) {
+    const serverDraft = state.draftsByJobId[posting.id];
+
+    // Start / Retry draft buttons
+    const startBtn = pane.querySelector("#start-draft-btn");
+    if (startBtn) {
+      startBtn.addEventListener("click", () => fetchApplicationDraft(posting.id));
+    }
+    const retryBtn = pane.querySelector("#retry-draft-btn");
+    if (retryBtn) {
+      retryBtn.addEventListener("click", () => fetchApplicationDraft(posting.id));
+    }
+
+    if (!serverDraft || !serverDraft.has_sufficient_evidence) return;
+
+    const localData = getLocalDraftData(posting.id, serverDraft);
+
+    // Subtab navigation
+    pane.querySelectorAll(".draft-subtab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.draftSubTab = btn.getAttribute("data-subtab");
+        renderJobDetail();
+      });
+    });
+
+    // Toggle view mode (Edit vs Preview)
+    const toggleViewBtn = pane.querySelector("#toggle-view-btn");
+    if (toggleViewBtn) {
+      toggleViewBtn.addEventListener("click", () => {
+        state.draftViewMode = (state.draftViewMode === "edit" ? "preview" : "edit");
+        renderJobDetail();
+      });
+    }
+
+    // Resume textarea auto-save
+    const resumeTextarea = pane.querySelector("#resume-textarea");
+    if (resumeTextarea) {
+      resumeTextarea.addEventListener("input", e => {
+        saveLocalDraft(posting.id, e.target.value, localData.coverLetter);
+        const pill = pane.querySelector("#draft-save-pill");
+        if (pill) pill.textContent = "Autosaved in browser";
+      });
+    }
+
+    // Cover letter textarea auto-save
+    const coverTextarea = pane.querySelector("#cover-textarea");
+    if (coverTextarea) {
+      coverTextarea.addEventListener("input", e => {
+        saveLocalDraft(posting.id, localData.resume, e.target.value);
+        const pill = pane.querySelector("#draft-save-pill");
+        if (pill) pill.textContent = "Autosaved in browser";
+      });
+    }
+
+    // Reset to original draft
+    const resetBtn = pane.querySelector("#reset-draft-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        if (confirm("Reset this application draft back to the original server-generated version? Local edits will be lost.")) {
+          resetLocalDraft(posting.id);
+          state.draftViewMode = "edit";
+          renderJobDetail();
+        }
+      });
+    }
+
+    // Copy draft
+    const copyBtn = pane.querySelector("#copy-draft-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => {
+        const textToCopy = state.draftSubTab === "cover_letter" ? localData.coverLetter : localData.resume;
+        copyTextToClipboard(textToCopy, copyBtn);
+      });
+    }
+
+    // Export draft
+    const exportBtn = pane.querySelector("#export-draft-btn");
+    if (exportBtn) {
+      exportBtn.addEventListener("click", () => {
+        const filename = `${posting.employer_handle || "application"}_${posting.id.slice(0, 8)}_draft.md`;
+        const exportContent = [
+          `# Tailored Application Draft: ${serverDraft.job_title} at ${serverDraft.employer_handle}`,
+          `*Generated deterministically from verified candidate evidence on ${serverDraft.generated_at}*`,
+          "",
+          "---",
+          "",
+          "## Tailored Resume",
+          "",
+          localData.resume,
+          "",
+          "---",
+          "",
+          "## Tailored Cover Letter",
+          "",
+          localData.coverLetter,
+        ].join("\n");
+        exportMarkdownFile(filename, exportContent);
+      });
+    }
   }
 
   function clearFilters() {

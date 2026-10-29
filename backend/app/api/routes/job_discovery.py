@@ -18,7 +18,9 @@ from backend.app.db.models import (
     JobPostingSnapshot,
     JobSource,
 )
+from backend.app.domain.application_preparation import ApplicationPreparationError
 from backend.app.domain.job_matching import assess_job_match
+from backend.app.services.application_preparation import prepare_application_draft
 from backend.app.services.job_matching import (
     evaluate_job_posting_match,
     load_candidate_evidence,
@@ -296,6 +298,22 @@ def get_job_detail(
             "assessed_at": assessment.assessed_at.isoformat(),
         },
     }
+
+
+@router.get("/jobs/{posting_id}/application-draft")
+def get_job_application_draft(
+    posting_id: str,
+    session: Session = Depends(get_session),
+) -> dict[str, Any]:
+    """Retrieve deterministic evidence-grounded application materials for a job posting."""
+    try:
+        draft = prepare_application_draft(session, posting_id)
+    except ApplicationPreparationError as exc:
+        if exc.code in {"POSTING_NOT_FOUND", "SNAPSHOT_NOT_FOUND"}:
+            raise HTTPException(status_code=404, detail=exc.code)
+        raise HTTPException(status_code=400, detail=exc.message)
+
+    return draft.model_dump()
 
 
 SAMPLE_JOBS = [
