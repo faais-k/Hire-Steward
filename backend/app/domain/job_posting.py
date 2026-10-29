@@ -394,6 +394,32 @@ SECTION_HEADING_PATTERN = re.compile(
 BULLET_PREFIX_PATTERN = re.compile(r"^[-*••‣◦⁃∙]\s*|\A[0-9]+[.)]\s*")
 
 
+def _normalize_html_markup(text: str) -> str:
+    """Normalize basic HTML formatting into clean plain-text lines and bullets."""
+    if not ("<" in text and ">" in text):
+        return text
+    # Strip script and style blocks
+    s = re.sub(r"(?is)<\s*(?:script|style)\b[^>]*>.*?</\s*(?:script|style)\s*>", "", text)
+    # Strip HTML comments
+    s = re.sub(r"(?s)<!--.*?-->", "", s)
+    # Convert block closing and break tags to newlines
+    s = re.sub(r"(?i)<\s*(?:br\s*/?|/\s*(?:p|div|li|h[1-6]|tr))\s*>", "\n", s)
+    # Convert opening li tags to markdown bullets
+    s = re.sub(r"(?i)<\s*li(?:\s+[^>]*)?>", "\n- ", s)
+    # Remove all remaining HTML tags starting with an element letter or closing slash
+    s = re.sub(r"</?[a-zA-Z][^>]*>", "", s)
+    # Decode basic HTML entities
+    s = (
+        s.replace("&amp;", "&")
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", '"')
+        .replace("&#39;", "'")
+        .replace("&nbsp;", " ")
+    )
+    return s
+
+
 def extract_sections_from_plain_text(description_plain: str) -> list[dict[str, Any]]:
     """Parse structured list sections from plain text descriptions.
 
@@ -407,7 +433,9 @@ def extract_sections_from_plain_text(description_plain: str) -> list[dict[str, A
     current_title: str | None = None
     current_items: list[str] = []
 
-    for line in description_plain.splitlines():
+    normalized_plain = _normalize_html_markup(description_plain)
+
+    for line in normalized_plain.splitlines():
         trimmed = line.strip()
         if not trimmed:
             continue

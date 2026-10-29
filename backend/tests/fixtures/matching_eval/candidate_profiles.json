@@ -1,0 +1,705 @@
+{
+  "standard_senior_dev": {
+    "description": "Experienced senior backend developer with 8+ years verified tenure, CS degree, Python, PostgreSQL, Docker, FastAPI, Redis, Git, Linux, CI/CD",
+    "facts": [
+      {
+        "fact_id": "fact_std_python",
+        "fact_type": "SKILL",
+        "value": {"name": "Python"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_py",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 100,
+            "byte_end": 140,
+            "evidence_hash": "a1b2c3d4e5f60102030405060708090a1b2c3d4e5f60102030405060708090a1",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_postgres",
+        "fact_type": "SKILL",
+        "value": {"name": "PostgreSQL"},
+        "verification_state": "USER_VERIFIED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_pg",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 145,
+            "byte_end": 180,
+            "evidence_hash": "b2c3d4e5f60102030405060708090a1b2c3d4e5f60102030405060708090a1b2",
+            "method": "USER_AFFIRMED"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_docker",
+        "fact_type": "SKILL",
+        "value": {"name": "Docker"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_dock",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 185,
+            "byte_end": 210,
+            "evidence_hash": "c3d4e5f60102030405060708090a1b2c3d4e5f60102030405060708090a1b2c3",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_fastapi",
+        "fact_type": "SKILL",
+        "value": {"name": "FastAPI"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_fa",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 215,
+            "byte_end": 240,
+            "evidence_hash": "d4e5f60102030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_redis",
+        "fact_type": "SKILL",
+        "value": {"name": "Redis"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_red",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 245,
+            "byte_end": 265,
+            "evidence_hash": "e5f60102030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_git",
+        "fact_type": "SKILL",
+        "value": {"name": "Git"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_git",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 270,
+            "byte_end": 285,
+            "evidence_hash": "f60102030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_linux",
+        "fact_type": "SKILL",
+        "value": {"name": "Linux"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_lin",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 290,
+            "byte_end": 310,
+            "evidence_hash": "0102030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f601",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_cicd",
+        "fact_type": "SKILL",
+        "value": {"name": "CI/CD"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_cicd",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 315,
+            "byte_end": 335,
+            "evidence_hash": "1202030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f612",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_edu_btech",
+        "fact_type": "EDUCATION",
+        "value": {
+          "institution": "Anna University",
+          "credential": "B.Tech",
+          "field_of_study": "Computer Science",
+          "graduation_year": 2018
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_edu",
+            "document_version_id": "doc_std_degree_v1",
+            "byte_start": 0,
+            "byte_end": 60,
+            "evidence_hash": "2302030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f623",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_emp_1",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "TechCorp Global",
+          "title": "Senior Software Engineer",
+          "start_date": "2021-01-01",
+          "end_date": "2026-10-01"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_emp1",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 400,
+            "byte_end": 480,
+            "evidence_hash": "3402030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f634",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_emp_2",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "StartCo Labs",
+          "title": "Software Engineer",
+          "start_date": "2018-07-01",
+          "end_date": "2020-12-31"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_emp2",
+            "document_version_id": "doc_std_resume_v1",
+            "byte_start": 490,
+            "byte_end": 560,
+            "evidence_hash": "4502030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f645",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_std_workplace",
+        "fact_type": "WORKPLACE",
+        "value": {
+          "preference": "remote or hybrid",
+          "location": "Bangalore, India",
+          "willing_to_relocate": false
+        },
+        "verification_state": "USER_VERIFIED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_std_wp",
+            "document_version_id": "doc_std_pref_v1",
+            "byte_start": 0,
+            "byte_end": 35,
+            "evidence_hash": "5602030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f656",
+            "method": "USER_AFFIRMED"
+          }
+        ]
+      }
+    ]
+  },
+  "junior_frontend_dev": {
+    "description": "Junior frontend developer with 0.5 years tenure, BS IT, React, JavaScript, HTML, CSS, Git",
+    "facts": [
+      {
+        "fact_id": "fact_jr_js",
+        "fact_type": "SKILL",
+        "value": {"name": "JavaScript"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_js",
+            "document_version_id": "doc_jr_resume_v1",
+            "byte_start": 50,
+            "byte_end": 75,
+            "evidence_hash": "6702030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f667",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_jr_react",
+        "fact_type": "SKILL",
+        "value": {"name": "React"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_react",
+            "document_version_id": "doc_jr_resume_v1",
+            "byte_start": 80,
+            "byte_end": 105,
+            "evidence_hash": "7802030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f678",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_jr_html",
+        "fact_type": "SKILL",
+        "value": {"name": "HTML"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_html",
+            "document_version_id": "doc_jr_resume_v1",
+            "byte_start": 110,
+            "byte_end": 125,
+            "evidence_hash": "8902030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f689",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_jr_css",
+        "fact_type": "SKILL",
+        "value": {"name": "CSS"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_css",
+            "document_version_id": "doc_jr_resume_v1",
+            "byte_start": 130,
+            "byte_end": 145,
+            "evidence_hash": "9002030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f690",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_jr_git",
+        "fact_type": "SKILL",
+        "value": {"name": "Git"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_git",
+            "document_version_id": "doc_jr_resume_v1",
+            "byte_start": 150,
+            "byte_end": 165,
+            "evidence_hash": "a202030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6a2",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_jr_edu",
+        "fact_type": "EDUCATION",
+        "value": {
+          "institution": "State University",
+          "credential": "B.S.",
+          "field_of_study": "Information Technology",
+          "graduation_year": 2024
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_edu",
+            "document_version_id": "doc_jr_degree_v1",
+            "byte_start": 0,
+            "byte_end": 50,
+            "evidence_hash": "b302030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6b3",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_jr_emp",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "WebAgency",
+          "title": "Frontend Intern",
+          "start_date": "2024-01-01",
+          "end_date": "2024-06-30"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_jr_emp",
+            "document_version_id": "doc_jr_resume_v1",
+            "byte_start": 200,
+            "byte_end": 260,
+            "evidence_hash": "c402030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6c4",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      }
+    ]
+  },
+  "remote_only_dev": {
+    "description": "DevOps / Backend engineer strictly constrained to remote-only work, with Python, Go, Kubernetes, AWS, Terraform",
+    "facts": [
+      {
+        "fact_id": "fact_ro_py",
+        "fact_type": "SKILL",
+        "value": {"name": "Python"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_py",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 10,
+            "byte_end": 30,
+            "evidence_hash": "d502030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6d5",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ro_go",
+        "fact_type": "SKILL",
+        "value": {"name": "Go"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_go",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 35,
+            "byte_end": 50,
+            "evidence_hash": "e602030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6e6",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ro_k8s",
+        "fact_type": "SKILL",
+        "value": {"name": "Kubernetes"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_k8s",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 55,
+            "byte_end": 75,
+            "evidence_hash": "f702030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f6f7",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ro_aws",
+        "fact_type": "SKILL",
+        "value": {"name": "AWS"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_aws",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 80,
+            "byte_end": 95,
+            "evidence_hash": "0802030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f608",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ro_terraform",
+        "fact_type": "SKILL",
+        "value": {"name": "Terraform"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_tf",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 96,
+            "byte_end": 105,
+            "evidence_hash": "0902030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f609",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ro_emp",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "CloudScale Inc",
+          "title": "DevOps Engineer",
+          "start_date": "2020-01-01",
+          "end_date": "2026-01-01"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_emp",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 100,
+            "byte_end": 170,
+            "evidence_hash": "1902030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f619",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ro_workplace",
+        "fact_type": "WORKPLACE",
+        "value": {
+          "preference": "remote only",
+          "willing_to_relocate": false
+        },
+        "verification_state": "USER_VERIFIED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ro_wp",
+            "document_version_id": "doc_ro_v1",
+            "byte_start": 180,
+            "byte_end": 210,
+            "evidence_hash": "2a02030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f62a",
+            "method": "USER_AFFIRMED"
+          }
+        ]
+      }
+    ]
+  },
+  "conflicted_skills_dev": {
+    "description": "Developer with conflicted Java skill and unreviewed facts",
+    "facts": [
+      {
+        "fact_id": "fact_conf_java",
+        "fact_type": "SKILL",
+        "value": {"name": "Java"},
+        "verification_state": "CONFLICTED",
+        "is_active": true,
+        "is_conflicted": true,
+        "provenance": [
+          {
+            "provenance_id": "prov_conf_java",
+            "document_version_id": "doc_conf_v1",
+            "byte_start": 10,
+            "byte_end": 30,
+            "evidence_hash": "3b02030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f63b",
+            "method": "USER_DISPUTED"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_conf_py",
+        "fact_type": "SKILL",
+        "value": {"name": "Python"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_conf_py",
+            "document_version_id": "doc_conf_v1",
+            "byte_start": 35,
+            "byte_end": 50,
+            "evidence_hash": "4c02030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f64c",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_conf_emp",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "LegacyCorp",
+          "title": "Software Engineer",
+          "start_date": "2020-01-01",
+          "end_date": "2024-01-01"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_conf_emp",
+            "document_version_id": "doc_conf_v1",
+            "byte_start": 60,
+            "byte_end": 120,
+            "evidence_hash": "5d02030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f65d",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      }
+    ]
+  },
+  "unreviewed_evidence_dev": {
+    "description": "Developer whose facts have UNREVIEWED verification state and lack document byte-span provenance",
+    "facts": [
+      {
+        "fact_id": "fact_unrev_py",
+        "fact_type": "SKILL",
+        "value": {"name": "Python"},
+        "verification_state": "UNREVIEWED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": []
+      },
+      {
+        "fact_id": "fact_unrev_sql",
+        "fact_type": "SKILL",
+        "value": {"name": "SQL"},
+        "verification_state": "UNREVIEWED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": []
+      }
+    ]
+  },
+  "overlapping_tenure_dev": {
+    "description": "Developer with multiple concurrent/overlapping consulting engagements: calendar span is 6.0 years despite nominal 9.0 years",
+    "facts": [
+      {
+        "fact_id": "fact_ov_py",
+        "fact_type": "SKILL",
+        "value": {"name": "Python"},
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ov_py",
+            "document_version_id": "doc_ov_v1",
+            "byte_start": 10,
+            "byte_end": 30,
+            "evidence_hash": "6e02030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f66e",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ov_emp_1",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "Consultant Client Alpha",
+          "title": "Software Consultant",
+          "start_date": "2020-01-01",
+          "end_date": "2023-01-01"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ov_emp1",
+            "document_version_id": "doc_ov_v1",
+            "byte_start": 40,
+            "byte_end": 100,
+            "evidence_hash": "7f02030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f67f",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ov_emp_2",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "Consultant Client Beta",
+          "title": "Backend Consultant",
+          "start_date": "2020-06-01",
+          "end_date": "2023-06-01"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ov_emp2",
+            "document_version_id": "doc_ov_v1",
+            "byte_start": 110,
+            "byte_end": 170,
+            "evidence_hash": "8002030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f680",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      },
+      {
+        "fact_id": "fact_ov_emp_3",
+        "fact_type": "EMPLOYMENT",
+        "value": {
+          "employer": "Gamma Tech",
+          "title": "Senior Engineer",
+          "start_date": "2023-01-01",
+          "end_date": "2026-01-01"
+        },
+        "verification_state": "DOCUMENT_SUPPORTED",
+        "is_active": true,
+        "is_conflicted": false,
+        "provenance": [
+          {
+            "provenance_id": "prov_ov_emp3",
+            "document_version_id": "doc_ov_v1",
+            "byte_start": 180,
+            "byte_end": 240,
+            "evidence_hash": "9102030405060708090a1b2c3d4e5f60102030405060708090a1b2c3d4e5f691",
+            "method": "PARSED_DOCUMENT"
+          }
+        ]
+      }
+    ]
+  },
+  "empty_profile": {
+    "description": "Empty candidate evidence profile with zero recorded facts",
+    "facts": []
+  }
+}

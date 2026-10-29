@@ -47,6 +47,25 @@ class FitTier(StrEnum):
     INSUFFICIENT_DATA = "INSUFFICIENT_DATA"
 
 
+def normalize_fit_tier(tier: str | FitTier) -> FitTier:
+    """Normalize a fit tier value, alias, or string into the canonical FitTier enum."""
+    if isinstance(tier, FitTier):
+        return tier
+    raw = str(tier).strip()
+    upper = raw.upper()
+    if upper in ("BLOCKED", "CONTRADICTED", "BLOCKED_OR_CONTRADICTED"):
+        return FitTier.BLOCKED_OR_CONTRADICTED
+    if upper in ("INSUFFICIENT", "INSUFFICIENT_DATA", "INCOMPLETE"):
+        return FitTier.INSUFFICIENT_DATA
+    if upper in ("STRONG", "STRONG_MATCH"):
+        return FitTier.STRONG_MATCH
+    if upper in ("PARTIAL", "PARTIAL_MATCH", "GOOD", "GOOD_MATCH"):
+        return FitTier.PARTIAL_MATCH
+    if upper in ("WEAK", "WEAK_MATCH"):
+        return FitTier.WEAK_MATCH
+    return FitTier(raw)
+
+
 class ConfidenceLevel(StrEnum):
     """Confidence in the assessment based on data completeness and verification."""
 
@@ -54,6 +73,14 @@ class ConfidenceLevel(StrEnum):
     MEDIUM = "MEDIUM"
     LOW = "LOW"
     UNKNOWN = "UNKNOWN"
+
+
+def normalize_confidence_level(level: str | ConfidenceLevel) -> ConfidenceLevel:
+    """Normalize a confidence level value or alias into the canonical ConfidenceLevel enum."""
+    if isinstance(level, ConfidenceLevel):
+        return level
+    raw = str(level).strip().upper()
+    return ConfidenceLevel(raw)
 
 
 @dataclass(frozen=True)
@@ -221,6 +248,57 @@ GENERAL_EXPERIENCE_WORDS = {
 }
 
 
+CANONICAL_SKILL_SYNONYMS: dict[str, set[str]] = {
+    "postgres": {"postgresql", "postgres", "psql"},
+    "postgresql": {"postgresql", "postgres", "psql"},
+    "aws": {"aws", "amazon web services"},
+    "amazon web services": {"aws", "amazon web services"},
+    "react": {"react", "reactjs", "react.js"},
+    "reactjs": {"react", "reactjs", "react.js"},
+    "react.js": {"react", "reactjs", "react.js"},
+    "k8s": {"k8s", "kubernetes"},
+    "kubernetes": {"k8s", "kubernetes"},
+    "golang": {"golang", "go"},
+    "go": {"golang", "go"},
+    "nodejs": {"nodejs", "node.js", "node"},
+    "node.js": {"nodejs", "node.js", "node"},
+    "node": {"nodejs", "node.js", "node"},
+    "typescript": {"typescript", "ts"},
+    "ts": {"typescript", "ts"},
+    "javascript": {"javascript", "js"},
+    "js": {"javascript", "js"},
+    "gcp": {"gcp", "google cloud platform", "google cloud"},
+    "google cloud platform": {"gcp", "google cloud platform", "google cloud"},
+    "google cloud": {"gcp", "google cloud platform", "google cloud"},
+    "azure": {"azure", "microsoft azure"},
+    "microsoft azure": {"azure", "microsoft azure"},
+}
+
+TECHNICAL_ACTIVITY_WORDS = {
+    "tuning", "design", "development", "maintenance", "debugging",
+    "testing", "architecture", "management", "optimization", "administration",
+    "practices", "internals", "modules", "systems", "solutions",
+    "services", "infrastructure", "pipelines", "applications", "implementation",
+    "deployment", "monitoring", "troubleshooting", "review", "reviews",
+    "query", "data", "database", "backend", "frontend", "fullstack",
+    "software", "engineering", "programming", "code", "coding", "memory",
+    "concurrency", "performance", "security", "integration", "operations",
+    "workflow", "tooling", "scalability", "reliability", "standards",
+    "low", "level", "high", "deep", "solid", "broad", "advanced", "basic",
+    "hands", "end", "real", "time", "scalable", "distributed", "concurrent",
+    "modern", "legacy", "native", "open", "source", "cross", "functional",
+}
+
+
+def _single_symbol_safe_match(term: str, text: str) -> bool:
+    cleaned_term = term.strip().lower()
+    if not cleaned_term:
+        return False
+    escaped = re.escape(cleaned_term)
+    pattern = rf"(?<![a-zA-Z0-9_+#.]){escaped}(?![a-zA-Z0-9_+#])"
+    return bool(re.search(pattern, text, re.IGNORECASE))
+
+
 def symbol_safe_match(term: str, text: str) -> bool:
     """Matches a term as a distinct whole entity, handling programming symbols (+, #, .).
 
@@ -231,15 +309,34 @@ def symbol_safe_match(term: str, text: str) -> bool:
     - 'R' matching 'React'
     - 'c++' failing to match because of trailing symbols
     """
-    cleaned_term = term.strip().lower()
-    if not cleaned_term:
-        return False
+    if _single_symbol_safe_match(term, text):
+        return True
 
-    escaped = re.escape(cleaned_term)
-    # Lookbehind: not preceded by alphanumeric, underscore, +, #, or .
-    # Lookahead: not followed by alphanumeric, underscore, +, or #
-    pattern = rf"(?<![a-zA-Z0-9_+#.]){escaped}(?![a-zA-Z0-9_+#])"
-    return bool(re.search(pattern, text, re.IGNORECASE))
+    cleaned_lower = term.strip().lower()
+    if cleaned_lower in CANONICAL_SKILL_SYNONYMS:
+        for syn in CANONICAL_SKILL_SYNONYMS[cleaned_lower]:
+            if _single_symbol_safe_match(syn, text):
+                return True
+    return False
+
+
+def is_skill_negated_in_text(skill_name: str, text: str) -> bool:
+    """Check if a skill or any of its canonical aliases are mentioned in a negated or prohibitive context."""
+    cleaned = skill_name.strip().lower()
+    if not cleaned:
+        return False
+    variants = {cleaned}
+    if cleaned in CANONICAL_SKILL_SYNONYMS:
+        variants |= CANONICAL_SKILL_SYNONYMS[cleaned]
+    for v in variants:
+        escaped = re.escape(v)
+        pattern = (
+            rf"\b(?:no|not|without|never|avoid|do\s+not(?:\s+(?:use|need|want|have))?)\s+"
+            rf"[^.;,]*(?<![a-zA-Z0-9_+#.]){escaped}(?![a-zA-Z0-9_+#])"
+        )
+        if re.search(pattern, text, re.IGNORECASE):
+            return True
+    return False
 
 
 def normalize_text_tokens(text: str) -> list[str]:
@@ -494,6 +591,11 @@ def evaluate_requirement(
     for item in candidate_evidence:
         if not item.is_active:
             continue
+        if item.verification_state in (
+            FactVerificationState.REJECTED.value,
+            FactVerificationState.SUPERSEDED.value,
+        ):
+            continue
 
         fact_val = item.value
 
@@ -501,7 +603,7 @@ def evaluate_requirement(
         if item.is_conflicted:
             if item.fact_type == FactType.SKILL.value:
                 skill_name = str(fact_val.get("name", ""))
-                if symbol_safe_match(skill_name, req.text):
+                if symbol_safe_match(skill_name, req.text) and not is_skill_negated_in_text(skill_name, req.text):
                     conflicted.append(item)
             continue
 
@@ -509,7 +611,8 @@ def evaluate_requirement(
         if item.fact_type == FactType.SKILL.value:
             skill_name = str(fact_val.get("name", "")).strip()
             if symbol_safe_match(skill_name, req.text):
-                matched.append(item)
+                if not is_skill_negated_in_text(skill_name, req.text):
+                    matched.append(item)
 
         # 2. Education evaluation (Only evaluate if requirement explicitly pertains to degrees/education)
         elif item.fact_type == FactType.EDUCATION.value and req_mentions_degree:
@@ -738,7 +841,8 @@ def evaluate_requirement(
                 unmatched_parts: list[str] = []
                 for p in parts:
                     sub_tokens = [t for t in normalize_text_tokens(p) if t not in STOPWORDS]
-                    if sub_tokens:
+                    is_tech_conjunct = any(tok not in TECHNICAL_ACTIVITY_WORDS for tok in sub_tokens)
+                    if sub_tokens and is_tech_conjunct:
                         substantive_parts.append((p, sub_tokens))
                         part_matched = any(
                             symbol_safe_match(item.display_label, p)
@@ -937,7 +1041,15 @@ def assess_job_match(
         if subj_count > 0:
             confidence_reasons.append(f"{subj_count} requirement(s) are subjective and cannot be evaluated deterministically.")
 
-        if unreviewed > 0 or missing_prov > 0 or subj_count > 0:
+        # Count requirements with partial conjunct evidence
+        partial_conjunct_count = sum(
+            1 for e in (required_evals + preferred_evals)
+            if e.matched_evidence and e.status == RequirementMatchStatus.INSUFFICIENT_EVIDENCE
+        )
+        if partial_conjunct_count > 0:
+            confidence_reasons.append(f"{partial_conjunct_count} requirement(s) are partially evidenced with unresolved conjuncts.")
+
+        if unreviewed > 0 or missing_prov > 0 or subj_count > 0 or partial_conjunct_count > 0:
             confidence_level = ConfidenceLevel.MEDIUM
             if unreviewed > 0:
                 confidence_reasons.append(f"{unreviewed} supporting candidate facts have UNREVIEWED status.")

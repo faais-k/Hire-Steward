@@ -887,6 +887,7 @@
       const tier = assessment.fit_tier || "INSUFFICIENT_DATA";
       const score = assessment.overall_score;
       const gapsCount = assessment.gaps_count || 0;
+      const gapLabel = (tier === "INSUFFICIENT_DATA") ? "Insufficient data" : (tier === "BLOCKED_OR_CONTRADICTED") ? (gapsCount > 0 ? `${gapsCount} gap${gapsCount > 1 ? "s" : ""} (Blocked)` : "Blocked constraint") : (gapsCount > 0 ? `${gapsCount} gap${gapsCount > 1 ? "s" : ""}` : "All reqs met");
 
       const wpLabel = job.workplace_type ? job.workplace_type.charAt(0).toUpperCase() + job.workplace_type.slice(1) : "Unspecified";
       const locLabel = job.location || "Location not stated";
@@ -910,7 +911,7 @@
           <div class="job-match-row">
             <span class="tier-badge tier-${escapeHtml(tier)}">${escapeHtml(formatTierLabel(tier))}</span>
             <div class="coverage-metric num">${formatPercent(score)}</div>
-            <div class="gap-indicator">${gapsCount > 0 ? `${gapsCount} gap${gapsCount > 1 ? "s" : ""}` : "All reqs met"}</div>
+            <div class="gap-indicator">${escapeHtml(gapLabel)}</div>
           </div>
         </div>
       `;
