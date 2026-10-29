@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hire-Steward — Job Discovery & Review Workbench</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" aria-label="Application navigation">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">H</div>
+        <div class="brand-name">Hire-Steward</div>
+        <span class="scope-badge">Local</span>
+      </div>
+
+      <nav>
+        <button type="button" class="nav-item active" id="nav-opportunities-btn" aria-current="page">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <rect x="2" y="3" width="12" height="10" rx="1.5" stroke-width="1.5"/>
+            <path d="M5 6h6M5 9h4" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Opportunities</span>
+          <span class="nav-count num" id="sidebar-count">0</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-pipeline-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M2 4h12M2 8h12M2 12h12" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="5" cy="4" r="1.5" fill="currentColor"/>
+            <circle cx="9" cy="8" r="1.5" fill="currentColor"/>
+            <circle cx="13" cy="12" r="1.5" fill="currentColor"/>
+          </svg>
+          <span>Pipeline</span>
+          <span class="nav-count num" id="pipeline-count">0</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-profile-btn">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <circle cx="8" cy="5" r="3" stroke-width="1.5"/>
+            <path d="M3 14c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Candidate Facts</span>
+          <span class="nav-count num" id="candidate-facts-count">0</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="fixture-notice">
+          <strong>Offline Mode</strong><br>
+          Synthetic fixtures &amp; user intake. Live employer scraping disabled.
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="topbar-title">
+          <h1 class="topbar-heading">Job Discovery Workbench</h1>
+          <span class="tag" style="background:#fef3c7; color:#92400e; font-weight:600;">Synthetic Fixtures &amp; Offline Intake</span>
+        </div>
+
+        <div class="topbar-search">
+          <input type="search" id="search-input" placeholder="Search title, skills, employer..." aria-label="Search job opportunities">
+          <span class="kbd-hint">Ctrl K</span>
+        </div>
+
+        <div class="filter-group">
+          <select id="workplace-filter" class="filter-select" aria-label="Filter by workplace arrangement">
+            <option value="">All Arrangements</option>
+            <option value="remote">Remote Only</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="onsite">Onsite Only</option>
+          </select>
+
+          <select id="sort-select" class="filter-select" aria-label="Sort opportunities">
+            <option value="observed_desc">Latest Observed</option>
+            <option value="score_desc">Highest Match Score</option>
+            <option value="title_asc">Job Title (A-Z)</option>
+          </select>
+
+          <button type="button" id="seed-btn" class="btn-secondary" title="Seed synthetic demo fixtures into local database">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="14" height="14">
+              <path d="M8 2v12M2 8h12" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+            <span>Load Demo Fixtures</span>
+          </button>
+
+          <button type="button" id="add-job-btn" class="btn-primary" style="background:#4338ca; gap:6px;" title="Add a user-supplied job for offline matching and review">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="14" height="14">
+              <path d="M8 3v10M3 8h10" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>+ Add Job</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Workbench Split View -->
+      <main class="workbench" id="workbench-view">
+        <!-- Left Pane: Job List -->
+        <section class="jobs-pane" aria-label="Opportunities list">
+          <div class="jobs-pane-header">
+            <div class="jobs-count"><span id="total-visible" class="num">0</span> opportunities</div>
+            <div class="tier-pills" role="tablist" aria-label="Filter by match tier">
+              <button type="button" class="pill-btn active" data-tier="" role="tab" aria-selected="true">All</button>
+              <button type="button" class="pill-btn" data-tier="STRONG_MATCH" role="tab" aria-selected="false">Strong</button>
+              <button type="button" class="pill-btn" data-tier="PARTIAL_MATCH" role="tab" aria-selected="false">Partial</button>
+              <button type="button" class="pill-btn" data-tier="WEAK_MATCH" role="tab" aria-selected="false">Weak</button>
+              <button type="button" class="pill-btn" data-tier="BLOCKED_OR_CONTRADICTED" role="tab" aria-selected="false">Blocked</button>
+            </div>
+          </div>
+
+          <div id="jobs-container" class="jobs-list" tabindex="0" role="listbox" aria-label="Select an opportunity to review">
+            <!-- Dynamic jobs list or skeletons will be injected here -->
+          </div>
+        </section>
+
+        <!-- Right Pane: Detail & Match Inspector -->
+        <section class="detail-pane" id="detail-pane" aria-label="Opportunity details and match explanation">
+          <div class="state-box" style="margin-top: 60px;">
+            <div class="state-title">Select an Opportunity</div>
+            <div class="state-desc">Select a job posting from the list to inspect its requirements, deterministic evidence coverage, and qualification gaps.</div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Pipeline Tracker View (Milestone 5) -->
+      <main class="pipeline-container" id="pipeline-view" style="display: none;" aria-label="Application Pipeline Tracker">
+        <div class="pipeline-header-bar">
+          <div class="pipeline-title-group">
+            <h2 class="pipeline-heading">Application Pipeline</h2>
+            <span class="pipeline-subheading" id="pipeline-total-indicator">0 tracked applications</span>
+          </div>
+
+          <div class="pipeline-controls">
+            <div class="pipeline-status-pills" role="tablist" aria-label="Filter applications by status">
+              <button type="button" class="pill-btn active" data-pipeline-status="" role="tab" aria-selected="true">All Active</button>
+              <button type="button" class="pill-btn" data-pipeline-status="SAVED" role="tab" aria-selected="false">Saved</button>
+              <button type="button" class="pill-btn" data-pipeline-status="PREPARING" role="tab" aria-selected="false">Preparing</button>
+              <button type="button" class="pill-btn" data-pipeline-status="READY_FOR_REVIEW" role="tab" aria-selected="false">Ready</button>
+              <button type="button" class="pill-btn" data-pipeline-status="APPLIED" role="tab" aria-selected="false">Applied</button>
+              <button type="button" class="pill-btn" data-pipeline-status="INTERVIEWING" role="tab" aria-selected="false">Interviewing</button>
+              <button type="button" class="pill-btn" data-pipeline-status="OFFER_RECEIVED" role="tab" aria-selected="false">Offers</button>
+              <button type="button" class="pill-btn" data-pipeline-status="ARCHIVED" role="tab" aria-selected="false">Archived</button>
+            </div>
+
+            <select id="pipeline-sort-select" class="filter-select" aria-label="Sort tracked applications">
+              <option value="updated_at">Last Updated</option>
+              <option value="last_status_change_at">Recent Status Change</option>
+              <option value="created_at">Date Tracked</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="pipeline-cards-container" class="pipeline-cards-grid" tabindex="0" role="region" aria-label="Tracked applications list">
+          <!-- Dynamically injected pipeline cards -->
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="modal-container" style="display:none;" role="dialog" aria-modal="true"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

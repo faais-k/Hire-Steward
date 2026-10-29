@@ -1,6 +1,6 @@
 # ADR-0010 — PostgreSQL Development and CI Baseline
 
-- **Status:** Accepted for local development and CI configuration; runtime verification pending
+- **Status:** Accepted for local development and CI configuration; hosted CI verified, local Compose runtime verification pending
 - **Date:** 2026-10-28
 
 ## Context
@@ -25,7 +25,7 @@ Using one PostgreSQL service keeps the development stack small and matches the s
 
 Pinning the image, CI actions, and uv version improves reproducibility, but requires deliberate updates for security fixes and upstream lifecycle changes. The checkout action is pinned to a full commit SHA to avoid a mutable tag; its runtime metadata was inspected at that SHA. The setup-uv pin was checked the same way. Per-test schemas isolate application tables; the suite still connects to the explicitly configured test database, so the fixture checks its exact database name and must never be configured with a production URL. The selected uv 0.13.5 release was checked against the upstream release page on 2026-10-28. [uv releases](https://github.com/astral-sh/uv/releases)
 
-The local PostgreSQL service, migrations, transaction behavior, constraints, decimal round-tripping, and concurrency tests have not been run in this workspace because Docker is unavailable and the installed local PostgreSQL service is stopped. The workflow has not run on GitHub. Configuration and test code are not evidence of PostgreSQL compatibility.
+The local PostgreSQL service, migrations, transaction behavior, constraints, decimal round-tripping, and concurrency tests have not been run in this workspace because Docker is unavailable and the installed local PostgreSQL service is stopped. Hosted GitHub Actions verified the isolated PostgreSQL suite for `f47b9d1` on 2026-10-28 (73 passed, 0 failed, one upstream Starlette/AnyIO deprecation warning); the workflow-run URL is not available in repository context. This does not establish local Compose, backup/restore, or production operational compatibility.
 
 ## Consequences
 
@@ -41,4 +41,4 @@ Revisit the image pin at routine security/update review or when the supported Po
 ## Verification history
 
 - On 2026-10-28, the first Foundation 2 review found that the original `actions/checkout@v4.4.0` pin used retired Node 20 and that readiness could return success after a required table was dropped while the migration marker remained. This correction upgrades and SHA-pins checkout to v7.0.1 and adds non-mutating schema-shape and preference-state checks with regression tests.
-- The PostgreSQL test module currently collects nine independent test functions (no parameterized PostgreSQL cases), including a readiness regression that drops a required table after migration. Local PostgreSQL and hosted GitHub Actions verification remain pending; configuration and SQLite tests do not establish those results.
+- The PostgreSQL test module currently collects nine independent test functions (no parameterized PostgreSQL cases), including a readiness regression that drops a required table after migration. They were included in the hosted CI pass for `f47b9d1`. Local PostgreSQL/Compose verification remains pending; configuration and SQLite tests alone do not establish those results.

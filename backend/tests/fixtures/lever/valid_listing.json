@@ -1,0 +1,46 @@
+[
+  {
+    "id": "lever-job-001",
+    "text": "Senior Backend Engineer",
+    "createdAt": 1700000000000,
+    "descriptionPlain": "We are seeking a Senior Backend Engineer to build robust local-first systems with Python.",
+    "description": "<div><p>We are seeking a <strong>Senior Backend Engineer</strong> to build robust local-first systems with Python.</p></div>",
+    "additionalPlain": "Equal Opportunity Employer.",
+    "additional": "<p>Equal Opportunity Employer.</p>",
+    "categories": {
+      "location": "Remote - India",
+      "commitment": "Full-time",
+      "team": "Platform Engineering",
+      "department": "Engineering",
+      "level": "Senior"
+    },
+    "workplaceType": "remote",
+    "hostedUrl": "https://jobs.lever.co/example-corp/lever-job-001",
+    "applyUrl": "https://jobs.lever.co/example-corp/lever-job-001/apply",
+    "lists": [
+      {
+        "text": "Requirements",
+        "content": "<ul><li>5+ years Python experience</li><li>FastAPI or modern async frameworks</li><li>PostgreSQL knowledge</li></ul>"
+      },
+      {
+        "text": "Nice to have",
+        "content": "<ul><li>Offline-first systems</li><li>Pydantic v2</li></ul>"
+      }
+    ]
+  },
+  {
+    "id": "lever-job-002",
+    "text": "Staff Data Engineer",
+    "createdAt": 1700100000000,
+    "descriptionPlain": "Build scalable data pipelines with strict schema guarantees.",
+    "description": "<p>Build scalable data pipelines with strict schema guarantees.</p>",
+    "categories": {
+      "location": "Bengaluru, India",
+      "commitment": "Full-time",
+      "team": "Data Platform"
+    },
+    "workplaceType": "hybrid",
+    "hostedUrl": "https://jobs.lever.co/example-corp/lever-job-002",
+    "applyUrl": "https://jobs.lever.co/example-corp/lever-job-002/apply"
+  }
+]

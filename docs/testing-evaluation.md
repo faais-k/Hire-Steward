@@ -22,6 +22,8 @@ Target pure or narrowly scoped components:
 - Provider error normalization, retry budgets and privacy dispatch rules.
 - Import manifest/schema/path validation.
 
+Foundation 3 current coverage uses synthetic text only: candidate-document creation, bounded text-only upload validation, closed fact schemas, `UNREVIEWED` provenance, filename/media/body rejection, and readiness failure when candidate table is absent. PostgreSQL-marked coverage adds `0002 -> 0003` upgrade, synthetic destructive downgrade, reservation quota admission, and candidate-schema readiness drift. All 4 Foundation 3 PostgreSQL integration tests passed in hosted CI (commit `fe0baf0`, workflow run 40664831364, 95 passed total); they remain skipped in local runs when `JOBPILOT_TEST_DATABASE_URL` is unset.
+
 ### Integration tests
 
 Use a real temporary test PostgreSQL instance/database with migrations:
@@ -135,7 +137,7 @@ These are implementation/test results for the first backend slice only. They do 
 | Assessment context after later preference change | Assessment stores old threshold and version; no update route | Pass: SQLite API integration test |
 | Preserve already-submitted application records | No application-record model or submission route exists in this slice | Not implemented or tested |
 | Matching, dashboard, scheduling, preparation, and final submission gates | Not wired in this slice | Pending; no claim of cross-product enforcement |
-| PostgreSQL migration/transaction behavior | PostgreSQL service unavailable; Docker engine is not running | Not run; use a dedicated PostgreSQL integration database before production use |
+| PostgreSQL migration/transaction behavior | Hosted CI PostgreSQL service for `f47b9d1`; local Docker engine unavailable | Hosted CI passed the isolated PostgreSQL suite; local Compose execution remains outstanding before local operational use |
 
 Command run: `$env:PYTHONDONTWRITEBYTECODE='1'; .\.venv\Scripts\python.exe -m pytest -p no:cacheprovider -q` — **53 passed**, one upstream Starlette/AnyIO deprecation warning. Tests include unit policy cases and in-memory SQLite migration/API/transaction coverage, including the 0001-to-0002 upgrade, fail-closed legacy API view, and downgrade. This does not verify PostgreSQL locking/behavior, Compose, or any external integration. PostgreSQL tests were not run because the local Docker engine/database service is unavailable.
 
@@ -143,19 +145,19 @@ Command run: `$env:PYTHONDONTWRITEBYTECODE='1'; .\.venv\Scripts\python.exe -m py
 
 The explicit `postgres` marker selects `backend/tests/integration/test_postgres_integration.py`. Its fixture requires `JOBPILOT_TEST_DATABASE_URL` to use the `postgresql+psycopg` driver and the database name `jobpilot_test`. For each test, it creates a random schema, applies Alembic migrations using a connection whose search path targets that schema, then drops only that schema. It never drops or recreates the database. An unset URL causes a clear skip; a configured but unreachable PostgreSQL server causes a test failure rather than a simulated pass.
 
-The suite has nine independent PostgreSQL test functions, confirmed with `pytest --collect-only -m postgres`. It covers a fresh migration and model/schema constraints, readiness after a required table is dropped while the migration marker remains, the `NUMERIC(18,2)` preference default, legacy migration to `UNVERIFIED` with fail-closed API output, exact decimal/audit round-trip, rollback when the audit insert violates a constraint, concurrent preference updates with linear audit versions, singleton and primary-key constraints, and the public unverified evidence boundary.
+Foundation 2 has nine independent PostgreSQL test functions, confirmed in hosted CI at `f47b9d1`. The current Foundation 3 worktree adds four PostgreSQL-marked candidate-evidence tests, so `pytest --collect-only -m postgres` collects **13** functions. They cover a fresh migration and model/schema constraints, readiness after a required table is dropped while the migration marker remains, the `NUMERIC(18,2)` preference default, legacy migration to `UNVERIFIED` with fail-closed API output, exact decimal/audit round-trip, rollback when the audit insert violates a constraint, concurrent preference updates with linear audit versions, singleton and primary-key constraints, public unverified evidence, `0002 -> 0003` upgrade, synthetic destructive downgrade, candidate-route/schema readiness, and reservation quota admission. The four Foundation 3 PostgreSQL tests have not run locally or in hosted CI.
 
 Current local verification on 2026-10-28:
 
-- Latest local full-suite command: `$env:PYTHONDONTWRITEBYTECODE='1'; .\.venv\Scripts\python.exe -m pytest -p no:cacheprovider -q` — **63 passed, 9 skipped**, with one upstream Starlette/AnyIO deprecation warning. All nine skips are PostgreSQL cases because `JOBPILOT_TEST_DATABASE_URL` was unset.
+- Latest local fast-suite command: `uv run --locked pytest -m "not postgres" -q` — **64 passed, 9 deselected**, with one upstream Starlette/AnyIO deprecation warning. PostgreSQL cases are deselected because `JOBPILOT_TEST_DATABASE_URL` is unset.
 - Readiness tests include SQLite success at the current migration head, stale migration, unconfigured database, missing schema, a required table or column removed after successful migration while the marker remains, missing/invalid preference state, and a PostgreSQL URL on an intentionally unavailable local port. These tests establish application behavior without proving PostgreSQL compatibility.
 - `docker compose --env-file .env.example config --quiet` passed; `uv lock --check --offline --cache-dir .venv\uv-cache` passed; `uv sync --locked --offline --cache-dir .venv\uv-cache --python 3.12` audited the locked environment; `uv run --locked --offline --cache-dir .venv\uv-cache --env-file .env.example python -c "import os; assert os.environ['DATABASE_URL'] == 'postgresql+psycopg://jobpilot:local_dev_only@127.0.0.1:5432/jobpilot'; print('uv env-file: DATABASE_URL loaded')"` passed; `.\.venv\Scripts\python.exe -m compileall -q backend/app backend/migrations` passed.
 - No YAML parser or `actionlint` is installed locally. The CI workflow was manually reviewed; the pinned `actions/checkout` and `astral-sh/setup-uv` `action.yml` files were verified upstream to declare Node 24. This is syntax/runtime-source review only, not a GitHub Actions run.
-- The Docker engine is unavailable, and the installed Windows PostgreSQL service is stopped. No PostgreSQL test passed locally. The GitHub Actions workflow is configured but has not run on GitHub.
+- The Docker engine is unavailable, and the installed Windows PostgreSQL service is stopped. No PostgreSQL test passed locally. Hosted GitHub Actions verified `f47b9d1` on 2026-10-28 with its PostgreSQL service healthy and `uv run --locked pytest -q` reporting **73 passed, 0 failed**, and one upstream Starlette/AnyIO deprecation warning. No workflow URL is available in repository context.
 
 The first lock check using uv's default cache failed because this restricted workspace could not access the user-level uv cache. Re-running with the ignored project virtual environment's cache directory succeeded; no dependency was added or lockfile changed.
 
-Run fast tests with `uv run --locked pytest -m "not postgres" -q`. Run PostgreSQL tests only after preparing a dedicated `jobpilot_test` database with `JOBPILOT_TEST_DATABASE_URL` set: `uv run --locked pytest -m postgres -q`. GitHub Actions runs the full suite against its own health-checked PostgreSQL 17.11 service. Results from CI must be recorded separately after an actual workflow run.
+Run fast tests with `uv run --locked pytest -m "not postgres" -q`. Run PostgreSQL tests only after preparing a dedicated `jobpilot_test` database with `JOBPILOT_TEST_DATABASE_URL` set: `uv run --locked pytest -m postgres -q`. GitHub Actions runs the full suite against its own health-checked PostgreSQL 17.11 service; the `f47b9d1` result is recorded above. Local Compose results must still be recorded separately if/when run.
 
 ## 6. Gold datasets
 

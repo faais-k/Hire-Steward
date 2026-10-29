@@ -2,7 +2,7 @@
 
 **Status:** Proposed roadmap. Complete each phase's acceptance gate before building the next high-risk capability. Timelines are intentionally omitted until repository and workload are inspected.
 
-**Current implementation:** Phase 1 is `IN_PROGRESS` as of 2026-10-28. Foundation 1 implements configurable compensation preference and a public evidence trust boundary. Foundation 2 adds PostgreSQL Compose configuration, readiness reporting, PostgreSQL test code, and CI workflow configuration. Phase 0 remains incomplete; these local foundation changes do not approve any source/provider integration or live external action. Current test results and the unverified PostgreSQL/CI status are recorded in `docs/memory.md`. Public compensation assessments remain unverified until a real evidence-verification path exists.
+**Current implementation:** Milestone 6 (User-Controlled Job Intake) is committed and pushed as `b709013` on branch `foundation-3-candidate-evidence`, passing 333 tests locally and verified in hosted GitHub Actions CI (Run 40884209323: 333 passed, 0 failed, 3 warnings, all 24 PostgreSQL integration tests passing). Offline discovery (Milestone 1, `214dfea`), deterministic matching (Milestone 2, `e022a47`), review workbench (Milestones 3 & 3.1, `8f19559` & `3dba991`), evidence-grounded application preparation (Milestones 4 & 4.1, `b8a9b59`), and application tracking pipeline (Milestone 5, `7182b65`) are completed and committed. The intake flow remains strictly offline and does not activate live job sources. Phase 0 remains `IN_PROGRESS / NOT PASSED` until its source-permission exit gate is formally resolved by the product owner; live-source permission is still unresolved, and Lever and the other candidate sources remain disabled, unapproved, and in `NEEDS_REVIEW`. No live ATS requests, scraping, or external network discovery are activated. Live discovery cannot begin while Phase 0 is not passed.
 
 ## Delivery principle
 
@@ -25,7 +25,9 @@ Build vertical slices that prove the core lifecycle and safety properties. Do no
 - Updated `memory.md` with verified repo state.
 
 ### Exit gate
-- No unresolved license or source-permission blocker for the first source.
+- No unresolved license or source-permission blocker for the first source (Criterion 1: Owner formal source-access decision / legal risk acceptance).
+- Approved single-request live test protocol (Criterion 2: Owner sign-off on isolated live test against agreed board).
+- Verified offline invariant suite (Criterion 3: 88 Lever adapter tests passing with loop detection, pagination bounds, and honest attribution).
 - Stack versions selected with compatibility confirmed.
 - Data handling and provider-sharing behavior understood.
 

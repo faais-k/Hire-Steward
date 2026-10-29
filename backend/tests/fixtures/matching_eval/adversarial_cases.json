@@ -1,0 +1,175 @@
+[
+  {
+    "id": "holdout_01_negated_skill_requirement",
+    "title": "Go Backend Systems Engineer",
+    "employer_handle": "cloudscale-systems",
+    "workplace_type": "remote",
+    "location": "Remote - India",
+    "candidate_profile_id": "remote_only_dev",
+    "lists_json": [
+      {
+        "title": "Requirements",
+        "items": [
+          "4+ years of software engineering experience",
+          "We do not use Python; pure Golang backend environment",
+          "Experience with Kubernetes container orchestration"
+        ]
+      }
+    ],
+    "description_plain": "CloudScale Systems is looking for a Go Backend Systems Engineer.\n\nRequirements:\n- 4+ years of software engineering experience\n- We do not use Python; pure Golang backend environment\n- Experience with Kubernetes container orchestration",
+    "expected": {
+      "expected_required_count": 3,
+      "expected_preferred_count": 0,
+      "expected_fit_tier": "STRONG_MATCH",
+      "expected_confidence_level": "HIGH",
+      "expected_required_met": 3,
+      "expected_required_gaps_count": 0,
+      "expected_gaps_keywords": [],
+      "expected_workplace_ok": true,
+      "expected_compensation_ineligible": false,
+      "rationale": "Candidate has 5.5 yrs tenure, Go (matched via Golang alias), and Kubernetes. Python is explicitly negated in requirement 2 and must NOT match as an unrequested requirement or cause false match; requirement 2 is satisfied by candidate's Go evidence."
+    }
+  },
+  {
+    "id": "holdout_02_compound_or_alternative_skills",
+    "title": "Cloud Platform Engineer",
+    "employer_handle": "cloudscale-systems",
+    "workplace_type": "remote",
+    "location": "Remote - India",
+    "candidate_profile_id": "remote_only_dev",
+    "lists_json": [
+      {
+        "title": "Requirements",
+        "items": [
+          "4+ years of software development experience",
+          "Experience with either AWS or Google Cloud Platform",
+          "Hands-on experience with Kubernetes"
+        ]
+      }
+    ],
+    "description_plain": "Cloud Platform Engineer role.\n\nRequirements:\n- 4+ years of software development experience\n- Experience with either AWS or Google Cloud Platform\n- Hands-on experience with Kubernetes",
+    "expected": {
+      "expected_required_count": 3,
+      "expected_preferred_count": 0,
+      "expected_fit_tier": "STRONG_MATCH",
+      "expected_confidence_level": "HIGH",
+      "expected_required_met": 3,
+      "expected_required_gaps_count": 0,
+      "expected_gaps_keywords": [],
+      "expected_workplace_ok": true,
+      "expected_compensation_ineligible": false,
+      "rationale": "Alternative 'OR' requirement satisfied because candidate has verified AWS skill. Full mandatory qualification match."
+    }
+  },
+  {
+    "id": "holdout_03_inequality_symbol_markup",
+    "title": "Senior Quantitative Software Engineer",
+    "employer_handle": "quant-alpha",
+    "workplace_type": "remote",
+    "location": "Remote - India",
+    "candidate_profile_id": "standard_senior_dev",
+    "lists_json": null,
+    "description_plain": "Quant Alpha hiring.\n\nRequirements:\n- Experience with <5 years in Python algorithms\n- High performance latency < 10ms with PostgreSQL database\n- Docker containerization",
+    "expected": {
+      "expected_required_count": 3,
+      "expected_preferred_count": 0,
+      "expected_fit_tier": "STRONG_MATCH",
+      "expected_confidence_level": "HIGH",
+      "expected_required_met": 3,
+      "expected_required_gaps_count": 0,
+      "expected_gaps_keywords": [],
+      "expected_workplace_ok": true,
+      "expected_compensation_ineligible": false,
+      "rationale": "Tests that raw inequality symbols like '<5' and 'latency < 10ms' are preserved during HTML normalization and not stripped into empty text."
+    }
+  },
+  {
+    "id": "holdout_04_short_acronym_ambiguity",
+    "title": "Statistical Computing Specialist",
+    "employer_handle": "stat-insights",
+    "workplace_type": "remote",
+    "location": "Remote - India",
+    "candidate_profile_id": "standard_senior_dev",
+    "lists_json": [
+      {
+        "title": "Requirements",
+        "items": [
+          "5+ years of software development experience",
+          "Proficiency in R statistical programming language"
+        ]
+      }
+    ],
+    "description_plain": "Stat Insights is hiring a Statistical Computing Specialist.\n\nRequirements:\n- 5+ years of software development experience\n- Proficiency in R statistical programming language",
+    "expected": {
+      "expected_required_count": 2,
+      "expected_preferred_count": 0,
+      "expected_fit_tier": "PARTIAL_MATCH",
+      "expected_confidence_level": "HIGH",
+      "expected_required_met": 1,
+      "expected_required_gaps_count": 1,
+      "expected_gaps_keywords": ["R"],
+      "expected_workplace_ok": true,
+      "expected_compensation_ineligible": false,
+      "rationale": "Senior candidate has Redis and Python, but lacks R. Single-character symbol matching must NOT match 'Redis' as 'R'. Generates qualification gap."
+    }
+  },
+  {
+    "id": "holdout_05_quarantined_rejected_evidence",
+    "title": "C++ Game Engine Engineer",
+    "employer_handle": "gaming-studio",
+    "workplace_type": "remote",
+    "location": "Remote - India",
+    "candidate_profile_id": "standard_senior_dev",
+    "lists_json": [
+      {
+        "title": "Requirements",
+        "items": [
+          "5+ years of software development experience",
+          "Proficiency in Rust programming language"
+        ]
+      }
+    ],
+    "description_plain": "Gaming Studio is hiring a Game Engine Engineer.\n\nRequirements:\n- 5+ years of software development experience\n- Proficiency in Rust programming language",
+    "expected": {
+      "expected_required_count": 2,
+      "expected_preferred_count": 0,
+      "expected_fit_tier": "PARTIAL_MATCH",
+      "expected_confidence_level": "HIGH",
+      "expected_required_met": 1,
+      "expected_required_gaps_count": 1,
+      "expected_gaps_keywords": ["Rust"],
+      "expected_workplace_ok": true,
+      "expected_compensation_ineligible": false,
+      "rationale": "Candidate lacks Rust. Must not match any other skill or claim."
+    }
+  },
+  {
+    "id": "holdout_06_unpaid_internship_hard_gate",
+    "title": "Unpaid Research Volunteer",
+    "employer_handle": "open-institute",
+    "workplace_type": "remote",
+    "location": "Remote - India",
+    "candidate_profile_id": "standard_senior_dev",
+    "lists_json": [
+      {
+        "title": "Requirements",
+        "items": [
+          "Proficiency in Python programming"
+        ]
+      }
+    ],
+    "description_plain": "Open Institute is seeking an Unpaid Research Volunteer.\nThis role is entirely unpaid.\n\nRequirements:\n- Proficiency in Python programming",
+    "expected": {
+      "expected_required_count": 1,
+      "expected_preferred_count": 0,
+      "expected_fit_tier": "STRONG_MATCH",
+      "expected_confidence_level": "HIGH",
+      "expected_required_met": 1,
+      "expected_required_gaps_count": 0,
+      "expected_gaps_keywords": [],
+      "expected_workplace_ok": true,
+      "expected_compensation_ineligible": true,
+      "rationale": "Although technical skills match, this unpaid posting must trigger compensation policy hard-gate block (eligible_to_submit=False)."
+    }
+  }
+]
