@@ -62,6 +62,7 @@ def test_workbench_static_assets_served(api_client: TestClient) -> None:
     assert "text/html" in root_res.headers["content-type"]
     assert "Hire-Steward" in root_res.text
     assert "Job Discovery Workbench" in root_res.text
+    assert '<h1 class="topbar-heading">Job Discovery Workbench</h1>' in root_res.text
 
     # 2. Explicit /workbench route
     wb_res = api_client.get("/workbench")
@@ -73,12 +74,16 @@ def test_workbench_static_assets_served(api_client: TestClient) -> None:
     assert css_res.status_code == 200
     assert "text/css" in css_res.headers["content-type"]
     assert "--fs-title" in css_res.text
+    assert ".mobile-back-btn" in css_res.text
+    assert "@media (max-width: 900px)" in css_res.text
 
     # 4. JS application script
     js_res = api_client.get("/app.js")
     assert js_res.status_code == 200
     assert any(t in js_res.headers["content-type"] for t in ["javascript", "text/plain"])
     assert "fetchJobs" in js_res.text
+    assert "mobile-visible" in js_res.text
+    assert "mobile-back-btn" in js_res.text
 
 
 def test_list_jobs_empty_database(api_client: TestClient) -> None:

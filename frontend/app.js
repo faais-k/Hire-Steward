@@ -181,10 +181,13 @@
     }
   }
 
-  function selectJob(postingId) {
+  function selectJob(postingId, isUserClick = false) {
     state.selectedPostingId = postingId;
     renderJobsList();
     fetchJobDetail(postingId);
+    if (isUserClick && window.innerWidth <= 900) {
+      elements.detailPane.classList.add("mobile-visible");
+    }
   }
 
   // Render Functions
@@ -279,7 +282,7 @@
     container.querySelectorAll(".job-card").forEach(el => {
       el.addEventListener("click", () => {
         const id = el.getAttribute("data-id");
-        selectJob(id);
+        selectJob(id, true);
       });
     });
   }
@@ -330,11 +333,18 @@
     const wpLabel = snapshot.workplace_type ? snapshot.workplace_type.charAt(0).toUpperCase() + snapshot.workplace_type.slice(1) : "Unspecified";
 
     pane.innerHTML = `
+      <button type="button" class="btn-secondary mobile-back-btn" id="mobile-back-btn" aria-label="Back to opportunities list">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="14" height="14">
+          <path d="M10 13L5 8l5-5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Back to List</span>
+      </button>
+
       <!-- Header Card -->
       <div class="detail-header">
         <div class="detail-title-row">
           <div>
-            <h1 class="detail-title">${escapeHtml(snapshot.title)}</h1>
+            <h2 class="detail-title">${escapeHtml(snapshot.title)}</h2>
             <div class="detail-employer">${escapeHtml(posting.employer_handle)} • ${escapeHtml(snapshot.department || snapshot.team || "Engineering")}</div>
           </div>
           <span class="tier-badge tier-${escapeHtml(assessment.fit_tier)}" style="font-size:12px; padding:4px 8px;">
@@ -419,6 +429,14 @@
         renderJobDetail();
       });
     });
+
+    // Attach mobile back button handler
+    const backBtn = pane.querySelector("#mobile-back-btn");
+    if (backBtn) {
+      backBtn.addEventListener("click", () => {
+        elements.detailPane.classList.remove("mobile-visible");
+      });
+    }
   }
 
   function renderTabContent(tab, data) {
@@ -629,7 +647,9 @@
         elements.searchInput.focus();
         elements.searchInput.select();
       } else if (e.key === "Escape") {
-        if (document.activeElement === elements.searchInput) {
+        if (elements.detailPane.classList.contains("mobile-visible")) {
+          elements.detailPane.classList.remove("mobile-visible");
+        } else if (document.activeElement === elements.searchInput) {
           elements.searchInput.blur();
         }
       }
