@@ -1,0 +1,71 @@
+{
+  "case_id": "rw_froz_041",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_01",
+  "source_platform": "ATS_GREENHOUSE",
+  "formatting_cluster_id": "FMT_FROZ_01",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_01",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_01",
+    "title": "Staff Corporate Financial Analyst",
+    "employer_id": "EMP_FROZ_01",
+    "employer_name": "Apex Global Treasury Solutions",
+    "workplace_type": "hybrid",
+    "location": "Bengaluru, Karnataka, India",
+    "description_plain": "Apex Global Treasury Solutions is seeking a Staff Corporate Financial Analyst to lead our multi-entity budgeting, 5-year financial forecasting, and variance reporting.\n\nKey Responsibilities:\n- Lead corporate financial modeling and capital budgeting initiatives.\n- Build dynamic variance dashboards using Excel VBA and PowerBI.\n- Collaborate with executive leadership on GAAP compliant earnings forecasts.\n\nQualifications:\n- 5+ years of experience in corporate financial modeling and variance analysis.\n- Proven expertise in Excel VBA, PowerBI, and GAAP financial standards.\n- Bachelor's degree in Finance, Economics, or related quantitative field.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2200000.0,
+      "amount_max": 2600000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2200000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Hybrid on-site in Bengaluru"
+      ],
+      "core_competencies": [
+        "Financial Modeling",
+        "Corporate Budgeting",
+        "Variance Analysis",
+        "Excel VBA",
+        "GAAP"
+      ],
+      "preferred_qualifications": [
+        "PowerBI",
+        "CFMS or CFA certification"
+      ],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_01",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_01",
+    "name": null,
+    "contact_info": null,
+    "education_status": null,
+    "is_complete_profile": false,
+    "incompleteness_reason": "Completely empty candidate record with zero identity, contact, or education facts.",
+    "experience": [],
+    "projects": [],
+    "skills": [],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Completely empty candidate profile: blocks matching with PROFILE_INCOMPLETE."
+}

@@ -1,0 +1,87 @@
+{
+  "case_id": "rw_froz_052",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_07",
+  "source_platform": "PIPE_SYNTH_FEED",
+  "formatting_cluster_id": "FMT_FROZ_07",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_07",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_20",
+    "title": "Company Overview Only Stub",
+    "employer_id": "EMP_FROZ_07",
+    "employer_name": "Syndicated Feeds Hub",
+    "workplace_type": "remote",
+    "location": "Delhi, India",
+    "description_plain": "About Syndicated Feeds Hub: We are a multi-national logistics and feed syndication company founded in 2012 with over 500 global employees across 12 countries.",
+    "completeness_status": "INCOMPLETE_STUB",
+    "incompleteness_reason": "Contains only corporate background text; completely missing job duties and requirements.",
+    "compensation": null,
+    "requirements": {},
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_02",
+  "candidate_profile": {
+    "profile_id": "P_froz_02",
+    "name": "Marcus Chen",
+    "contact_info": {
+      "email": "marcus.chen@example.invalid",
+      "phone": "+91-98765-01002",
+      "location": "Hyderabad, Telangana, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Science in Nursing (BSN)",
+      "degree_level": "Bachelor",
+      "field_of_study": "Nursing",
+      "institution": "Christian Medical College",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Clinical Care Coordinator",
+        "employer": "Apollo Regional Health",
+        "years": 6.0,
+        "description": "Managed multidisciplinary clinical triage, patient care plans, electronic health records (Epic EHR), and hospital accreditation compliance."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Clinical Care Coordination",
+      "Patient Triage",
+      "EHR (Epic)",
+      "Care Planning",
+      "Infection Control",
+      "Nursing Standards"
+    ],
+    "certifications": [
+      "Active Licence to Practise as Registered Nurse & Midwife (NNMC Act, 2023 / State Register Enrolled)",
+      "Basic Life Support (BLS)",
+      "Advanced Cardiovascular Life Support (ACLS)"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_02_F01",
+        "fact_type": "CERTIFICATION",
+        "statement": "Maintains an active, unencumbered licence to practise as a Registered Nurse & Midwife enrolled under the National Nursing and Midwifery Commission Act, 2023.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Registered Nurse",
+          "RN Licence",
+          "Clinical Care"
+        ],
+        "years_of_experience": 6.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Evaluate company-background-only stub: utilize employer context; disclose absent role duties; abstain cautiously without asserting candidate failure."
+}

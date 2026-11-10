@@ -1,0 +1,21 @@
+{
+  "posting_id": "J_adv_01",
+  "title": "Adversarial Target Posting 01",
+  "employer_id": "EMP_ADV_01",
+  "employer_name": "Adversarial Stress Test Employer",
+  "workplace_type": "remote",
+  "location": "Test Location",
+  "description_plain": "Adversarial test description for probe 01.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": null,
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "AdversarialRequirement_01"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 1
+  },
+  "lists_json": []
+}

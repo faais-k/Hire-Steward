@@ -1,0 +1,43 @@
+{
+  "profile_id": "P_froz_11",
+  "name": "Jordan Taylor",
+  "contact_info": {
+    "email": "jordan.taylor@example.invalid",
+    "phone": null,
+    "location": "Bengaluru, Karnataka, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Higher Secondary Certificate (High School Diploma)",
+    "degree_level": "High School",
+    "field_of_study": "General Studies",
+    "institution": "National Public School",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "MS Office Suite",
+    "Data Entry",
+    "Email Correspondence",
+    "Document Archiving",
+    "Client Greeting"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_froz_11_F01",
+      "fact_type": "SKILL",
+      "statement": "Proficient in office documentation, data entry, and email correspondence.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "MS Office Suite",
+        "Data Entry",
+        "Email Correspondence"
+      ],
+      "years_of_experience": 0.0
+    }
+  ]
+}

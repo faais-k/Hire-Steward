@@ -1,0 +1,76 @@
+{
+  "case_id": "rw_adv_012",
+  "partition": "ADVERSARIAL_REGRESSION",
+  "employer_id": "EMP_ADV_01",
+  "source_platform": "PIPE_ADVERSARIAL_LABS",
+  "formatting_cluster_id": "FMT_ADV_01",
+  "provenance": {
+    "type": "ADVERSARIAL_SYNTHETIC_FIXTURE",
+    "source_domain": "adversarial_security_stress_testing",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_adv_12",
+    "title": "Adversarial Target Posting 12",
+    "employer_id": "EMP_ADV_01",
+    "employer_name": "Adversarial Stress Test Employer",
+    "workplace_type": "remote",
+    "location": "Test Location",
+    "description_plain": "Adversarial test description for probe 12.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": null,
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "AdversarialRequirement_12"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 1
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_adv_12",
+  "candidate_profile": {
+    "profile_id": "P_adv_12",
+    "name": "Unicode Control Characters",
+    "contact_info": {
+      "email": "adv_12@example.invalid",
+      "phone": "+91-98765-09999",
+      "location": "Test Environment, Localhost"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Verified Security Probe",
+      "degree_level": "Certification",
+      "field_of_study": "Parser Defense",
+      "institution": "Hire-Steward Security Labs",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [],
+    "projects": [],
+    "skills": [
+      "AdversarialProbe_UNICODE_CONTROL"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_adv_12_F01",
+        "fact_type": "SKILL",
+        "statement": "Engineer with \u0007\b\u000e\u000f terminal escape proficiency.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Probe_UNICODE_CONTROL"
+        ],
+        "years_of_experience": 1.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Parser exploit stress test for adversarial probe 12."
+}

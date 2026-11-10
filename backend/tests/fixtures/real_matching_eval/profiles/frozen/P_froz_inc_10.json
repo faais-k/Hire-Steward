@@ -1,0 +1,27 @@
+{
+  "profile_id": "P_froz_inc_10",
+  "name": "Zoya Akhtar",
+  "contact_info": {
+    "email": "not-an-email",
+    "phone": null,
+    "location": "Lucknow, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Arts in English",
+    "degree_level": "Bachelor",
+    "field_of_study": "English",
+    "institution": "University of Lucknow",
+    "is_verified": true
+  },
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate contact channel is syntactically malformed and uncontactable.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "Proofreading",
+    "Copy Editing"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

@@ -32,6 +32,10 @@ class FinalizedVersion:
     created: bool
 
 
+def _transaction_context(session: Session):
+    return session.begin_nested() if session.in_transaction() else session.begin()
+
+
 def _locked_usage(session: Session) -> CandidateEvidenceStorageUsage:
     usage = session.scalar(
         select(CandidateEvidenceStorageUsage)
@@ -45,7 +49,7 @@ def _locked_usage(session: Session) -> CandidateEvidenceStorageUsage:
 
 def create_document(session: Session, display_name: str) -> CandidateDocument:
     document = CandidateDocument(id=str(uuid4()), display_name=display_name, state=DocumentState.ACTIVE.value)
-    with session.begin():
+    with _transaction_context(session):
         session.add(document)
     return document
 
@@ -73,7 +77,7 @@ def list_document_versions(session: Session, document_id: str) -> list[Candidate
 
 
 def retire_document(session: Session, document_id: str) -> CandidateDocument:
-    with session.begin():
+    with _transaction_context(session):
         document = session.scalar(
             select(CandidateDocument).where(CandidateDocument.id == document_id).with_for_update()
         )
@@ -97,7 +101,7 @@ def reserve_upload(
             temp_key=storage.temp_key(),
             state=ReservationState.STAGING.value,
         )
-        with session.begin():
+        with _transaction_context(session):
             document = session.scalar(
                 select(CandidateDocument).where(CandidateDocument.id == document_id).with_for_update()
             )
@@ -121,7 +125,7 @@ def release_failed_reservation(
     session: Session, reservation_id: str, storage: EvidenceStorage
 ) -> None:
     try:
-        with session.begin():
+        with _transaction_context(session):
             reservation = session.scalar(
                 select(CandidateEvidenceStorageReservation)
                 .where(CandidateEvidenceStorageReservation.id == reservation_id)
@@ -140,7 +144,7 @@ def release_failed_reservation(
 def mark_reservation_ready(
     session: Session, reservation_id: str, staged: StagedContent
 ) -> CandidateEvidenceStorageReservation:
-    with session.begin():
+    with _transaction_context(session):
         reservation = session.scalar(
             select(CandidateEvidenceStorageReservation)
             .where(CandidateEvidenceStorageReservation.id == reservation_id)
@@ -162,9 +166,13 @@ def finalize_document_version(
     staged: StagedContent,
     storage: EvidenceStorage,
     original_filename: str,
+    media_type: str = "text/plain",
+    text_staged: StagedContent | None = None,
+    extraction_status: str = "NOT_REQUESTED",
+    extractor_version: str | None = None,
 ) -> FinalizedVersion:
     try:
-        with session.begin():
+        with _transaction_context(session):
             usage = _locked_usage(session)
             reservation = session.scalar(
                 select(CandidateEvidenceStorageReservation)
@@ -195,9 +203,14 @@ def finalize_document_version(
             if existing is not None:
                 if blob is None:
                     raise CandidateEvidenceError("EVIDENCE_STORAGE_INTEGRITY_ERROR", 503)
-                storage.verify(blob.storage_key, blob.content_hash, blob.byte_size)
-                if not storage.remove(staged.temp_key):
-                    raise CandidateEvidenceError("EVIDENCE_STORAGE_PENDING_RECONCILIATION", 503)
+                try:
+                    storage.verify(blob.storage_key, blob.content_hash, blob.byte_size)
+                except CandidateEvidenceError:
+                    if not storage.place(staged):
+                        raise
+                else:
+                    if not storage.remove(staged.temp_key):
+                        raise CandidateEvidenceError("EVIDENCE_STORAGE_PENDING_RECONCILIATION", 503)
                 usage.reserved_bytes -= reservation.reserved_bytes
                 usage.version += 1
                 session.delete(reservation)
@@ -217,15 +230,37 @@ def finalize_document_version(
                 blob = CandidateDocumentBlob(
                     content_hash=staged.content_hash,
                     storage_key=staged.final_key,
-                    media_type="text/plain",
+                    media_type=media_type,
                     byte_size=staged.byte_size,
                 )
                 session.add(blob)
                 usage.committed_bytes += staged.byte_size
             else:
-                storage.verify(blob.storage_key, blob.content_hash, blob.byte_size)
-                if not storage.remove(staged.temp_key):
-                    raise CandidateEvidenceError("EVIDENCE_STORAGE_PENDING_RECONCILIATION", 503)
+                try:
+                    storage.verify(blob.storage_key, blob.content_hash, blob.byte_size)
+                except CandidateEvidenceError:
+                    if not storage.place(staged):
+                        raise
+                else:
+                    if not storage.remove(staged.temp_key):
+                        raise CandidateEvidenceError("EVIDENCE_STORAGE_PENDING_RECONCILIATION", 503)
+
+            # If an extracted text artifact was staged separately, place and persist it
+            text_blob_hash = None
+            if text_staged is not None:
+                text_blob = session.get(CandidateDocumentBlob, text_staged.content_hash)
+                if text_blob is None:
+                    storage.place(text_staged)
+                    text_blob = CandidateDocumentBlob(
+                        content_hash=text_staged.content_hash,
+                        storage_key=text_staged.final_key,
+                        media_type="text/plain",
+                        byte_size=text_staged.byte_size,
+                    )
+                    session.add(text_blob)
+                    usage.committed_bytes += text_staged.byte_size
+                text_blob_hash = text_staged.content_hash
+
             version_number = (
                 session.scalar(
                     select(func.max(CandidateDocumentVersion.version_number)).where(
@@ -239,8 +274,10 @@ def finalize_document_version(
                 document_id=document_id,
                 version_number=version_number,
                 blob_hash=staged.content_hash,
+                text_artifact_hash=text_blob_hash or staged.content_hash,
                 original_filename=original_filename,
-                extraction_status="NOT_REQUESTED",
+                extraction_status=extraction_status,
+                extractor_version=extractor_version,
             )
             usage.reserved_bytes -= reservation.reserved_bytes
             usage.version += 1
@@ -259,7 +296,7 @@ def create_fact(session: Session, fact_type: str, value: dict[str, object]) -> C
         value_hash=value_hash,
         verification_state=FactVerificationState.UNREVIEWED.value,
     )
-    with session.begin():
+    with _transaction_context(session):
         session.add(fact)
     return fact
 
@@ -275,6 +312,20 @@ def list_facts(session: Session) -> list[CandidateFact]:
     return list(session.scalars(select(CandidateFact).order_by(CandidateFact.created_at.desc())))
 
 
+def verify_fact(session: Session, fact_id: str) -> CandidateFact:
+    fact = get_fact(session, fact_id)
+    with _transaction_context(session):
+        fact.verification_state = FactVerificationState.USER_VERIFIED.value
+    return fact
+
+
+def reject_fact(session: Session, fact_id: str) -> CandidateFact:
+    fact = get_fact(session, fact_id)
+    with _transaction_context(session):
+        fact.verification_state = FactVerificationState.REJECTED.value
+    return fact
+
+
 def attach_provenance(
     session: Session,
     fact_id: str,
@@ -286,12 +337,13 @@ def attach_provenance(
 ) -> CandidateFactEvidence:
     if end - start > 4096:
         raise CandidateEvidenceError("INVALID_PROVENANCE", 422)
-    with session.begin():
+    with _transaction_context(session):
         fact = session.scalar(select(CandidateFact).where(CandidateFact.id == fact_id).with_for_update())
         version = session.get(CandidateDocumentVersion, version_id)
         if fact is None or version is None:
             raise CandidateEvidenceError("FACT_OR_DOCUMENT_VERSION_NOT_FOUND", 404)
-        blob = session.get(CandidateDocumentBlob, version.blob_hash)
+        target_hash = getattr(version, "text_artifact_hash", None) or version.blob_hash
+        blob = session.get(CandidateDocumentBlob, target_hash)
         if blob is None:
             raise CandidateEvidenceError("EVIDENCE_STORAGE_INTEGRITY_ERROR", 503)
         storage.verify(blob.storage_key, blob.content_hash, blob.byte_size)
@@ -344,7 +396,7 @@ def reconcile_stale_reservations(
     released = 0
     protected = 0
     unexpected_files = 0
-    with session.begin():
+    with _transaction_context(session):
         usage = _locked_usage(session)
         reservations = list(
             session.scalars(

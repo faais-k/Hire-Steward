@@ -1,0 +1,37 @@
+{
+  "posting_id": "J_froz_12",
+  "title": "Learning Management Technology Specialist",
+  "employer_id": "EMP_FROZ_04",
+  "employer_name": "Beacon Global Higher Education",
+  "workplace_type": "remote",
+  "location": "Pune, Maharashtra, India",
+  "description_plain": "Support Canvas LMS administration, course integration, and digital pedagogical tooling.\n\nCompensation: Competitive package commensurate with experience (Undisclosed / Market Rate).\n\nRequirements:\n- 3+ years LMS administration experience (Canvas or Blackboard).\n- Strong customer service and faculty support orientation.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": null,
+    "amount_max": null,
+    "period": "YEAR",
+    "compensation_structure": "UNDISCLOSED",
+    "guaranteed_base": null,
+    "is_disclosed": false,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": [
+      "COMPENSATION_UNDISCLOSED"
+    ]
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Canvas LMS",
+      "LMS Administration",
+      "Faculty Support"
+    ],
+    "preferred_qualifications": [
+      "Blackboard"
+    ],
+    "experience_years_requested": 3
+  },
+  "lists_json": []
+}

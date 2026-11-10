@@ -1,0 +1,38 @@
+{
+  "posting_id": "J_froz_04",
+  "title": "Clinical Care Coordinator / Registered Nurse",
+  "employer_id": "EMP_FROZ_02",
+  "employer_name": "Apollo Regional Health Systems",
+  "workplace_type": "hybrid",
+  "location": "Hyderabad, Telangana, India",
+  "description_plain": "Oversee multidisciplinary patient care pathways, triage protocols, and clinical documentation within Epic EHR.\n\nStatutory Registration Requirement (State Nursing Council / INC Framework):\n- Active registration as a Registered Nurse & Registered Midwife (RN/RM) enrolled with the State Nursing Council under the operative statutory framework in India (noting that NNMC Act, 2023 repeal of the 1947 Act under Sec 56(1) and national Licence to Practise under Sec 27 await separate appointed date notification under Gazette S.O. 991(E) dated 29 Feb 2024).\n\nQualifications:\n- 5+ years of clinical nursing or care coordination experience.\n- Hands-on proficiency with Epic Hospital EHR.\n- Bachelor of Science in Nursing (BSN).",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 1300000.0,
+    "amount_max": 1600000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 1300000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "Mandatory Registration: Active State Nursing Council Registration as Registered Nurse & Registered Midwife (RN/RM) under operative statutory framework in India (pending separate appointed date notification for NNMC Act 2023 Sec 27 / Sec 56(1) repeal under Gazette S.O. 991(E) dated 29 Feb 2024)"
+    ],
+    "core_competencies": [
+      "Clinical Care Coordination",
+      "Patient Triage",
+      "EHR (Epic)",
+      "Care Planning"
+    ],
+    "preferred_qualifications": [
+      "BLS/ACLS Certification"
+    ],
+    "experience_years_requested": 5
+  },
+  "lists_json": []
+}

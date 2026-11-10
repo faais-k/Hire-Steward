@@ -1,0 +1,14 @@
+{
+  "posting_id": "J_froz_27",
+  "title": "Location & Schedule Stub",
+  "employer_id": "EMP_FROZ_08",
+  "employer_name": "Raw Dump Enterprises",
+  "workplace_type": "on_site",
+  "location": "Chennai, India",
+  "description_plain": "Shift hours: 9:00 AM to 6:00 PM, Monday through Friday.\nLocation: T. Nagar, Chennai, Tamil Nadu.\nCandidates must report in person daily.",
+  "completeness_status": "INCOMPLETE_STUB",
+  "incompleteness_reason": "Location and shift hours only; no job responsibilities or qualifications.",
+  "compensation": null,
+  "requirements": {},
+  "lists_json": []
+}

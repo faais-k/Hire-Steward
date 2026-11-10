@@ -1,0 +1,35 @@
+{
+  "posting_id": "J_calib_01",
+  "title": "Retail Inventory Supervisor",
+  "employer_id": "EMP_CALIB_01",
+  "employer_name": "Metro Mart Retail",
+  "workplace_type": "on_site",
+  "location": "Indore, India",
+  "description_plain": "Supervise stock reconciliation, point-of-sale inventory audits, and delivery intake at Metro Mart.\nRequirements: 3+ years retail inventory experience.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 450000.0,
+    "amount_max": 550000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 450000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "On-site in Indore"
+    ],
+    "core_competencies": [
+      "Retail Inventory",
+      "POS Systems",
+      "Stock Reconciliation"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 3
+  },
+  "lists_json": []
+}

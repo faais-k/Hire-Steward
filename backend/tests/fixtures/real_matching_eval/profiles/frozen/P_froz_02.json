@@ -1,0 +1,55 @@
+{
+  "profile_id": "P_froz_02",
+  "name": "Marcus Chen",
+  "contact_info": {
+    "email": "marcus.chen@example.invalid",
+    "phone": "+91-98765-01002",
+    "location": "Hyderabad, Telangana, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Science in Nursing (BSN)",
+    "degree_level": "Bachelor",
+    "field_of_study": "Nursing",
+    "institution": "Christian Medical College",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Clinical Care Coordinator",
+      "employer": "Apollo Regional Health",
+      "years": 6.0,
+      "description": "Managed multidisciplinary clinical triage, patient care plans, electronic health records (Epic EHR), and hospital accreditation compliance."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Clinical Care Coordination",
+    "Patient Triage",
+    "EHR (Epic)",
+    "Care Planning",
+    "Infection Control",
+    "Nursing Standards"
+  ],
+  "certifications": [
+    "State Nursing Council Registration (Telangana State Nursing Council / Indian Nursing Council Act 1947 framework; transitional alignment under NNMC Act 2023 Sec 56(5))",
+    "Basic Life Support (BLS)",
+    "Advanced Cardiovascular Life Support (ACLS)"
+  ],
+  "evidence_facts": [
+    {
+      "fact_id": "P_froz_02_F01",
+      "fact_type": "CERTIFICATION",
+      "statement": "Maintains an active, unencumbered licence to practise as a Registered Nurse & Midwife enrolled under the National Nursing and Midwifery Commission Act, 2023.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Registered Nurse",
+        "RN Licence",
+        "Clinical Care"
+      ],
+      "years_of_experience": 6.0
+    }
+  ]
+}

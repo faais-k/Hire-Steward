@@ -1,0 +1,14 @@
+{
+  "posting_id": "J_froz_28",
+  "title": "Empty Markdown Section Stub",
+  "employer_id": "EMP_FROZ_08",
+  "employer_name": "Raw Dump Enterprises",
+  "workplace_type": "remote",
+  "location": "Noida, India",
+  "description_plain": "# Operations Associate\n\n## Responsibilities\n\n## Qualifications\n\n- \n- \n",
+  "completeness_status": "MALFORMED",
+  "incompleteness_reason": "Markdown document with empty section headers and blank bullet items.",
+  "compensation": null,
+  "requirements": {},
+  "lists_json": []
+}

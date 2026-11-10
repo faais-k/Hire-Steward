@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JobPostingFixtureSchema",
+  "type": "object",
+  "required": [
+    "posting_id",
+    "title",
+    "employer_id",
+    "employer_name",
+    "workplace_type",
+    "location",
+    "description_plain",
+    "completeness_status"
+  ],
+  "properties": {
+    "posting_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "employer_id": {
+      "type": "string"
+    },
+    "employer_name": {
+      "type": "string"
+    },
+    "workplace_type": {
+      "type": "string",
+      "enum": [
+        "remote",
+        "hybrid",
+        "on_site"
+      ]
+    },
+    "location": {
+      "type": "string"
+    },
+    "description_plain": {
+      "type": "string"
+    },
+    "completeness_status": {
+      "type": "string",
+      "enum": [
+        "COMPLETE",
+        "PARTIAL",
+        "INCOMPLETE_STUB",
+        "MALFORMED"
+      ]
+    },
+    "incompleteness_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "compensation": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "amount_min": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "amount_max": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "period": {
+          "type": "string"
+        },
+        "compensation_structure": {
+          "type": "string",
+          "enum": [
+            "SALARIED",
+            "HOURLY",
+            "COMMISSION_ONLY",
+            "UNPAID",
+            "UNDISCLOSED"
+          ]
+        },
+        "guaranteed_base": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "is_disclosed": {
+          "type": "boolean"
+        },
+        "is_explicitly_unpaid": {
+          "type": "boolean"
+        },
+        "uncertainty_flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "properties": {
+        "mandatory_constraints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "core_competencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preferred_qualifications": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "experience_years_requested": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      }
+    },
+    "lists_json": {
+      "type": "array"
+    }
+  }
+}

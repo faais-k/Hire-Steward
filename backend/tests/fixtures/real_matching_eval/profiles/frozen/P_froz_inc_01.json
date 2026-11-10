@@ -1,0 +1,13 @@
+{
+  "profile_id": "P_froz_inc_01",
+  "name": null,
+  "contact_info": null,
+  "education_status": null,
+  "is_complete_profile": false,
+  "incompleteness_reason": "Completely empty candidate record with zero identity, contact, or education facts.",
+  "experience": [],
+  "projects": [],
+  "skills": [],
+  "certifications": [],
+  "evidence_facts": []
+}

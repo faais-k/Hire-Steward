@@ -1,0 +1,36 @@
+{
+  "posting_id": "J_froz_13",
+  "title": "Enterprise SaaS Account Executive",
+  "employer_id": "EMP_FROZ_05",
+  "employer_name": "CloudFrontier Commercial Solutions",
+  "workplace_type": "remote",
+  "location": "Mumbai, Maharashtra, India",
+  "description_plain": "Close 7-figure enterprise software contracts with mid-market and enterprise accounts.\n\nRequirements:\n- 5+ years quota-carrying B2B enterprise software sales experience.\n- Documented track record of 100%+ quota achievement and pipeline management.\n- Proficiency in Salesforce CRM and consultative solution selling.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 2500000.0,
+    "amount_max": 3000000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 2500000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Enterprise Software Sales",
+      "B2B Sales",
+      "Quota Attainment",
+      "Salesforce CRM"
+    ],
+    "preferred_qualifications": [
+      "MEDDIC Sales Process"
+    ],
+    "experience_years_requested": 5
+  },
+  "lists_json": []
+}

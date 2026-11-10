@@ -3,21 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hire-Steward — Job Discovery & Review Workbench</title>
+  <title>Hire-Steward — Autonomous Job Search & Review Workbench</title>
   <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <div class="app">
     <!-- Sidebar Navigation -->
-    <aside class="sidebar" aria-label="Application navigation">
+    <aside class="sidebar" id="app-sidebar" aria-label="Application navigation">
       <div class="brand">
         <div class="brand-icon" aria-hidden="true">H</div>
         <div class="brand-name">Hire-Steward</div>
         <span class="scope-badge">Local</span>
       </div>
 
-      <nav>
-        <button type="button" class="nav-item active" id="nav-opportunities-btn" aria-current="page">
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-title">Core Workflow</div>
+        <button type="button" class="nav-item active" id="nav-overview-btn" data-view="overview" aria-current="page">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <rect x="2" y="2" width="5" height="5" rx="1" stroke-width="1.5"/>
+            <rect x="9" y="2" width="5" height="5" rx="1" stroke-width="1.5"/>
+            <rect x="2" y="9" width="5" height="5" rx="1" stroke-width="1.5"/>
+            <rect x="9" y="9" width="5" height="5" rx="1" stroke-width="1.5"/>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-opportunities-btn" data-view="opportunities">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
             <rect x="2" y="3" width="12" height="10" rx="1.5" stroke-width="1.5"/>
             <path d="M5 6h6M5 9h4" stroke-width="1.5" stroke-linecap="round"/>
@@ -26,7 +37,7 @@
           <span class="nav-count num" id="sidebar-count">0</span>
         </button>
 
-        <button type="button" class="nav-item" id="nav-pipeline-btn">
+        <button type="button" class="nav-item" id="nav-pipeline-btn" data-view="pipeline">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
             <path d="M2 4h12M2 8h12M2 12h12" stroke-width="1.5" stroke-linecap="round"/>
             <circle cx="5" cy="4" r="1.5" fill="currentColor"/>
@@ -37,52 +48,118 @@
           <span class="nav-count num" id="pipeline-count">0</span>
         </button>
 
-        <button type="button" class="nav-item" id="nav-profile-btn">
+        <button type="button" class="nav-item" id="nav-preparation-btn" data-view="preparation">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M11 2H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V5l-2-3z" stroke-width="1.5"/>
+            <path d="M11 2v3h2M5 8h6M5 11h4" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Preparation</span>
+        </button>
+
+        <div class="sidebar-section-title">Candidate Profile</div>
+        <button type="button" class="nav-item" id="nav-profile-btn" data-view="profile">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
             <circle cx="8" cy="5" r="3" stroke-width="1.5"/>
             <path d="M3 14c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          <span>Candidate Facts</span>
+          <span>Candidate Profile</span>
+          <span class="nav-count num" id="profile-score-indicator">0%</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-evidence-btn" data-view="evidence">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M3 3h10v10H3z" stroke-width="1.5" rx="1"/>
+            <path d="M6 7l2 2 3-4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Evidence Library</span>
           <span class="nav-count num" id="candidate-facts-count">0</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-answers-btn" data-view="answers">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M2 3h12v7a1 1 0 01-1 1H5l-3 3V3z" stroke-width="1.5"/>
+            <circle cx="5" cy="7" r="0.8" fill="currentColor"/>
+            <circle cx="8" cy="7" r="0.8" fill="currentColor"/>
+            <circle cx="11" cy="7" r="0.8" fill="currentColor"/>
+          </svg>
+          <span>Answer Bank</span>
+          <span class="nav-count num" id="answers-count">0</span>
+        </button>
+
+        <div class="sidebar-section-title">Management &amp; Tools</div>
+        <button type="button" class="nav-item" id="nav-sources-btn" data-view="sources">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <circle cx="8" cy="8" r="6" stroke-width="1.5"/>
+            <path d="M2 8h12M8 2a10 10 0 010 12M8 2a10 10 0 000 12" stroke-width="1.2"/>
+          </svg>
+          <span>Source Registry</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-ai-btn" data-view="ai">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M8 1v3M8 12v3M1 8h3M12 8h3M3.5 3.5l2 2M10.5 10.5l2 2M3.5 12.5l2-2M10.5 5.5l2-2" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="8" cy="8" r="2.5" fill="currentColor"/>
+          </svg>
+          <span>AI &amp; Usage</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-settings-btn" data-view="settings">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <circle cx="8" cy="8" r="2.5" stroke-width="1.5"/>
+            <path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Settings &amp; Policy</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-portability-btn" data-view="portability">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <path d="M8 2v8M4 7l4 4 4-4M2 13h12" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Export &amp; Import</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-activity-btn" data-view="activity">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <circle cx="8" cy="8" r="6" stroke-width="1.5"/>
+            <path d="M8 4.5V8l2.5 1.5" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Activity Log</span>
+        </button>
+
+        <button type="button" class="nav-item" id="nav-system-btn" data-view="system">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="16" height="16">
+            <rect x="2" y="3" width="12" height="7" rx="1" stroke-width="1.5"/>
+            <path d="M5 13h6M8 10v3" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>System Health</span>
         </button>
       </nav>
 
       <div class="sidebar-bottom">
         <div class="fixture-notice">
-          <strong>Offline Mode</strong><br>
-          Synthetic fixtures &amp; user intake. Live employer scraping disabled.
+          <strong>Local-First Mode</strong><br>
+          Loopback enforced. External scraping &amp; telemetry disabled.
         </div>
       </div>
     </aside>
+    <div id="sidebar-backdrop" class="sidebar-backdrop" aria-hidden="true"></div>
 
     <!-- Main Content Area -->
     <div class="main-content">
       <!-- Top Bar -->
       <header class="topbar">
         <div class="topbar-title">
+          <button type="button" id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle navigation" aria-expanded="false" aria-controls="app-sidebar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
           <h1 class="topbar-heading">Job Discovery Workbench</h1>
-          <span class="tag" style="background:#fef3c7; color:#92400e; font-weight:600;">Synthetic Fixtures &amp; Offline Intake</span>
+          <span class="tag" id="view-mode-badge" style="background:#fef3c7; color:#92400e; font-weight:600;">Offline Safe</span>
         </div>
 
-        <div class="topbar-search">
+        <div class="topbar-search" id="topbar-search-container">
           <input type="search" id="search-input" placeholder="Search title, skills, employer..." aria-label="Search job opportunities">
           <span class="kbd-hint">Ctrl K</span>
         </div>
 
         <div class="filter-group">
-          <select id="workplace-filter" class="filter-select" aria-label="Filter by workplace arrangement">
-            <option value="">All Arrangements</option>
-            <option value="remote">Remote Only</option>
-            <option value="hybrid">Hybrid</option>
-            <option value="onsite">Onsite Only</option>
-          </select>
-
-          <select id="sort-select" class="filter-select" aria-label="Sort opportunities">
-            <option value="observed_desc">Latest Observed</option>
-            <option value="score_desc">Highest Match Score</option>
-            <option value="title_asc">Job Title (A-Z)</option>
-          </select>
-
           <button type="button" id="seed-btn" class="btn-secondary" title="Seed synthetic demo fixtures into local database">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" width="14" height="14">
               <path d="M8 2v12M2 8h12" stroke-width="1.7" stroke-linecap="round"/>
@@ -99,9 +176,77 @@
         </div>
       </header>
 
-      <!-- Workbench Split View -->
-      <main class="workbench" id="workbench-view">
-        <!-- Left Pane: Job List -->
+      <!-- View 1: Overview Dashboard -->
+      <main class="view-container" id="overview-view">
+        <div class="dashboard-kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Opportunities</span>
+            <span class="kpi-val" id="dash-opportunities-count">0</span>
+            <span class="kpi-sub">Persisted job postings</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Active Pipeline</span>
+            <span class="kpi-val" id="dash-pipeline-count">0</span>
+            <span class="kpi-sub">Applications tracked</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Candidate Facts</span>
+            <span class="kpi-val" id="dash-facts-count">0</span>
+            <span class="kpi-sub">Verified credentials</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Profile Health</span>
+            <span class="kpi-val" id="dash-profile-pct">0%</span>
+            <span class="kpi-sub" id="dash-profile-health-label">Incomplete</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">AI Budget Left</span>
+            <span class="kpi-val" id="dash-ai-budget">$5.00</span>
+            <span class="kpi-sub">Cap: $5.00 (Offline Mock)</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Quick Actions &amp; Workflows</h2>
+          </div>
+          <div class="quick-actions-grid">
+            <button type="button" class="action-card" id="qa-upload-resume">
+              <div class="action-icon">📄</div>
+              <div class="action-title">Upload Resume &amp; Documents</div>
+              <div class="action-desc">Parse PDF, DOCX, Markdown to extract candidate facts &amp; build profile.</div>
+            </button>
+            <button type="button" class="action-card" id="qa-explore-jobs">
+              <div class="action-icon">🔍</div>
+              <div class="action-title">Review Opportunities</div>
+              <div class="action-desc">Inspect match tiers, qualification gaps, and compensation requirements.</div>
+            </button>
+            <button type="button" class="action-card" id="qa-view-pipeline">
+              <div class="action-icon">📊</div>
+              <div class="action-title">Manage Pipeline</div>
+              <div class="action-desc">Move applications through 9 stages with dry-run simulations.</div>
+            </button>
+            <button type="button" class="action-card" id="qa-backup-data">
+              <div class="action-icon">💾</div>
+              <div class="action-title">Export Safe Backup</div>
+              <div class="action-desc">Download complete encrypted-free local JSON bundle with manifest checksum.</div>
+            </button>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Recent Activity Timeline</h2>
+            <button type="button" class="btn-secondary" id="dash-refresh-activity">Refresh</button>
+          </div>
+          <div id="overview-activity-feed" class="activity-feed">
+            <div class="state-desc">Loading recent activity events...</div>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 2: Opportunities Workbench (Split View) -->
+      <main class="workbench view-container" id="workbench-view" style="display:none; padding:0;">
         <section class="jobs-pane" aria-label="Opportunities list">
           <div class="jobs-pane-header">
             <div class="jobs-count"><span id="total-visible" class="num">0</span> opportunities</div>
@@ -112,14 +257,27 @@
               <button type="button" class="pill-btn" data-tier="WEAK_MATCH" role="tab" aria-selected="false">Weak</button>
               <button type="button" class="pill-btn" data-tier="BLOCKED_OR_CONTRADICTED" role="tab" aria-selected="false">Blocked</button>
             </div>
+            <div class="jobs-filters-bar" style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+              <select id="workplace-filter" class="form-input" style="padding:4px 8px; font-size:12px; height:auto; width:auto;" aria-label="Filter by workplace type">
+                <option value="">All Workplace Types</option>
+                <option value="remote">Remote</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="on_site">On-Site</option>
+              </select>
+              <select id="sort-select" class="form-input" style="padding:4px 8px; font-size:12px; height:auto; width:auto;" aria-label="Sort opportunities">
+                <option value="observed_desc">Newest First</option>
+                <option value="observed_asc">Oldest First</option>
+                <option value="score_desc">Highest Match</option>
+                <option value="score_asc">Lowest Match</option>
+              </select>
+            </div>
           </div>
 
           <div id="jobs-container" class="jobs-list" tabindex="0" role="listbox" aria-label="Select an opportunity to review">
-            <!-- Dynamic jobs list or skeletons will be injected here -->
+            <!-- Dynamic jobs list injected here -->
           </div>
         </section>
 
-        <!-- Right Pane: Detail & Match Inspector -->
         <section class="detail-pane" id="detail-pane" aria-label="Opportunity details and match explanation">
           <div class="state-box" style="margin-top: 60px;">
             <div class="state-title">Select an Opportunity</div>
@@ -128,8 +286,233 @@
         </section>
       </main>
 
-      <!-- Pipeline Tracker View (Milestone 5) -->
-      <main class="pipeline-container" id="pipeline-view" style="display: none;" aria-label="Application Pipeline Tracker">
+      <!-- View 3: Candidate Profile -->
+      <main class="view-container" id="profile-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Candidate Profile &amp; Verification</h2>
+              <div class="state-desc">Structured candidate details used for deterministic matching and application tailoring.</div>
+            </div>
+            <div style="text-align: right;">
+              <span style="font-weight:700; font-size:16px;" id="profile-completeness-badge">0% Complete</span>
+              <div class="completeness-bar" style="width: 140px;">
+                <div class="completeness-fill" id="profile-completeness-fill" style="width: 0%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="profile-recommendations-box" class="state-box" style="text-align:left; background:var(--raised); padding:12px; margin-bottom:12px; display:none;">
+            <strong>Recommendations:</strong>
+            <ul id="profile-recommendations-list" style="margin-left:20px; font-size:12px; margin-top:4px;"></ul>
+          </div>
+
+          <form id="candidate-profile-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="prof-name">Full Name *</label>
+                <input type="text" id="prof-name" class="form-input" placeholder="e.g. Alex Mercer" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prof-headline">Professional Headline</label>
+                <input type="text" id="prof-headline" class="form-input" placeholder="e.g. Staff Software Engineer | Distributed Systems">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label" for="prof-summary">Executive Summary</label>
+              <textarea id="prof-summary" class="form-textarea" placeholder="Summarize your engineering background, domains of expertise, and system achievements..."></textarea>
+            </div>
+
+            <div class="form-row" style="margin-top:12px;">
+              <div class="form-group">
+                <label class="form-label" for="prof-email">Email Address *</label>
+                <input type="email" id="prof-email" class="form-input" placeholder="alex@example.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prof-phone">Phone Number</label>
+                <input type="tel" id="prof-phone" class="form-input" placeholder="+1-555-0199">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prof-location">Location</label>
+                <input type="text" id="prof-location" class="form-input" placeholder="e.g. Bengaluru, India or Remote">
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top:12px;">
+              <div class="form-group">
+                <label class="form-label" for="prof-linkedin">LinkedIn Profile</label>
+                <input type="url" id="prof-linkedin" class="form-input" placeholder="https://linkedin.com/in/username">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prof-github">GitHub Profile</label>
+                <input type="url" id="prof-github" class="form-input" placeholder="https://github.com/username">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="prof-portfolio">Portfolio / Website</label>
+                <input type="url" id="prof-portfolio" class="form-input" placeholder="https://example.com">
+              </div>
+            </div>
+
+            <div class="form-row" style="margin-top:12px;">
+              <div class="form-group" style="flex:2;">
+                <label class="form-label" for="prof-skills">Technical Skills (Comma-separated)</label>
+                <input type="text" id="prof-skills" class="form-input" placeholder="Python, FastAPI, PostgreSQL, Docker, Kubernetes, Architecture">
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="prof-languages">Languages (Comma-separated)</label>
+                <input type="text" id="prof-languages" class="form-input" placeholder="English (Native), German (Professional)">
+              </div>
+            </div>
+
+            <!-- Structured Work Experience -->
+            <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label class="form-label" style="margin:0; font-size:13px; font-weight:700;">Employment History &amp; Experience</label>
+                <button type="button" class="btn-secondary" id="prof-add-exp-btn" style="font-size:11px; padding:3px 8px;">+ Add Position</button>
+              </div>
+              <div id="prof-exp-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+
+            <!-- Structured Education -->
+            <div style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <label class="form-label" style="margin:0; font-size:13px; font-weight:700;">Education &amp; Academic Background</label>
+                <button type="button" class="btn-secondary" id="prof-add-edu-btn" style="font-size:11px; padding:3px 8px;">+ Add Degree</button>
+              </div>
+              <div id="prof-edu-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+
+            <!-- Projects & Certifications -->
+            <div class="form-row" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <label class="form-label" style="margin:0; font-size:13px; font-weight:700;">Featured Projects</label>
+                  <button type="button" class="btn-secondary" id="prof-add-proj-btn" style="font-size:11px; padding:3px 8px;">+ Add Project</button>
+                </div>
+                <div id="prof-proj-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+              </div>
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                  <label class="form-label" style="margin:0; font-size:13px; font-weight:700;">Certifications</label>
+                  <button type="button" class="btn-secondary" id="prof-add-cert-btn" style="font-size:11px; padding:3px 8px;">+ Add Certification</button>
+                </div>
+                <div id="prof-cert-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px; display:flex; gap:12px; justify-content:flex-end;">
+              <button type="button" class="btn-secondary" id="prof-reset-btn">Reset</button>
+              <button type="submit" class="btn-primary" id="prof-save-btn">Save Profile Changes</button>
+            </div>
+          </form>
+        </div>
+      </main>
+
+      <!-- View 4: Evidence Library -->
+      <main class="view-container" id="evidence-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Document Extraction &amp; Upload</h2>
+              <div class="state-desc">Upload resumes, transcripts, or certifications (PDF, DOCX, Markdown, TXT up to 10MB).</div>
+            </div>
+          </div>
+
+          <div class="upload-dropzone" id="document-dropzone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="36" height="36" style="color:var(--accent);">
+              <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div style="margin-top:8px; font-weight:600;">Choose a file or drag &amp; drop here</div>
+            <div style="font-size:11px; color:var(--muted); margin-top:2px;">PDF, DOCX, Markdown, or Plain Text (Max 10MB)</div>
+            <input type="file" id="document-file-input" style="display:none;" accept=".pdf,.docx,.md,.txt">
+            <button type="button" class="btn-secondary" id="browse-doc-btn" style="margin-top:12px;">Browse Files</button>
+          </div>
+
+          <div id="parsed-preview-box" style="display:none; margin-top:16px; border:1px solid var(--border); border-radius:var(--radius-card); padding:16px; background:var(--raised);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong id="parsed-filename-display">Filename</strong>
+              <span class="tag" id="parsed-count-display">0 sections</span>
+            </div>
+            <pre id="parsed-text-content" style="max-height:160px; overflow-y:auto; font-size:12px; font-family:monospace; white-space:pre-wrap; background:var(--surface); padding:10px; border-radius:4px; border:1px solid var(--border); margin-bottom:12px;"></pre>
+            <div style="font-size:13px; font-weight:600; margin-bottom:8px;">Extracted Sections & Evidence Fact Mapping</div>
+            <div id="parsed-sections-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Extracted Candidate Facts</h2>
+            <span class="tag" id="facts-total-tag">0 Facts</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table" id="candidate-facts-table">
+              <thead>
+                <tr>
+                  <th>Fact Type</th>
+                  <th>Value</th>
+                  <th>Verification State</th>
+                  <th>Provenance</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="candidate-facts-tbody">
+                <tr><td colspan="5" style="text-align:center; color:var(--muted);">No candidate facts recorded yet. Upload a resume to extract facts.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 5: Application Preparation -->
+      <main class="view-container" id="preparation-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Tailored Application Preparation</h2>
+              <div class="state-desc">Synthesize evidence-grounded tailored resumes and cover letters for selected opportunities.</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <select id="prep-job-select" class="filter-select" style="min-width:240px;" aria-label="Select Target Job">
+                <option value="">-- Choose Opportunity --</option>
+              </select>
+              <button type="button" class="btn-primary" id="prep-generate-btn">Generate Tailored Draft</button>
+            </div>
+          </div>
+
+          <div id="prep-materials-container" style="display:none;">
+            <div class="tab-strip" style="margin-bottom:12px;">
+              <button type="button" class="tab-btn active" id="prep-tab-resume">Tailored Resume</button>
+              <button type="button" class="tab-btn" id="prep-tab-cover">Tailored Cover Letter</button>
+              <button type="button" class="tab-btn" id="prep-tab-claims">Evidence Claims &amp; Gaps</button>
+            </div>
+
+            <div id="prep-content-resume" class="prep-pane">
+              <textarea id="prep-resume-editor" class="form-textarea" style="min-height:350px; font-family:monospace; font-size:12px;"></textarea>
+            </div>
+
+            <div id="prep-content-cover" class="prep-pane" style="display:none;">
+              <textarea id="prep-cover-editor" class="form-textarea" style="min-height:350px; font-family:monospace; font-size:12px;"></textarea>
+            </div>
+
+            <div id="prep-content-claims" class="prep-pane" style="display:none;">
+              <div id="prep-claims-list"></div>
+            </div>
+
+            <div style="margin-top:16px; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:11px; color:var(--muted);">* All tailored claims are traced to active verified facts. Fabricated statements are rejected.</span>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn-primary" id="prep-create-plan-btn">Save to Pipeline Plan</button>
+                <button type="button" class="btn-secondary" id="prep-simulate-btn">Simulate Submission</button>
+              </div>
+            </div>
+            <div id="prep-simulation-receipt" style="margin-top:10px; font-size:12px; color:var(--accent); font-family:monospace; white-space:pre-wrap;"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 6: Application Pipeline (Kanban & List) -->
+      <main class="pipeline-container view-container" id="pipeline-view" style="display:none; padding:0;">
         <div class="pipeline-header-bar">
           <div class="pipeline-title-group">
             <h2 class="pipeline-heading">Application Pipeline</h2>
@@ -160,10 +543,278 @@
           <!-- Dynamically injected pipeline cards -->
         </div>
       </main>
+
+      <!-- View 7: Settings & Search Policies -->
+      <main class="view-container" id="settings-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Search Policies &amp; Thresholds</h2>
+              <div class="state-desc">Explicit review required. Target roles, minimum INR 300,000 compensation, India eligibility scope, and 30-day cooldown are enforced deterministically.</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn-secondary" id="load-recommended-defaults-btn">Load Proposed Defaults</button>
+              <button type="button" class="btn-primary" id="save-settings-btn">Save Policies</button>
+            </div>
+          </div>
+
+          <form id="user-settings-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="setting-min-comp">Minimum Annual Compensation (INR)</label>
+                <input type="number" id="setting-min-comp" class="form-input" min="0" step="10000" placeholder="300000">
+                <span style="font-size:11px; color:var(--muted);">Hard gate: Unverified or sub-threshold compensation requires manual override.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-daily-cap">Daily Application Cap</label>
+                <input type="number" id="setting-daily-cap" class="form-input" min="1" max="100" placeholder="5">
+                <span style="font-size:11px; color:var(--muted);">Prevents rate limits and candidate fatigue.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-cooldown">Same-Company Cooldown (Days)</label>
+                <input type="number" id="setting-cooldown" class="form-input" min="0" max="730" placeholder="30">
+                <span style="font-size:11px; color:var(--muted);">Minimum interval between applications to the same employer.</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top:16px;">
+              <label class="form-label" for="setting-target-roles">Target Roles (Comma-separated)</label>
+              <input type="text" id="setting-target-roles" class="form-input" placeholder="Staff Software Engineer, Backend Architect, AI Engineer">
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+              <label class="form-label" for="setting-target-locs">Target Locations (Comma-separated)</label>
+              <input type="text" id="setting-target-locs" class="form-input" placeholder="Remote, Bengaluru, India">
+            </div>
+
+            <div class="form-row" style="margin-top:16px;">
+              <div class="form-group">
+                <label class="form-label">Workplace Arrangements</label>
+                <div style="display:flex; gap:16px; margin-top:6px;">
+                  <label><input type="checkbox" id="wp-remote" value="remote" checked> Remote</label>
+                  <label><input type="checkbox" id="wp-hybrid" value="hybrid" checked> Hybrid</label>
+                  <label><input type="checkbox" id="wp-onsite" value="onsite"> Onsite</label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="setting-sponsorship">Work Authorization Requirement</label>
+                <select id="setting-sponsorship" class="form-input">
+                  <option value="not_required">No Sponsorship Required</option>
+                  <option value="required">Requires Sponsorship</option>
+                  <option value="will_sponsor_only">Will Sponsor Only</option>
+                </select>
+              </div>
+            </div>
+          </form>
+        </div>
+      </main>
+
+      <!-- View 8: Answer Bank -->
+      <main class="view-container" id="answers-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Interview Answer Bank</h2>
+              <div class="state-desc">Reusable, candidate-approved responses for recurring application and screening questions.</div>
+            </div>
+            <button type="button" class="btn-primary" id="add-answer-btn">+ New Response</button>
+          </div>
+
+          <div class="filter-group" style="margin-bottom:12px;">
+            <div class="tier-pills" id="answer-cat-pills">
+              <button type="button" class="pill-btn active" data-cat="">All Categories</button>
+              <button type="button" class="pill-btn" data-cat="behavioral">Behavioral</button>
+              <button type="button" class="pill-btn" data-cat="technical">Technical</button>
+              <button type="button" class="pill-btn" data-cat="logistics">Logistics</button>
+              <button type="button" class="pill-btn" data-cat="compensation">Compensation</button>
+            </div>
+          </div>
+
+          <div id="answer-cards-container" class="answer-cards-grid">
+            <!-- Dynamically populated answer cards -->
+          </div>
+        </div>
+      </main>
+
+      <!-- View 9: Source Registry -->
+      <main class="view-container" id="sources-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Job Source Registry</h2>
+              <div class="state-desc">Configured job boards, ATS ingest adapters, rate limits, and compliance status.</div>
+            </div>
+          </div>
+
+          <div class="heuristic-banner" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; margin-bottom:14px; padding:10px 14px; border-radius:6px; font-size:12px;">
+            <strong>Offline Safe Architecture:</strong> External network fetching and web scraping remain strictly disabled. Enabling a verified read-only adapter permits ingestion from local fixtures or sanctioned APIs; adapters without terms review remain disabled.
+          </div>
+
+          <div class="table-container">
+            <table class="data-table" id="source-registry-table">
+              <thead>
+                <tr>
+                  <th>Source Name</th>
+                  <th>Display Name</th>
+                  <th>Capability Status</th>
+                  <th>Rate Limit</th>
+                  <th>Live Scraping</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="source-registry-tbody">
+                <!-- Dynamically populated sources -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 10: AI & Usage -->
+      <main class="view-container" id="ai-view" style="display:none;">
+        <div class="dashboard-kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">Active AI Mode</span>
+            <span class="kpi-val" id="ai-mode-display">OFFLINE_MOCK</span>
+            <span class="kpi-sub">Deterministic Local</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Budget Cap</span>
+            <span class="kpi-val" id="ai-budget-cap">$5.00</span>
+            <span class="kpi-sub">Authorized limit</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Committed Spend</span>
+            <span class="kpi-val" id="ai-committed-spend">$0.00</span>
+            <span class="kpi-sub">Incurred so far</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Remaining Funds</span>
+            <span class="kpi-val" id="ai-remaining-funds">$5.00</span>
+            <span class="kpi-sub">Available headroom</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">AI Assistant &amp; Pre-Approved Question Resolver</h2>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="ai-test-question">Ask Question or Prompt</label>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="ai-test-question" class="form-input" style="flex:1;" placeholder="e.g. Describe your experience with distributed consensus and state machines.">
+              <button type="button" class="btn-primary" id="ai-ask-btn">Resolve Answer</button>
+            </div>
+          </div>
+          <div id="ai-answer-result-box" style="display:none; margin-top:12px; padding:16px; border:1px solid var(--border); border-radius:var(--radius-card); background:var(--raised);">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span class="tag" id="ai-answer-source-tag">Answer Bank</span>
+              <span style="font-size:11px; color:var(--muted);" id="ai-confidence-tag">Confidence: 100%</span>
+            </div>
+            <p id="ai-answer-text" style="font-size:13px;"></p>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 11: Export & Import / Data Portability -->
+      <main class="view-container" id="portability-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Data Backup &amp; Portability</h2>
+              <div class="state-desc">Safe JSON data export and atomic restore bundles conforming to 'hire-steward-export-v1'.</div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="kpi-card" style="padding:20px;">
+              <h3 style="font-size:15px; margin-bottom:6px;">Export Full Backup</h3>
+              <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">
+                Download an export bundle with your candidate profile, answer bank, facts, and settings. Secrets and credentials are automatically redacted.
+              </p>
+              <button type="button" class="btn-primary" id="export-download-btn">Download Backup (.json)</button>
+            </div>
+
+            <div class="kpi-card" style="padding:20px;">
+              <h3 style="font-size:15px; margin-bottom:6px;">Restore from Backup</h3>
+              <p style="font-size:12px; color:var(--muted); margin-bottom:16px;">
+                Preview incoming bundle checksums, inspect collision counts, and execute an atomic restore into your local database.
+              </p>
+              <input type="file" id="import-file-input" style="display:none;" accept=".json">
+              <button type="button" class="btn-secondary" id="import-browse-btn">Choose Backup File</button>
+            </div>
+          </div>
+
+          <div id="import-preview-modal-box" style="display:none; margin-top:16px; border:1px solid var(--border); border-radius:var(--radius-card); padding:16px; background:var(--raised);">
+            <h3 style="font-size:14px; margin-bottom:8px;">Import Bundle Preview</h3>
+            <div id="import-preview-details" style="font-size:12px; margin-bottom:12px;"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+              <button type="button" class="btn-secondary" id="import-cancel-btn">Cancel</button>
+              <button type="button" class="btn-primary" id="import-confirm-btn">Confirm &amp; Restore</button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 12: Activity & Audit Feed -->
+      <main class="view-container" id="activity-view" style="display:none;">
+        <div class="section-card">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Activity Timeline &amp; Audit Log</h2>
+              <div class="state-desc">Immutable history of pipeline transitions, policy adjustments, and system events.</div>
+            </div>
+            <button type="button" class="btn-secondary" id="refresh-activity-btn">Refresh</button>
+          </div>
+
+          <div id="full-activity-feed" class="activity-feed">
+            <div class="state-desc">Loading activity events...</div>
+          </div>
+        </div>
+      </main>
+
+      <!-- View 13: System Health -->
+      <main class="view-container" id="system-view" style="display:none;">
+        <div class="dashboard-kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">System Health</span>
+            <span class="kpi-val" id="sys-status-val">Healthy</span>
+            <span class="kpi-sub" id="sys-loopback-indicator">Loopback Enforced</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Database Connection</span>
+            <span class="kpi-val" id="sys-db-val">Connected</span>
+            <span class="kpi-sub">SQLite / PostgreSQL</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Evidence Storage</span>
+            <span class="kpi-val" id="sys-storage-val">Writable</span>
+            <span class="kpi-sub" id="sys-storage-path">Local Path</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Total Opportunities</span>
+            <span class="kpi-val" id="sys-total-jobs">0</span>
+            <span class="kpi-sub">In database</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="section-header">
+            <h2 class="section-title">Operational Diagnostics &amp; Runtime Security</h2>
+          </div>
+          <div style="font-size:12px; display:flex; flex-direction:column; gap:8px;">
+            <div><strong>Allowed Hosts:</strong> localhost, 127.0.0.1, [::1], testserver</div>
+            <div><strong>External Scraping:</strong> Disabled (Pure offline &amp; synthetic fixture mode)</div>
+            <div><strong>Model Inference:</strong> Offline Mock Adapter (No live outbound API traffic)</div>
+            <div><strong>Credentials Policy:</strong> Redacting Formatter active (Zero secrets in logs or exports)</div>
+          </div>
+        </div>
+      </main>
     </div>
   </div>
 
   <div id="modal-container" style="display:none;" role="dialog" aria-modal="true"></div>
+  <div id="toast-container" style="position:fixed; bottom:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:8px; max-width:380px; pointer-events:none;" aria-live="polite"></div>
 
   <script src="app.js"></script>
 </body>

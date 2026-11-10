@@ -91,6 +91,42 @@ class EvidenceStorage:
             final_key=storage_key_for_hash(content_hash),
         )
 
+    def stage_binary(self, temp_key: str, data: bytes) -> StagedContent:
+        """Stage raw binary or text data without UTF-8 constraint or null-byte rejection."""
+        self.initialize()
+        path = self._path(temp_key)
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if len(data) > self.settings.max_version_bytes:
+            raise CandidateEvidenceError("DOCUMENT_TOO_LARGE", 413)
+        if len(data) == 0:
+            raise CandidateEvidenceError("INVALID_DOCUMENT_CONTENT", 422)
+
+        try:
+            with path.open("xb") as target:
+                if os.name != "nt":
+                    os.chmod(path, 0o600)
+                target.write(data)
+        except Exception as exc:
+            if not self.remove(temp_key):
+                raise CandidateEvidenceError("EVIDENCE_STORAGE_PENDING_RECONCILIATION", 503) from exc
+            raise
+
+        content_hash = hashlib.sha256(data).hexdigest()
+        return StagedContent(
+            temp_key=temp_key,
+            content_hash=content_hash,
+            byte_size=len(data),
+            final_key=storage_key_for_hash(content_hash),
+        )
+
+    def read_bytes(self, key: str) -> bytes:
+        """Read full binary contents with integrity and traversal checks."""
+        try:
+            with self._path(key).open("rb") as source:
+                return source.read()
+        except OSError as exc:
+            raise CandidateEvidenceError("EVIDENCE_STORAGE_INTEGRITY_ERROR", 503) from exc
+
     def remove(self, key: str) -> bool:
         try:
             self._path(key).unlink(missing_ok=True)

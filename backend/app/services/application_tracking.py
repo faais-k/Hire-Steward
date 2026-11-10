@@ -69,9 +69,6 @@ def save_or_track_job(
     if request.initial_status == ApplicationStatus.APPLIED:
         raise DirectAppliedTransitionNotAllowedError("NONE")
 
-    if request.initial_status == ApplicationStatus.APPLIED:
-        raise DirectAppliedTransitionNotAllowedError("NONE")
-
     posting = _resolve_job_posting(session, request.job_posting_id)
 
     # Check for existing tracking record
@@ -206,6 +203,20 @@ def transition_application_status(
             created_at=now,
         )
         session.add(history)
+
+        from backend.app.services.audit import record_audit_event
+
+        record_audit_event(
+            session,
+            event_type="APPLICATION_STATUS_TRANSITIONED",
+            entity_type="APPLICATION",
+            entity_id=app.id,
+            payload_json={
+                "from_status": current_status,
+                "to_status": target_status,
+                "reason": request.reason,
+            },
+        )
         session.commit()
         session.refresh(app)
 
@@ -268,10 +279,23 @@ def confirm_application_submission(
     if request.resume_markdown is not None:
         app.submitted_resume_snapshot = request.resume_markdown
         app.submitted_resume_sha256 = compute_content_sha256(request.resume_markdown)
+    elif app.reviewed_resume_markdown is not None:
+        app.submitted_resume_snapshot = app.reviewed_resume_markdown
+        app.submitted_resume_sha256 = compute_content_sha256(app.reviewed_resume_markdown)
 
     if request.cover_letter_markdown is not None:
         app.submitted_cover_letter_snapshot = request.cover_letter_markdown
         app.submitted_cover_letter_sha256 = compute_content_sha256(request.cover_letter_markdown)
+    elif app.reviewed_cover_letter_markdown is not None:
+        app.submitted_cover_letter_snapshot = app.reviewed_cover_letter_markdown
+        app.submitted_cover_letter_sha256 = compute_content_sha256(app.reviewed_cover_letter_markdown)
+
+    if not app.submitted_resume_snapshot and not app.submitted_cover_letter_snapshot:
+        if not (request.notes and request.notes.strip()):
+            raise InvalidStateTransitionError(
+                app.status,
+                ApplicationStatus.APPLIED.value,
+            )
 
     if request.notes:
         if app.notes:
@@ -281,14 +305,35 @@ def confirm_application_submission(
 
     app.version += 1
 
+    details = []
+    if app.submitted_resume_sha256:
+        details.append(f"resume_sha256={app.submitted_resume_sha256[:12]}")
+    if app.submitted_cover_letter_sha256:
+        details.append(f"cl_sha256={app.submitted_cover_letter_sha256[:12]}")
+    reason_detail = f" ({', '.join(details)})" if details else " (manual external entry)"
+
     history = ApplicationStatusHistory(
         application_id=app.id,
         from_status=current_status,
         to_status=ApplicationStatus.APPLIED.value,
-        transition_reason="Candidate confirmed application submission",
+        transition_reason=f"Candidate confirmed application submission{reason_detail}",
         created_at=now,
     )
     session.add(history)
+
+    from backend.app.services.audit import record_audit_event
+
+    record_audit_event(
+        session,
+        event_type="APPLICATION_STATUS_TRANSITIONED",
+        entity_type="APPLICATION",
+        entity_id=app.id,
+        payload_json={
+            "from_status": current_status,
+            "to_status": ApplicationStatus.APPLIED.value,
+            "notes": request.notes,
+        },
+    )
     session.commit()
     session.refresh(app)
     return app

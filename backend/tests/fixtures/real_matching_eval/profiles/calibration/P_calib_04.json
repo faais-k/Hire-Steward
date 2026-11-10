@@ -1,0 +1,49 @@
+{
+  "profile_id": "P_calib_04",
+  "name": "Vikramaditya Roy",
+  "contact_info": {
+    "email": "vikram.roy@example.invalid",
+    "phone": "+91-98765-03004",
+    "location": "Jamshedpur, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Diploma in Industrial Plant Maintenance",
+    "degree_level": "Diploma",
+    "field_of_study": "Plant Engineering",
+    "institution": "Tata Technical Institute",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Plant Maintenance Technician",
+      "employer": "Heavy Forge Works",
+      "years": 5.0,
+      "description": "Inspected pneumatic presses, hydraulic lines, and preventive maintenance logs."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Hydraulic Systems",
+    "Pneumatic Maintenance",
+    "Preventive Maintenance",
+    "Plant Safety"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_calib_04_F01",
+      "fact_type": "SKILL",
+      "statement": "Vikramaditya Roy exhibits verified background in Hydraulic Systems.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Hydraulic Systems",
+        "Pneumatic Maintenance",
+        "Preventive Maintenance"
+      ],
+      "years_of_experience": 5.0
+    }
+  ]
+}

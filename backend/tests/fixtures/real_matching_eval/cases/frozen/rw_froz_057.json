@@ -1,0 +1,89 @@
+{
+  "case_id": "rw_froz_057",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_08",
+  "source_platform": "PIPE_SYNTH_DUMP",
+  "formatting_cluster_id": "FMT_FROZ_08",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_08",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_25",
+    "title": "Truncated HTML Snippet",
+    "employer_id": "EMP_FROZ_08",
+    "employer_name": "Raw Dump Enterprises",
+    "workplace_type": "remote",
+    "location": "Bengaluru, India",
+    "description_plain": "<div><h2>Job Overview</h2><p>Seeking experienced professional for client operations. Detailed requirements will follow in</p>",
+    "completeness_status": "INCOMPLETE_STUB",
+    "incompleteness_reason": "Cut-off unclosed HTML fragment lacking qualifications.",
+    "compensation": null,
+    "requirements": {},
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_07",
+  "candidate_profile": {
+    "profile_id": "P_froz_07",
+    "name": "Priya Nair",
+    "contact_info": {
+      "email": "priya.nair@example.invalid",
+      "phone": "+91-98765-01007",
+      "location": "Bengaluru, Karnataka, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Technology in Computer Science",
+      "degree_level": "Bachelor",
+      "field_of_study": "Computer Science",
+      "institution": "NIT Calicut",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Senior Cloud Software Engineer",
+        "employer": "FintechHub Technologies",
+        "years": 6.0,
+        "description": "Architected low-latency transaction processing APIs in Python (FastAPI) and TypeScript (React), deployed on AWS ECS with PostgreSQL."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Python",
+      "FastAPI",
+      "TypeScript",
+      "React",
+      "PostgreSQL",
+      "AWS",
+      "Docker",
+      "REST APIs"
+    ],
+    "certifications": [
+      "AWS Certified Solutions Architect Associate"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_07_F01",
+        "fact_type": "SKILL",
+        "statement": "6 years full-stack Python/FastAPI, TypeScript, and AWS cloud engineering.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Python",
+          "FastAPI",
+          "TypeScript",
+          "PostgreSQL",
+          "AWS"
+        ],
+        "years_of_experience": 6.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Evaluate cut-off HTML snippet: parse valid opening section; disclose truncated body; abstain cautiously on unstated criteria rather than assuming failure."
+}

@@ -1,0 +1,38 @@
+{
+  "posting_id": "J_froz_16",
+  "title": "Senior Mechanical Design Engineer",
+  "employer_id": "EMP_FROZ_06",
+  "employer_name": "Precision Engineering Dynamics",
+  "workplace_type": "on_site",
+  "location": "Coimbatore, Tamil Nadu, India",
+  "description_plain": "Design high-reliability automotive powertrain assemblies, validate GD&T tolerances per ASME Y14.5, and supervise CNC tooling manufacture.\n\nRequirements:\n- 6+ years of mechanical design engineering in an automotive or industrial setting.\n- Professional fluency in SolidWorks 3D CAD modeling and GD&T drafting.\n- Bachelor of Engineering / Technology in Mechanical Engineering.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 1600000.0,
+    "amount_max": 2000000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 1600000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "On-site plant presence in Coimbatore"
+    ],
+    "core_competencies": [
+      "SolidWorks CAD",
+      "GD&T (ASME Y14.5)",
+      "Mechanical Design",
+      "Manufacturing Tooling"
+    ],
+    "preferred_qualifications": [
+      "CSWP Certification"
+    ],
+    "experience_years_requested": 6
+  },
+  "lists_json": []
+}

@@ -1,0 +1,37 @@
+{
+  "posting_id": "J_froz_11",
+  "title": "On-Site Higher-Ed Curriculum Director (London Campus)",
+  "employer_id": "EMP_FROZ_04",
+  "employer_name": "Beacon Global Higher Education",
+  "workplace_type": "on_site",
+  "location": "London, United Kingdom",
+  "description_plain": "Direct our central London university partner curriculum review board.\n\nMandatory Constraints:\n- 100% physical on-site presence at our central London campus.\n- Unrestricted existing right-to-work in the UK (no visa sponsorship provided).\n- 8+ years UK higher education leadership experience.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 6500000.0,
+    "amount_max": 7500000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 6500000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "100% on-site London physical attendance",
+      "Unrestricted UK right-to-work"
+    ],
+    "core_competencies": [
+      "Curriculum Governance",
+      "Academic Leadership"
+    ],
+    "preferred_qualifications": [
+      "PhD in Education"
+    ],
+    "experience_years_requested": 8
+  },
+  "lists_json": []
+}

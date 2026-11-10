@@ -1,0 +1,23 @@
+{
+  "profile_id": "P_froz_inc_07",
+  "name": null,
+  "contact_info": null,
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Diploma in Mechanical Drafting",
+    "degree_level": "Diploma",
+    "field_of_study": "Drafting",
+    "institution": "Government Polytechnic",
+    "is_verified": true
+  },
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate profile contains only education status; name and contact missing.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "Drafting",
+    "Blueprint Reading"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

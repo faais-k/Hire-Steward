@@ -1,0 +1,49 @@
+{
+  "profile_id": "P_calib_08",
+  "name": "Kunal Joshi",
+  "contact_info": {
+    "email": "kunal.j@example.invalid",
+    "phone": "+91-98765-03008",
+    "location": "Ahmedabad, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Science in Chemistry",
+    "degree_level": "Bachelor",
+    "field_of_study": "Chemistry",
+    "institution": "Gujarat University",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Quality Assurance Inspector",
+      "employer": "Amrit Pharma Packaging",
+      "years": 4.0,
+      "description": "Conducted physical packaging inspections, container sealing checks, and ISO 9001 audits."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Packaging QA",
+    "ISO 9001 Auditing",
+    "Batch Record Review",
+    "Defect Logging"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_calib_08_F01",
+      "fact_type": "SKILL",
+      "statement": "Kunal Joshi exhibits verified background in Packaging QA.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Packaging QA",
+        "ISO 9001 Auditing",
+        "Batch Record Review"
+      ],
+      "years_of_experience": 4.0
+    }
+  ]
+}

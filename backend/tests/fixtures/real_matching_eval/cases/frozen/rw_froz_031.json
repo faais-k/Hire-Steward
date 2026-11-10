@@ -1,0 +1,112 @@
+{
+  "case_id": "rw_froz_031",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_01",
+  "source_platform": "ATS_GREENHOUSE",
+  "formatting_cluster_id": "FMT_FROZ_01",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_01",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_03",
+    "title": "Junior Financial Operations Associate (Tokyo Office)",
+    "employer_id": "EMP_FROZ_01",
+    "employer_name": "Apex Global Treasury Solutions",
+    "workplace_type": "on_site",
+    "location": "Tokyo, Japan",
+    "description_plain": "On-site financial entry and invoice processing in our Tokyo headquarters.\n\nWorkplace Location & Visa Sponsorship Policy:\n- Physical on-site attendance at Tokyo office required (Employer Workplace Location Policy).\n- Employer Visa Policy: The employer does not provide visa sponsorship or Certificate of Eligibility (COE) processing for this role. Candidates must possess existing independent legal authorization to work in Japan (e.g. Permanent Resident, Spouse/Child of Japanese National, or active valid Status of Residence with change-of-employer eligibility under Japan Immigration Services Agency guidelines) prior to hire.\n- Fluent Japanese and basic accounting knowledge.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 500000.0,
+      "amount_max": 600000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 500000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Mandatory on-site attendance at Tokyo office (Employer Location Policy)",
+        "Existing independent Japan work authorization (Employer No-Visa-Sponsorship Policy)"
+      ],
+      "core_competencies": [
+        "Invoice Processing",
+        "Data Entry"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 1
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_01",
+  "candidate_profile": {
+    "profile_id": "P_froz_01",
+    "name": "Elena Rostova",
+    "contact_info": {
+      "email": "elena.rostova@example.invalid",
+      "phone": "+91-98765-01001",
+      "location": "Bengaluru, Karnataka, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Science in Finance and Economics",
+      "degree_level": "Bachelor",
+      "field_of_study": "Finance & Economics",
+      "institution": "University of Mumbai",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Senior Financial Analyst",
+        "employer": "Apex Retail Group",
+        "years": 5.0,
+        "description": "Led corporate budgeting, 5-year financial modeling, variance reporting, and capital expenditure analysis using Excel VBA and PowerBI."
+      }
+    ],
+    "projects": [
+      {
+        "name": "Automated Variance Dashboard",
+        "description": "Constructed automated cash flow forecasting dashboard reducing variance by 14%."
+      }
+    ],
+    "skills": [
+      "Financial Modeling",
+      "Corporate Budgeting",
+      "Variance Analysis",
+      "Excel VBA",
+      "PowerBI",
+      "GAAP",
+      "Forecasting"
+    ],
+    "certifications": [
+      "Certified Financial Modeling Specialist (CFMS)"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_01_F01",
+        "fact_type": "SKILL",
+        "statement": "Elena has 5 years of experience in corporate financial modeling and forecasting.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Financial Modeling",
+          "Forecasting",
+          "Variance Analysis"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Fails employer workplace & visa policy: role requires existing independent Japan work authorization (employer does not provide COE visa sponsorship)."
+}

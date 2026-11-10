@@ -1,0 +1,37 @@
+{
+  "posting_id": "J_froz_10",
+  "title": "Senior Instructional Designer",
+  "employer_id": "EMP_FROZ_04",
+  "employer_name": "Beacon Global Higher Education",
+  "workplace_type": "remote",
+  "location": "Pune, Maharashtra, India",
+  "description_plain": "Design modern, asynchronous online degree programs in Canvas LMS for our university partners.\n\nRequirements:\n- 4+ years of instructional design experience in higher-ed or enterprise edtech.\n- Mastery of Canvas LMS course configuration and SCORM authoring in Articulate 360.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 1500000.0,
+    "amount_max": 1800000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 1500000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Instructional Design",
+      "Canvas LMS",
+      "Curriculum Development",
+      "SCORM Authoring"
+    ],
+    "preferred_qualifications": [
+      "Articulate 360",
+      "Higher Education Experience"
+    ],
+    "experience_years_requested": 4
+  },
+  "lists_json": []
+}

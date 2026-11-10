@@ -1,0 +1,939 @@
+{
+  "mapping_version": "1.0.0",
+  "total_cases": 92,
+  "partitions": {
+    "frozen_benchmark_cases": 60,
+    "calibration_cases": 20,
+    "adversarial_regression_cases": 12
+  },
+  "candidate_completeness_breakdown": {
+    "complete_profiles": 82,
+    "incomplete_profiles": 10
+  },
+  "posting_completeness_breakdown": {
+    "complete_postings": 82,
+    "incomplete_stubs": 10
+  },
+  "cases": [
+    {
+      "case_id": "rw_froz_001",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_01",
+      "job_posting_id": "J_froz_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Strong match in corporate financial modeling and forecasting."
+    },
+    {
+      "case_id": "rw_froz_002",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_01",
+      "job_posting_id": "J_froz_02",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Strong match in corporate treasury and cash flow variance."
+    },
+    {
+      "case_id": "rw_froz_003",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_02",
+      "job_posting_id": "J_froz_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Strong match in clinical nursing coordination with active RN license."
+    },
+    {
+      "case_id": "rw_froz_004",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_02",
+      "job_posting_id": "J_froz_06",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Strong match in hospital EHR patient chart documentation."
+    },
+    {
+      "case_id": "rw_froz_005",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_03",
+      "job_posting_id": "J_froz_13",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Strong match in enterprise B2B SaaS software sales."
+    },
+    {
+      "case_id": "rw_froz_006",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_04",
+      "job_posting_id": "J_froz_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Strong match in supply chain warehouse and SAP ERP operations."
+    },
+    {
+      "case_id": "rw_froz_007",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_05",
+      "job_posting_id": "J_froz_10",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Strong match in instructional design and Canvas LMS course authoring."
+    },
+    {
+      "case_id": "rw_froz_008",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_05",
+      "job_posting_id": "J_froz_12",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Customer Support & Client Advocacy",
+      "intended_test_purpose": "Strong match in LMS administration with non-blocking undisclosed compensation."
+    },
+    {
+      "case_id": "rw_froz_009",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_06",
+      "job_posting_id": "J_froz_16",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Strong match in mechanical design, SolidWorks CAD, and ASME GD&T."
+    },
+    {
+      "case_id": "rw_froz_010",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_07",
+      "job_posting_id": "J_froz_17",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Strong match in full-stack cloud software engineering (Python/React/AWS)."
+    },
+    {
+      "case_id": "rw_froz_011",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_08",
+      "job_posting_id": "J_froz_15",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Strong match in customer service operations and Zendesk SLAs."
+    },
+    {
+      "case_id": "rw_froz_012",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_04",
+      "job_posting_id": "J_froz_02",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Cross-cluster match in financial supply chain forecasting."
+    },
+    {
+      "case_id": "rw_froz_013",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_07",
+      "job_posting_id": "J_froz_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Transferable data engineering background applied to quantitative corporate finance."
+    },
+    {
+      "case_id": "rw_froz_014",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_10",
+      "job_posting_id": "J_froz_14",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Evaluate commission-only handling: must disclose COMMISSION_ONLY & NO_GUARANTEED_BASE, not treat as unpaid."
+    },
+    {
+      "case_id": "rw_froz_015",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_08",
+      "job_posting_id": "J_froz_12",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Customer Support & Client Advocacy",
+      "intended_test_purpose": "Transferable customer support operations background applied to faculty LMS support."
+    },
+    {
+      "case_id": "rw_froz_016",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_09",
+      "job_posting_id": "J_froz_15",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Transferable HR talent coordination background applied to support escalation leadership."
+    },
+    {
+      "case_id": "rw_froz_017",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_06",
+      "job_posting_id": "J_froz_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Transferable mechanical plant manufacturing background applied to supply chain operations."
+    },
+    {
+      "case_id": "rw_froz_018",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_04",
+      "job_posting_id": "J_froz_16",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Transferable industrial operations background applied to mechanical manufacturing tooling."
+    },
+    {
+      "case_id": "rw_froz_019",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_05",
+      "job_posting_id": "J_froz_15",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Transferable instructional design background applied to customer advocacy and training."
+    },
+    {
+      "case_id": "rw_froz_020",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_11",
+      "job_posting_id": "J_froz_15",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Career starter with 0 exp / 0 projects evaluated for entry-level support without invalidation."
+    },
+    {
+      "case_id": "rw_froz_021",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_02",
+      "job_posting_id": "J_froz_16",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Domain mismatch: clinical healthcare nurse applied to mechanical CAD engineer."
+    },
+    {
+      "case_id": "rw_froz_022",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_06",
+      "job_posting_id": "J_froz_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Domain mismatch: mechanical engineer applied to clinical care coordinator."
+    },
+    {
+      "case_id": "rw_froz_023",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_01",
+      "job_posting_id": "J_froz_10",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Domain mismatch: corporate financial analyst applied to instructional designer."
+    },
+    {
+      "case_id": "rw_froz_024",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_03",
+      "job_posting_id": "J_froz_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Domain mismatch: commercial sales executive applied to supply chain warehouse lead."
+    },
+    {
+      "case_id": "rw_froz_025",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_05",
+      "job_posting_id": "J_froz_17",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Domain mismatch: educator applied to full-stack Python/AWS cloud developer."
+    },
+    {
+      "case_id": "rw_froz_026",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_07",
+      "job_posting_id": "J_froz_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Domain mismatch: software developer applied to clinical hospital nurse."
+    },
+    {
+      "case_id": "rw_froz_027",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_04",
+      "job_posting_id": "J_froz_10",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Domain mismatch: supply chain manager applied to instructional designer."
+    },
+    {
+      "case_id": "rw_froz_028",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_08",
+      "job_posting_id": "J_froz_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Domain mismatch: customer support lead applied to corporate financial analyst."
+    },
+    {
+      "case_id": "rw_froz_029",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_09",
+      "job_posting_id": "J_froz_16",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Domain mismatch: HR recruiter applied to mechanical design CAD engineer."
+    },
+    {
+      "case_id": "rw_froz_030",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_10",
+      "job_posting_id": "J_froz_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Domain mismatch: digital marketer applied to supply chain warehouse manager."
+    },
+    {
+      "case_id": "rw_froz_031",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_01",
+      "job_posting_id": "J_froz_03",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Fails employer workplace & visa policy: role requires existing independent Japan work authorization (employer does not provide COE visa sponsorship)."
+    },
+    {
+      "case_id": "rw_froz_032",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_02",
+      "job_posting_id": "J_froz_05",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Fails hard compensation gate: role is explicitly unpaid (INR 0.00)."
+    },
+    {
+      "case_id": "rw_froz_033",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_04",
+      "job_posting_id": "J_froz_08",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Education & Instructional Design",
+      "intended_test_purpose": "Fails mandatory Government of India Secret security clearance constraint."
+    },
+    {
+      "case_id": "rw_froz_034",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_06",
+      "job_posting_id": "J_froz_09",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Mechanical & Manufacturing Engineering",
+      "intended_test_purpose": "Fails employer-mandated ISO 13485 Lead Auditor credential prerequisite (employer credential constraint, distinct from ordinary experience expectation)."
+    },
+    {
+      "case_id": "rw_froz_035",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_05",
+      "job_posting_id": "J_froz_11",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Entry-Level Office Administration",
+      "intended_test_purpose": "Fails mandatory on-site London attendance and UK right-to-work constraint."
+    },
+    {
+      "case_id": "rw_froz_036",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_03",
+      "job_posting_id": "J_froz_05",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Fails hard compensation gate: role is explicitly unpaid (INR 0.00)."
+    },
+    {
+      "case_id": "rw_froz_037",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_01",
+      "job_posting_id": "J_froz_18",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Fails statutory NISM Series VIII certification required for approved users operating trading member terminals in SEBI equity derivatives segment."
+    },
+    {
+      "case_id": "rw_froz_038",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_07",
+      "job_posting_id": "J_froz_03",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Fails employer workplace & visa policy: role requires existing independent Japan work authorization (employer does not provide COE visa sponsorship)."
+    },
+    {
+      "case_id": "rw_froz_039",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_08",
+      "job_posting_id": "J_froz_05",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Fails hard compensation gate: role is explicitly unpaid (INR 0.00)."
+    },
+    {
+      "case_id": "rw_froz_040",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_10",
+      "job_posting_id": "J_froz_18",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Fails statutory NISM Series VIII certification required for approved users operating trading member terminals in SEBI equity derivatives segment."
+    },
+    {
+      "case_id": "rw_froz_041",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_01",
+      "job_posting_id": "J_froz_01",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Completely empty candidate profile: blocks matching with PROFILE_INCOMPLETE."
+    },
+    {
+      "case_id": "rw_froz_042",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_02",
+      "job_posting_id": "J_froz_02",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Missing candidate name: blocks matching with MISSING_CANDIDATE_NAME."
+    },
+    {
+      "case_id": "rw_froz_043",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_03",
+      "job_posting_id": "J_froz_04",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Missing all contact channels: blocks matching with MISSING_CONTACT_INFO."
+    },
+    {
+      "case_id": "rw_froz_044",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_04",
+      "job_posting_id": "J_froz_06",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Absent education declaration: blocks matching with MISSING_EDUCATION_STATUS."
+    },
+    {
+      "case_id": "rw_froz_045",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_05",
+      "job_posting_id": "J_froz_07",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Name only (contact and education missing): blocks matching."
+    },
+    {
+      "case_id": "rw_froz_046",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_06",
+      "job_posting_id": "J_froz_10",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Contact only (name and education missing): blocks matching."
+    },
+    {
+      "case_id": "rw_froz_047",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_07",
+      "job_posting_id": "J_froz_13",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Education status only (name and contact missing): blocks matching."
+    },
+    {
+      "case_id": "rw_froz_048",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_08",
+      "job_posting_id": "J_froz_15",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Whitespace-only name and contact: blocks matching with BLANK_REQUIRED_FIELDS."
+    },
+    {
+      "case_id": "rw_froz_049",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_09",
+      "job_posting_id": "J_froz_16",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Unstated empty education declaration: blocks matching with UNSTATED_EDUCATION."
+    },
+    {
+      "case_id": "rw_froz_050",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_inc_10",
+      "job_posting_id": "J_froz_17",
+      "candidate_required_profile_completeness": "INCOMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Malformed contact info: blocks matching with MALFORMED_CONTACT_CHANNEL."
+    },
+    {
+      "case_id": "rw_froz_051",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_01",
+      "job_posting_id": "J_froz_19",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Evaluate truncated requirements: utilize available title/location; identify missing criteria; disclose reduced score coverage without automatic candidate rejection."
+    },
+    {
+      "case_id": "rw_froz_052",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_02",
+      "job_posting_id": "J_froz_20",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Evaluate company-background-only stub: utilize employer context; disclose absent role duties; abstain cautiously without asserting candidate failure."
+    },
+    {
+      "case_id": "rw_froz_053",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_03",
+      "job_posting_id": "J_froz_21",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Evaluate title-only job stub: assess available title and location; report INSUFFICIENT_DATA due to missing body evidence without declaring job ineligible."
+    },
+    {
+      "case_id": "rw_froz_054",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_04",
+      "job_posting_id": "J_froz_22",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "MALFORMED",
+      "occupational_category": "Entry-Level Office Administration",
+      "intended_test_purpose": "Evaluate garbled OCR text: identify unparseable syntax; disclose parsing uncertainty rather than fabricating requirements or falsely rejecting candidate."
+    },
+    {
+      "case_id": "rw_froz_055",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_05",
+      "job_posting_id": "J_froz_23",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Evaluate EEO legal boilerplate: preserve compliance metadata; identify absent role duties; report insufficient evidence rather than candidate failure."
+    },
+    {
+      "case_id": "rw_froz_056",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_06",
+      "job_posting_id": "J_froz_24",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Evaluate promotional copy without competencies: capture cultural keywords cautiously; report confidence limitation without phantom requirement synthesis."
+    },
+    {
+      "case_id": "rw_froz_057",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_07",
+      "job_posting_id": "J_froz_25",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Evaluate cut-off HTML snippet: parse valid opening section; disclose truncated body; abstain cautiously on unstated criteria rather than assuming failure."
+    },
+    {
+      "case_id": "rw_froz_058",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_08",
+      "job_posting_id": "J_froz_26",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Evaluate salary-and-perks-only posting (J_froz_26): parse valid INR 15 LPA salary and Gurugram location; disclose absence of skill requirements; report insufficient coverage without rejecting candidate or declaring job ineligible."
+    },
+    {
+      "case_id": "rw_froz_059",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_09",
+      "job_posting_id": "J_froz_27",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "INCOMPLETE_STUB",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Evaluate location-and-schedule stub (J_froz_27): extract valid shift hours and Chennai on-site facts; identify absent qualification criteria; maintain cautious abstention without candidate rejection."
+    },
+    {
+      "case_id": "rw_froz_060",
+      "partition": "FROZEN_BENCHMARK",
+      "candidate_profile_id": "P_froz_10",
+      "job_posting_id": "J_froz_28",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "MALFORMED",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Evaluate empty markdown headers (J_froz_28): detect blank section structure; identify zero substantive requirements; report insufficient data rather than false match or false failure."
+    },
+    {
+      "case_id": "rw_calib_001",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_01",
+      "job_posting_id": "J_calib_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_01 with posting J_calib_01."
+    },
+    {
+      "case_id": "rw_calib_002",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_02",
+      "job_posting_id": "J_calib_02",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_02 with posting J_calib_02."
+    },
+    {
+      "case_id": "rw_calib_003",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_03",
+      "job_posting_id": "J_calib_03",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_03 with posting J_calib_03."
+    },
+    {
+      "case_id": "rw_calib_004",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_04",
+      "job_posting_id": "J_calib_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_04 with posting J_calib_04."
+    },
+    {
+      "case_id": "rw_calib_005",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_05",
+      "job_posting_id": "J_calib_05",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_05 with posting J_calib_05."
+    },
+    {
+      "case_id": "rw_calib_006",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_06",
+      "job_posting_id": "J_calib_06",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Customer Support & Client Advocacy",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_06 with posting J_calib_06."
+    },
+    {
+      "case_id": "rw_calib_007",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_07",
+      "job_posting_id": "J_calib_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_07 with posting J_calib_07."
+    },
+    {
+      "case_id": "rw_calib_008",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_08",
+      "job_posting_id": "J_calib_08",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_08 with posting J_calib_08."
+    },
+    {
+      "case_id": "rw_calib_009",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_01",
+      "job_posting_id": "J_calib_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_01 with posting J_calib_01."
+    },
+    {
+      "case_id": "rw_calib_010",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_02",
+      "job_posting_id": "J_calib_02",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_02 with posting J_calib_02."
+    },
+    {
+      "case_id": "rw_calib_011",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_03",
+      "job_posting_id": "J_calib_03",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_03 with posting J_calib_03."
+    },
+    {
+      "case_id": "rw_calib_012",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_04",
+      "job_posting_id": "J_calib_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_04 with posting J_calib_04."
+    },
+    {
+      "case_id": "rw_calib_013",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_05",
+      "job_posting_id": "J_calib_05",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_05 with posting J_calib_05."
+    },
+    {
+      "case_id": "rw_calib_014",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_06",
+      "job_posting_id": "J_calib_06",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Customer Support & Client Advocacy",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_06 with posting J_calib_06."
+    },
+    {
+      "case_id": "rw_calib_015",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_07",
+      "job_posting_id": "J_calib_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_07 with posting J_calib_07."
+    },
+    {
+      "case_id": "rw_calib_016",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_08",
+      "job_posting_id": "J_calib_08",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_08 with posting J_calib_08."
+    },
+    {
+      "case_id": "rw_calib_017",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_01",
+      "job_posting_id": "J_calib_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_01 with posting J_calib_01."
+    },
+    {
+      "case_id": "rw_calib_018",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_02",
+      "job_posting_id": "J_calib_02",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_02 with posting J_calib_02."
+    },
+    {
+      "case_id": "rw_calib_019",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_03",
+      "job_posting_id": "J_calib_03",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_03 with posting J_calib_03."
+    },
+    {
+      "case_id": "rw_calib_020",
+      "partition": "CALIBRATION",
+      "candidate_profile_id": "P_calib_04",
+      "job_posting_id": "J_calib_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Calibration testing for candidate P_calib_04 with posting J_calib_04."
+    },
+    {
+      "case_id": "rw_adv_001",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_01",
+      "job_posting_id": "J_adv_01",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 01."
+    },
+    {
+      "case_id": "rw_adv_002",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_02",
+      "job_posting_id": "J_adv_02",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "B2B Enterprise Software Sales",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 02."
+    },
+    {
+      "case_id": "rw_adv_003",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_03",
+      "job_posting_id": "J_adv_03",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Corporate Finance & Treasury",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 03."
+    },
+    {
+      "case_id": "rw_adv_004",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_04",
+      "job_posting_id": "J_adv_04",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Healthcare & Clinical Nursing",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 04."
+    },
+    {
+      "case_id": "rw_adv_005",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_05",
+      "job_posting_id": "J_adv_05",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Operations & Supply Chain Logistics",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 05."
+    },
+    {
+      "case_id": "rw_adv_006",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_06",
+      "job_posting_id": "J_adv_06",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Systems & Cloud Tech",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 06."
+    },
+    {
+      "case_id": "rw_adv_007",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_07",
+      "job_posting_id": "J_adv_07",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Customer Support & Client Advocacy",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 07."
+    },
+    {
+      "case_id": "rw_adv_008",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_08",
+      "job_posting_id": "J_adv_08",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Human Resources & Talent Acquisition",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 08."
+    },
+    {
+      "case_id": "rw_adv_009",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_09",
+      "job_posting_id": "J_adv_09",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Growth Marketing & Analytics",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 09."
+    },
+    {
+      "case_id": "rw_adv_010",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_10",
+      "job_posting_id": "J_adv_10",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Education & Instructional Design",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 10."
+    },
+    {
+      "case_id": "rw_adv_011",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_11",
+      "job_posting_id": "J_adv_11",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Entry-Level Office Administration",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 11."
+    },
+    {
+      "case_id": "rw_adv_012",
+      "partition": "ADVERSARIAL_REGRESSION",
+      "candidate_profile_id": "P_adv_12",
+      "job_posting_id": "J_adv_12",
+      "candidate_required_profile_completeness": "COMPLETE",
+      "job_posting_completeness": "COMPLETE",
+      "occupational_category": "Entry-Level Office Administration",
+      "intended_test_purpose": "Parser exploit stress test for adversarial probe 12."
+    }
+  ]
+}

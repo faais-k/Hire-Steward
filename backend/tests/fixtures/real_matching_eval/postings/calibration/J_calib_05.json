@@ -1,0 +1,35 @@
+{
+  "posting_id": "J_calib_05",
+  "title": "Tax & GST Compliance Associate",
+  "employer_id": "EMP_CALIB_03",
+  "employer_name": "Crestview Accounting Services",
+  "workplace_type": "hybrid",
+  "location": "Nagpur, India",
+  "description_plain": "Prepare monthly GST filings, maintain tax audit documentation, and perform reconciliations in Tally Prime.\nRequirements: 3+ years corporate tax filing experience.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 550000.0,
+    "amount_max": 650000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 550000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "GST Filing",
+      "Corporate Tax",
+      "Tally Prime"
+    ],
+    "preferred_qualifications": [
+      "Tally Certification"
+    ],
+    "experience_years_requested": 3
+  },
+  "lists_json": []
+}

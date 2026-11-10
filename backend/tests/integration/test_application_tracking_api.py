@@ -336,3 +336,75 @@ def test_track_with_initial_applied_rejected_api(api_client: TestClient):
         headers=local_headers(),
     )
     assert res.status_code == 422
+
+
+def test_simulate_submission_rejects_invalid_mode_with_422(api_client: TestClient):
+    """Verify that typos in simulation mode return 422 validation error, not simulated success."""
+    res = api_client.post(
+        "/api/v1/applications/track",
+        json={"job_posting_id": "syn_py_backend_01"},
+        headers=local_headers(),
+    )
+    app_id = res.json()["id"]
+
+    # Mark materials reviewed first so plan can be created
+    api_client.post(
+        f"/api/v1/applications/{app_id}/mark-reviewed",
+        json={"reviewed_resume": "# Resume", "reviewed_cover_letter": "# Cover Letter"},
+        headers=local_headers(),
+    )
+
+    sim_res = api_client.post(
+        f"/api/v1/applications/{app_id}/simulate-submission",
+        json={"mode": "SUCESS"},
+        headers=local_headers(),
+    )
+    assert sim_res.status_code == 422
+    assert "Invalid simulation mode 'SUCESS'" in sim_res.json()["detail"]
+
+
+def test_submission_plan_persistence_and_handoff_unresolved_gates(api_client: TestClient):
+    """Verify submission plan is persisted and manual handoff flags incomplete or unreviewed materials."""
+    res = api_client.post(
+        "/api/v1/applications/track",
+        json={"job_posting_id": "syn_py_backend_01"},
+        headers=local_headers(),
+    )
+    app_id = res.json()["id"]
+
+    # 1. Before materials are attached, handoff fails closed with 422
+    handoff_before = api_client.get(
+        f"/api/v1/applications/{app_id}/handoff",
+        headers=local_headers(),
+    )
+    assert handoff_before.status_code == 422
+    assert "APPLICATION_MATERIALS_INCOMPLETE" in handoff_before.json()["detail"]
+
+    # 2. Mark materials reviewed
+    api_client.post(
+        f"/api/v1/applications/{app_id}/mark-reviewed",
+        json={"reviewed_resume": "# Verified Resume", "reviewed_cover_letter": "# Verified Cover Letter"},
+        headers=local_headers(),
+    )
+
+    # 3. Generate and persist plan
+    plan_res = api_client.post(
+        f"/api/v1/applications/{app_id}/submission-plan",
+        headers=local_headers(),
+    )
+    assert plan_res.status_code == 200
+    plan_data = plan_res.json()
+    assert plan_data["plan_id"] is not None
+    assert plan_data["packet_sha256"] is not None
+    assert isinstance(plan_data["answers"], list)
+
+    # 4. After review, handoff gates are satisfied
+    handoff_after = api_client.get(
+        f"/api/v1/applications/{app_id}/handoff",
+        headers=local_headers(),
+    )
+    assert handoff_after.status_code == 200
+    ha_data = handoff_after.json()
+    assert ha_data["review_required"] is False
+    assert ha_data["material_status"] == "VERIFIED_APPROVED"
+    assert len(ha_data["unresolved_gates"]) == 0

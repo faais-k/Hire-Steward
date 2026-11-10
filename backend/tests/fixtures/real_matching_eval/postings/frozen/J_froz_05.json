@@ -1,0 +1,35 @@
+{
+  "posting_id": "J_froz_05",
+  "title": "Unpaid Clinical Observership / Healthcare Student Intern",
+  "employer_id": "EMP_FROZ_02",
+  "employer_name": "Apollo Regional Health Systems",
+  "workplace_type": "hybrid",
+  "location": "Hyderabad, Telangana, India",
+  "description_plain": "Unpaid clinical learning internship for nursing students.\n\nCompensation Notice: This is an unpaid educational observership. No salary, stipend, or financial compensation is provided (INR 0.00).",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 0.0,
+    "amount_max": 0.0,
+    "period": "YEAR",
+    "compensation_structure": "UNPAID",
+    "guaranteed_base": 0.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": true,
+    "uncertainty_flags": [
+      "EXPLICITLY_UNPAID_ROLE"
+    ]
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "Unpaid role - zero financial compensation"
+    ],
+    "core_competencies": [
+      "Clinical Observation"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 0
+  },
+  "lists_json": []
+}

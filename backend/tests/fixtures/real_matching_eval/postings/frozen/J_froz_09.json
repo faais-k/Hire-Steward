@@ -1,0 +1,37 @@
+{
+  "posting_id": "J_froz_09",
+  "title": "Principal Medical Device Quality Auditor",
+  "employer_id": "EMP_FROZ_03",
+  "employer_name": "TransGlobal Logistics Enterprise",
+  "workplace_type": "on_site",
+  "location": "Mumbai, Maharashtra, India",
+  "description_plain": "Lead quality management audits of medical device facilities.\n\nEmployer-Mandated Credential Prerequisite:\n- Accredited ISO 13485 Lead Auditor Certification is strictly required by employer for lead auditor client assignments (employer contractual qualification, not statutory licensing).\n\nExperience Expectation:\n- Approximately 10 years of experience in medical device quality auditing under FDA 21 CFR Part 820 (preferred experience level, not an automatic statutory ineligibility gate).",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 3200000.0,
+    "amount_max": 3800000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 3200000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "ISO 13485 Lead Auditor Certification (Employer Mandated)"
+    ],
+    "core_competencies": [
+      "Medical Device Auditing",
+      "FDA 21 CFR Part 820",
+      "ISO 13485 Quality Management Systems"
+    ],
+    "preferred_qualifications": [
+      "ASQ CQA Certification"
+    ],
+    "experience_years_requested": 10
+  },
+  "lists_json": []
+}

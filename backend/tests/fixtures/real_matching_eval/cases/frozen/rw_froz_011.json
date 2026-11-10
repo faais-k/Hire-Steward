@@ -1,0 +1,105 @@
+{
+  "case_id": "rw_froz_011",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_05",
+  "source_platform": "PIPE_SYNTH_DIRECT",
+  "formatting_cluster_id": "FMT_FROZ_05",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_05",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_15",
+    "title": "Customer Support Operations Lead",
+    "employer_id": "EMP_FROZ_05",
+    "employer_name": "CloudFrontier Commercial Solutions",
+    "workplace_type": "remote",
+    "location": "Gurugram, Haryana, India",
+    "description_plain": "Lead our Tier-2 customer advocacy team, manage Zendesk escalation queues, maintain 95%+ CSAT, and track team SLA performance metrics.\n\nRequirements:\n- 4+ years of customer service experience with at least 1 year in a team lead capacity.\n- Expert-level Zendesk ticketing workflow configuration and reporting.\n- Strong verbal and written customer conflict resolution skills.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1100000.0,
+      "amount_max": 1300000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1100000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Customer Support Operations",
+        "Zendesk",
+        "SLA Management",
+        "CSAT Improvement"
+      ],
+      "preferred_qualifications": [
+        "Team Leadership"
+      ],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_08",
+  "candidate_profile": {
+    "profile_id": "P_froz_08",
+    "name": "Maya Lin",
+    "contact_info": {
+      "email": "maya.lin@example.invalid",
+      "phone": "+91-98765-01008",
+      "location": "Gurugram, Haryana, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Arts in Psychology",
+      "degree_level": "Bachelor",
+      "field_of_study": "Psychology",
+      "institution": "Lady Shri Ram College",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Customer Support Operations Lead",
+        "employer": "QuickCart Global",
+        "years": 5.0,
+        "description": "Managed Tier-2 customer service teams, monitored Zendesk ticket queues, maintained 98% SLA compliance, and drove customer satisfaction (CSAT)."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Customer Support Operations",
+      "Zendesk",
+      "SLA Management",
+      "CSAT Improvement",
+      "Escalation Handling",
+      "Team Leadership"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_08_F01",
+        "fact_type": "WORK_EXPERIENCE",
+        "statement": "5 years managing Tier-2 customer support operations and Zendesk SLAs.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Customer Support Operations",
+          "Zendesk",
+          "SLA Management"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Strong match in customer service operations and Zendesk SLAs."
+}

@@ -1,0 +1,108 @@
+{
+  "case_id": "rw_froz_032",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_02",
+  "source_platform": "ATS_LEVER",
+  "formatting_cluster_id": "FMT_FROZ_02",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_02",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_05",
+    "title": "Unpaid Clinical Observership / Healthcare Student Intern",
+    "employer_id": "EMP_FROZ_02",
+    "employer_name": "Apollo Regional Health Systems",
+    "workplace_type": "hybrid",
+    "location": "Hyderabad, Telangana, India",
+    "description_plain": "Unpaid clinical learning internship for nursing students.\n\nCompensation Notice: This is an unpaid educational observership. No salary, stipend, or financial compensation is provided (INR 0.00).",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 0.0,
+      "amount_max": 0.0,
+      "period": "YEAR",
+      "compensation_structure": "UNPAID",
+      "guaranteed_base": 0.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": true,
+      "uncertainty_flags": [
+        "EXPLICITLY_UNPAID_ROLE"
+      ]
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Unpaid role - zero financial compensation"
+      ],
+      "core_competencies": [
+        "Clinical Observation"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 0
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_02",
+  "candidate_profile": {
+    "profile_id": "P_froz_02",
+    "name": "Marcus Chen",
+    "contact_info": {
+      "email": "marcus.chen@example.invalid",
+      "phone": "+91-98765-01002",
+      "location": "Hyderabad, Telangana, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Science in Nursing (BSN)",
+      "degree_level": "Bachelor",
+      "field_of_study": "Nursing",
+      "institution": "Christian Medical College",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Clinical Care Coordinator",
+        "employer": "Apollo Regional Health",
+        "years": 6.0,
+        "description": "Managed multidisciplinary clinical triage, patient care plans, electronic health records (Epic EHR), and hospital accreditation compliance."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Clinical Care Coordination",
+      "Patient Triage",
+      "EHR (Epic)",
+      "Care Planning",
+      "Infection Control",
+      "Nursing Standards"
+    ],
+    "certifications": [
+      "Active Licence to Practise as Registered Nurse & Midwife (NNMC Act, 2023 / State Register Enrolled)",
+      "Basic Life Support (BLS)",
+      "Advanced Cardiovascular Life Support (ACLS)"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_02_F01",
+        "fact_type": "CERTIFICATION",
+        "statement": "Maintains an active, unencumbered licence to practise as a Registered Nurse & Midwife enrolled under the National Nursing and Midwifery Commission Act, 2023.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Registered Nurse",
+          "RN Licence",
+          "Clinical Care"
+        ],
+        "years_of_experience": 6.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Fails hard compensation gate: role is explicitly unpaid (INR 0.00)."
+}

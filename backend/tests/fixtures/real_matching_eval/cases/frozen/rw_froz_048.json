@@ -1,0 +1,78 @@
+{
+  "case_id": "rw_froz_048",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_05",
+  "source_platform": "PIPE_SYNTH_DIRECT",
+  "formatting_cluster_id": "FMT_FROZ_05",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_05",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_15",
+    "title": "Customer Support Operations Lead",
+    "employer_id": "EMP_FROZ_05",
+    "employer_name": "CloudFrontier Commercial Solutions",
+    "workplace_type": "remote",
+    "location": "Gurugram, Haryana, India",
+    "description_plain": "Lead our Tier-2 customer advocacy team, manage Zendesk escalation queues, maintain 95%+ CSAT, and track team SLA performance metrics.\n\nRequirements:\n- 4+ years of customer service experience with at least 1 year in a team lead capacity.\n- Expert-level Zendesk ticketing workflow configuration and reporting.\n- Strong verbal and written customer conflict resolution skills.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1100000.0,
+      "amount_max": 1300000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1100000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Customer Support Operations",
+        "Zendesk",
+        "SLA Management",
+        "CSAT Improvement"
+      ],
+      "preferred_qualifications": [
+        "Team Leadership"
+      ],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_08",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_08",
+    "name": "   ",
+    "contact_info": {
+      "email": "   ",
+      "phone": "   ",
+      "location": "   "
+    },
+    "education_status": {
+      "declaration_state": "ABSENT",
+      "status_stated": "   ",
+      "degree_level": null,
+      "field_of_study": null,
+      "institution": null,
+      "is_verified": false
+    },
+    "is_complete_profile": false,
+    "incompleteness_reason": "Candidate name, contact, and education status contain only whitespace characters.",
+    "experience": [],
+    "projects": [],
+    "skills": [],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Whitespace-only name and contact: blocks matching with BLANK_REQUIRED_FIELDS."
+}

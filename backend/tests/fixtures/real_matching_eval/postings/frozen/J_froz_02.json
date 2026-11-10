@@ -1,0 +1,37 @@
+{
+  "posting_id": "J_froz_02",
+  "title": "Senior Treasury & Cash Flow Analyst",
+  "employer_id": "EMP_FROZ_01",
+  "employer_name": "Apex Global Treasury Solutions",
+  "workplace_type": "hybrid",
+  "location": "Bengaluru, Karnataka, India",
+  "description_plain": "Manage liquidity risk, daily cash positioning, and treasury variance reporting.\n\nRequirements:\n- 4+ years corporate treasury or financial planning experience.\n- In-depth understanding of cash flow modeling and bank reconciliation.\n- Professional degree in Commerce or Finance.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 1600000.0,
+    "amount_max": 1900000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 1600000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "Hybrid on-site in Bengaluru"
+    ],
+    "core_competencies": [
+      "Treasury Operations",
+      "Cash Flow Forecasting",
+      "Bank Reconciliation"
+    ],
+    "preferred_qualifications": [
+      "SAP Treasury"
+    ],
+    "experience_years_requested": 4
+  },
+  "lists_json": []
+}

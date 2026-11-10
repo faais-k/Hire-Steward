@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UnlabeledEvaluationCaseSchema",
+  "type": "object",
+  "required": [
+    "case_id",
+    "partition",
+    "employer_id",
+    "source_platform",
+    "formatting_cluster_id",
+    "provenance",
+    "job_posting",
+    "candidate_profile_id",
+    "intended_evaluation_purpose"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string"
+    },
+    "partition": {
+      "type": "string",
+      "enum": [
+        "CALIBRATION",
+        "FROZEN_BENCHMARK",
+        "ADVERSARIAL_REGRESSION"
+      ]
+    },
+    "employer_id": {
+      "type": "string"
+    },
+    "source_platform": {
+      "type": "string"
+    },
+    "formatting_cluster_id": {
+      "type": "string"
+    },
+    "provenance": {
+      "type": "object",
+      "required": [
+        "type",
+        "source_domain",
+        "original_date_observed",
+        "legal_reuse_basis",
+        "legal_review_status",
+        "anonymized",
+        "pii_scrubbed"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "source_domain": {
+          "type": "string"
+        },
+        "original_date_observed": {
+          "type": "string"
+        },
+        "legal_reuse_basis": {
+          "type": "string"
+        },
+        "legal_review_status": {
+          "type": "string"
+        },
+        "anonymized": {
+          "type": "boolean"
+        },
+        "pii_scrubbed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "job_posting": {
+      "type": "object"
+    },
+    "candidate_profile_id": {
+      "type": "string"
+    },
+    "candidate_profile": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "intended_evaluation_purpose": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

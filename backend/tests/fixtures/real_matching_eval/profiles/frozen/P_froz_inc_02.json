@@ -1,0 +1,27 @@
+{
+  "profile_id": "P_froz_inc_02",
+  "name": null,
+  "contact_info": {
+    "email": "inc02.anonymous@example.invalid",
+    "phone": "+91-98765-02002",
+    "location": "Bengaluru, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "B.Com Accounting",
+    "degree_level": "Bachelor",
+    "field_of_study": "Commerce",
+    "institution": "Delhi University",
+    "is_verified": true
+  },
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate profile lacks mandatory name/identity field.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "Accounting",
+    "Tally ERP"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

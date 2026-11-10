@@ -1,0 +1,79 @@
+{
+  "case_id": "rw_froz_043",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_02",
+  "source_platform": "ATS_LEVER",
+  "formatting_cluster_id": "FMT_FROZ_02",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_02",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_04",
+    "title": "Clinical Care Coordinator / Registered Nurse",
+    "employer_id": "EMP_FROZ_02",
+    "employer_name": "Apollo Regional Health Systems",
+    "workplace_type": "hybrid",
+    "location": "Hyderabad, Telangana, India",
+    "description_plain": "Oversee multidisciplinary patient care pathways, triage protocols, and clinical documentation within Epic EHR.\n\nStatutory Licensing Requirement under National Nursing and Midwifery Commission Act, 2023:\n- Active licence to practise as a Registered Nurse & Midwife enrolled in the State Register or National Register under Sections 24, 25, and 27 of the NNMC Act, 2023.\n\nQualifications:\n- 5+ years of clinical nursing or care coordination experience.\n- Hands-on proficiency with Epic Hospital EHR.\n- Bachelor of Science in Nursing (BSN).",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1300000.0,
+      "amount_max": 1600000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1300000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Active Licence to Practise as Registered Nurse & Midwife enrolled under NNMC Act, 2023 (or recognized State/National Register)"
+      ],
+      "core_competencies": [
+        "Clinical Care Coordination",
+        "Patient Triage",
+        "EHR (Epic)",
+        "Care Planning"
+      ],
+      "preferred_qualifications": [
+        "BLS/ACLS Certification"
+      ],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_03",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_03",
+    "name": "Rohan Deshmukh",
+    "contact_info": null,
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "B.E. Civil Engineering",
+      "degree_level": "Bachelor",
+      "field_of_study": "Civil Engineering",
+      "institution": "Pune University",
+      "is_verified": true
+    },
+    "is_complete_profile": false,
+    "incompleteness_reason": "Candidate profile lacks mandatory contact information.",
+    "experience": [],
+    "projects": [],
+    "skills": [
+      "AutoCAD",
+      "Site Inspection"
+    ],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Missing all contact channels: blocks matching with MISSING_CONTACT_INFO."
+}

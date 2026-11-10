@@ -1,0 +1,72 @@
+{
+  "case_id": "rw_froz_045",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_03",
+  "source_platform": "ATS_WORKDAY",
+  "formatting_cluster_id": "FMT_FROZ_03",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_03",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_07",
+    "title": "Supply Chain Operations Lead",
+    "employer_id": "EMP_FROZ_03",
+    "employer_name": "TransGlobal Logistics Enterprise",
+    "workplace_type": "on_site",
+    "location": "Chennai, Tamil Nadu, India",
+    "description_plain": "Direct our primary automotive logistics hub, oversee SAP S/4HANA supply chain workflows, manage 3PL carrier contracts, and ensure on-time delivery metrics.\n\nRequirements:\n- 5+ years leading warehouse operations, freight procurement, and 3PL vendor performance.\n- Hands-on operational mastery of SAP ERP / S/4HANA supply chain modules.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2000000.0,
+      "amount_max": 2400000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2000000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "On-site presence in Chennai logistics hub"
+      ],
+      "core_competencies": [
+        "Supply Chain Operations",
+        "SAP ERP",
+        "3PL Management",
+        "Inventory Forecasting"
+      ],
+      "preferred_qualifications": [
+        "APICS CSCP Certification"
+      ],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_05",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_05",
+    "name": "Arjun Singhania",
+    "contact_info": null,
+    "education_status": null,
+    "is_complete_profile": false,
+    "incompleteness_reason": "Candidate profile contains only name; contact and education status missing.",
+    "experience": [],
+    "projects": [],
+    "skills": [
+      "Sales",
+      "Business Development"
+    ],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Name only (contact and education missing): blocks matching."
+}

@@ -17,6 +17,7 @@ from backend.app.db.models import (
     CandidateDocumentVersion,
     CandidateFact,
     CandidateFactEvidence,
+    CandidateProfile,
     DiscoveryCheckpoint,
     DiscoveryRun,
     EmployerSubscription,
@@ -949,3 +950,109 @@ def test_empty_candidate_evidence_produces_honest_insufficient_data() -> None:
     assert all("No candidate evidence found" in g for g in assessment.qualification_gaps)
     assert all(e["status"] == "INSUFFICIENT_EVIDENCE" for e in assessment.required_evaluations)
     assert all(e["status"] == "INSUFFICIENT_EVIDENCE" for e in assessment.preferred_evaluations)
+
+
+def test_skill_matching_fallback_to_text_and_skill() -> None:
+    req = JobRequirement(
+        id="req_skills",
+        category=RequirementCategory.REQUIRED_QUALIFICATION,
+        text="Experience with Python and PostgreSQL",
+        source_section="Requirements",
+    )
+
+    # Candidate evidence where skills are stored using "text" and "skill" keys
+    item_py = make_evidence_item(
+        fact_id="fact_py",
+        fact_type=FactType.SKILL,
+        value={"text": "Python"},
+    )
+    item_pg = make_evidence_item(
+        fact_id="fact_pg",
+        fact_type=FactType.SKILL,
+        value={"skill": "PostgreSQL"},
+    )
+
+    eval_result = evaluate_requirement(req, [item_py, item_pg])
+    assert eval_result.status == RequirementMatchStatus.MET
+    assert len(eval_result.matched_evidence) == 2
+
+    # Verify conflicted state with "text" fallback
+    conflicted_item = CandidateEvidenceItem(
+        fact_id="fact_conflict",
+        fact_type="SKILL",
+        value={"text": "Python"},
+        verification_state=FactVerificationState.CONFLICTED.value,
+        is_active=True,
+        is_conflicted=True,
+        provenance=[],
+    )
+    eval_conflicted = evaluate_requirement(req, [conflicted_item])
+    assert eval_conflicted.status == RequirementMatchStatus.CONTRADICTED
+    assert len(eval_conflicted.conflicting_evidence) == 1
+
+
+def test_load_candidate_evidence_bridges_projects_and_certifications(
+    sqlite_session: Session,
+) -> None:
+    profile = CandidateProfile(
+        id="default",
+        name="Jordan Lee",
+        headline="Principal Architect",
+        summary="Specializing in distributed systems.",
+        contact_info={"email": "jordan@example.com"},
+        education=[],
+        employment=[],
+        skills=[],
+        projects=[
+            {
+                "title": "Autonomous Agent Workspace",
+                "role": "Lead Architect",
+                "description": "Deterministic multi-agent execution framework.",
+            }
+        ],
+        certifications=[
+            {
+                "name": "AWS Certified Solutions Architect",
+                "issuer": "Amazon Web Services",
+            }
+        ],
+        completeness_score=0.85,
+    )
+    sqlite_session.add(profile)
+    sqlite_session.flush()
+
+    evidence_items = load_candidate_evidence(sqlite_session)
+    project_items = [it for it in evidence_items if it.fact_type == "PROJECT"]
+    cert_items = [it for it in evidence_items if it.fact_type == "CERTIFICATION"]
+
+    assert len(project_items) == 1
+    assert project_items[0].fact_id == "profile_proj_0"
+    assert project_items[0].value.get("name") == "Autonomous Agent Workspace"
+    assert project_items[0].verification_state == FactVerificationState.USER_VERIFIED.value
+
+    assert len(cert_items) == 1
+    assert cert_items[0].fact_id == "profile_cert_0"
+    assert cert_items[0].value.get("name") == "AWS Certified Solutions Architect"
+    assert cert_items[0].verification_state == FactVerificationState.USER_VERIFIED.value
+
+    # Verify that bridged projects and certifications match job requirements
+    assessment = assess_job_match(
+        posting_id="post_proj_cert",
+        snapshot_id="snap_proj_cert",
+        lists_json=[
+            {
+                "title": "Required Qualifications",
+                "items": [
+                    "Experience leading Autonomous Agent Workspace",
+                    "Must hold AWS Certified Solutions Architect credential",
+                ],
+            }
+        ],
+        description_plain="Senior Role.",
+        workplace_type=None,
+        location=None,
+        candidate_evidence=evidence_items,
+    )
+
+    assert assessment.fit_tier == FitTier.STRONG_MATCH
+    assert all(r["status"] == "MET" for r in assessment.required_evaluations)

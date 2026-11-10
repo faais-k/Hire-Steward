@@ -1,0 +1,106 @@
+{
+  "case_id": "rw_froz_036",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_02",
+  "source_platform": "ATS_LEVER",
+  "formatting_cluster_id": "FMT_FROZ_02",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_02",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_05",
+    "title": "Unpaid Clinical Observership / Healthcare Student Intern",
+    "employer_id": "EMP_FROZ_02",
+    "employer_name": "Apollo Regional Health Systems",
+    "workplace_type": "hybrid",
+    "location": "Hyderabad, Telangana, India",
+    "description_plain": "Unpaid clinical learning internship for nursing students.\n\nCompensation Notice: This is an unpaid educational observership. No salary, stipend, or financial compensation is provided (INR 0.00).",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 0.0,
+      "amount_max": 0.0,
+      "period": "YEAR",
+      "compensation_structure": "UNPAID",
+      "guaranteed_base": 0.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": true,
+      "uncertainty_flags": [
+        "EXPLICITLY_UNPAID_ROLE"
+      ]
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Unpaid role - zero financial compensation"
+      ],
+      "core_competencies": [
+        "Clinical Observation"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 0
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_03",
+  "candidate_profile": {
+    "profile_id": "P_froz_03",
+    "name": "Devon Vance",
+    "contact_info": {
+      "email": "devon.vance@example.invalid",
+      "phone": "+91-98765-01003",
+      "location": "Mumbai, Maharashtra, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Arts in Media Communications",
+      "degree_level": "Bachelor",
+      "field_of_study": "Communications",
+      "institution": "University of Delhi",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Senior Enterprise Account Executive",
+        "employer": "CloudScale Solutions",
+        "years": 7.0,
+        "description": "Closed INR 8 Cr annual contract value across B2B SaaS accounts, managed end-to-end sales pipelines, and negotiated multi-year MSAs via Salesforce CRM."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Enterprise Software Sales",
+      "B2B Sales",
+      "Quota Attainment",
+      "Pipeline Management",
+      "Salesforce CRM",
+      "Contract Negotiation"
+    ],
+    "certifications": [
+      "MEDDIC Sales Certified"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_03_F01",
+        "fact_type": "WORK_EXPERIENCE",
+        "statement": "7 years enterprise B2B sales experience with consistent 120% quota attainment.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Enterprise Software Sales",
+          "B2B Sales",
+          "Quota Attainment"
+        ],
+        "years_of_experience": 7.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Fails hard compensation gate: role is explicitly unpaid (INR 0.00)."
+}

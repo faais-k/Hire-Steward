@@ -1,0 +1,100 @@
+{
+  "case_id": "rw_calib_004",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_02",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_04",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_02",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_04",
+    "title": "Cleanroom Protocol Technician",
+    "employer_id": "EMP_CALIB_02",
+    "employer_name": "BioVanguard Therapeutics",
+    "workplace_type": "on_site",
+    "location": "Kolkata, India",
+    "description_plain": "Monitor cleanroom air particulate levels, sterilize laboratory vessels, and enforce gowning procedures.\nRequirements: 2+ years cleanroom operations.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 500000.0,
+      "amount_max": 600000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 500000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Cleanroom Assays",
+        "Sterilization",
+        "Laboratory Safety"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 2
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_04",
+  "candidate_profile": {
+    "profile_id": "P_calib_04",
+    "name": "Vikramaditya Roy",
+    "contact_info": {
+      "email": "vikram.roy@example.invalid",
+      "phone": "+91-98765-03004",
+      "location": "Jamshedpur, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Diploma in Industrial Plant Maintenance",
+      "degree_level": "Diploma",
+      "field_of_study": "Plant Engineering",
+      "institution": "Tata Technical Institute",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Plant Maintenance Technician",
+        "employer": "Heavy Forge Works",
+        "years": 5.0,
+        "description": "Inspected pneumatic presses, hydraulic lines, and preventive maintenance logs."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Hydraulic Systems",
+      "Pneumatic Maintenance",
+      "Preventive Maintenance",
+      "Plant Safety"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_04_F01",
+        "fact_type": "SKILL",
+        "statement": "Vikramaditya Roy exhibits verified background in Hydraulic Systems.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Hydraulic Systems",
+          "Pneumatic Maintenance",
+          "Preventive Maintenance"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_04 with posting J_calib_04."
+}

@@ -1,0 +1,109 @@
+{
+  "case_id": "rw_froz_028",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_01",
+  "source_platform": "ATS_GREENHOUSE",
+  "formatting_cluster_id": "FMT_FROZ_01",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_01",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_01",
+    "title": "Staff Corporate Financial Analyst",
+    "employer_id": "EMP_FROZ_01",
+    "employer_name": "Apex Global Treasury Solutions",
+    "workplace_type": "hybrid",
+    "location": "Bengaluru, Karnataka, India",
+    "description_plain": "Apex Global Treasury Solutions is seeking a Staff Corporate Financial Analyst to lead our multi-entity budgeting, 5-year financial forecasting, and variance reporting.\n\nKey Responsibilities:\n- Lead corporate financial modeling and capital budgeting initiatives.\n- Build dynamic variance dashboards using Excel VBA and PowerBI.\n- Collaborate with executive leadership on GAAP compliant earnings forecasts.\n\nQualifications:\n- 5+ years of experience in corporate financial modeling and variance analysis.\n- Proven expertise in Excel VBA, PowerBI, and GAAP financial standards.\n- Bachelor's degree in Finance, Economics, or related quantitative field.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2200000.0,
+      "amount_max": 2600000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2200000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Hybrid on-site in Bengaluru"
+      ],
+      "core_competencies": [
+        "Financial Modeling",
+        "Corporate Budgeting",
+        "Variance Analysis",
+        "Excel VBA",
+        "GAAP"
+      ],
+      "preferred_qualifications": [
+        "PowerBI",
+        "CFMS or CFA certification"
+      ],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_08",
+  "candidate_profile": {
+    "profile_id": "P_froz_08",
+    "name": "Maya Lin",
+    "contact_info": {
+      "email": "maya.lin@example.invalid",
+      "phone": "+91-98765-01008",
+      "location": "Gurugram, Haryana, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Arts in Psychology",
+      "degree_level": "Bachelor",
+      "field_of_study": "Psychology",
+      "institution": "Lady Shri Ram College",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Customer Support Operations Lead",
+        "employer": "QuickCart Global",
+        "years": 5.0,
+        "description": "Managed Tier-2 customer service teams, monitored Zendesk ticket queues, maintained 98% SLA compliance, and drove customer satisfaction (CSAT)."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Customer Support Operations",
+      "Zendesk",
+      "SLA Management",
+      "CSAT Improvement",
+      "Escalation Handling",
+      "Team Leadership"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_08_F01",
+        "fact_type": "WORK_EXPERIENCE",
+        "statement": "5 years managing Tier-2 customer support operations and Zendesk SLAs.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Customer Support Operations",
+          "Zendesk",
+          "SLA Management"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Domain mismatch: customer support lead applied to corporate financial analyst."
+}

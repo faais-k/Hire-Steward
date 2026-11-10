@@ -1,0 +1,100 @@
+{
+  "case_id": "rw_calib_008",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_04",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_04",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_04",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_08",
+    "title": "Industrial Equipment Specialist",
+    "employer_id": "EMP_CALIB_04",
+    "employer_name": "Vanguard Industrial Works",
+    "workplace_type": "on_site",
+    "location": "Jamshedpur, India",
+    "description_plain": "Maintain heavy industrial forging equipment, monitor safety lockouts, and document mechanical downtime.\nRequirements: 3+ years heavy manufacturing maintenance.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 580000.0,
+      "amount_max": 680000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 580000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Plant Safety",
+        "Mechanical Maintenance",
+        "Downtime Logging"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 3
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_08",
+  "candidate_profile": {
+    "profile_id": "P_calib_08",
+    "name": "Kunal Joshi",
+    "contact_info": {
+      "email": "kunal.j@example.invalid",
+      "phone": "+91-98765-03008",
+      "location": "Ahmedabad, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Science in Chemistry",
+      "degree_level": "Bachelor",
+      "field_of_study": "Chemistry",
+      "institution": "Gujarat University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Quality Assurance Inspector",
+        "employer": "Amrit Pharma Packaging",
+        "years": 4.0,
+        "description": "Conducted physical packaging inspections, container sealing checks, and ISO 9001 audits."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Packaging QA",
+      "ISO 9001 Auditing",
+      "Batch Record Review",
+      "Defect Logging"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_08_F01",
+        "fact_type": "SKILL",
+        "statement": "Kunal Joshi exhibits verified background in Packaging QA.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Packaging QA",
+          "ISO 9001 Auditing",
+          "Batch Record Review"
+        ],
+        "years_of_experience": 4.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_08 with posting J_calib_08."
+}

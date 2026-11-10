@@ -1,11 +1,14 @@
 from datetime import datetime
 from decimal import Decimal
 
+import sqlalchemy as sa
 from sqlalchemy import (
+    text,
     BigInteger,
     Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     ForeignKeyConstraint,
     Index,
@@ -137,12 +140,12 @@ class CandidateDocumentBlob(Base):
         UniqueConstraint("storage_key", name="uq_candidate_document_blobs_storage_key"),
         CheckConstraint("length(content_hash) = 64", name="ck_candidate_blob_hash_length"),
         CheckConstraint("byte_size > 0", name="ck_candidate_blob_size_positive"),
-        CheckConstraint("media_type = 'text/plain'", name="ck_candidate_blob_media_type"),
+        CheckConstraint("length(media_type) > 0", name="ck_candidate_blob_media_type"),
     )
 
     content_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
     storage_key: Mapped[str] = mapped_column(String(96), nullable=False)
-    media_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    media_type: Mapped[str] = mapped_column(String(128), nullable=False)
     byte_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -228,7 +231,7 @@ class CandidateDocumentVersion(Base):
         PrimaryKeyConstraint("id", name="pk_candidate_document_versions"),
         CheckConstraint("version_number > 0", name="ck_candidate_document_version_positive"),
         CheckConstraint(
-            "extraction_status = 'NOT_REQUESTED'",
+            "extraction_status IN ('NOT_REQUESTED', 'EXTRACTED', 'FAILED', 'OCR_REQUIRED', 'ENCRYPTED')",
             name="ck_candidate_document_version_extraction_status",
         ),
         ForeignKeyConstraint(
@@ -239,6 +242,10 @@ class CandidateDocumentVersion(Base):
             ["blob_hash"], ["candidate_document_blobs.content_hash"],
             ondelete="RESTRICT", name="fk_candidate_version_blob",
         ),
+        ForeignKeyConstraint(
+            ["text_artifact_hash"], ["candidate_document_blobs.content_hash"],
+            ondelete="RESTRICT", name="fk_candidate_version_text_artifact",
+        ),
         UniqueConstraint("document_id", "version_number", name="uq_candidate_document_version_number"),
         UniqueConstraint("document_id", "blob_hash", name="uq_candidate_document_version_blob"),
         Index("ix_candidate_document_versions_document_ingested", "document_id", "ingested_at"),
@@ -248,6 +255,7 @@ class CandidateDocumentVersion(Base):
     document_id: Mapped[str] = mapped_column(String(36), nullable=False)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     blob_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    text_artifact_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     original_filename: Mapped[str] = mapped_column(String(128), nullable=False)
     ingested_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
@@ -668,6 +676,175 @@ class ApplicationStatusHistory(Base):
     from_status: Mapped[str | None] = mapped_column(String(32))
     to_status: Mapped[str] = mapped_column(String(32), nullable=False)
     transition_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class CandidateProfile(Base):
+    __tablename__ = "candidate_profiles"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_candidate_profiles"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default="default")
+    name: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    headline: Mapped[str] = mapped_column(String(500), nullable=False, default="")
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    contact_info: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    education: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    employment: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    projects: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    skills: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    certifications: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    completeness_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class AnswerBankItem(Base):
+    __tablename__ = "answer_bank_items"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_answer_bank_items"),
+        Index("ix_answer_bank_items_category", "category"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    answer: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str] = mapped_column(String(64), nullable=False, default="general")
+    fact_ids: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    reuse_consent: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=sa.text("false"))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    is_revoked: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class UserSettingsModel(Base):
+    __tablename__ = "user_settings"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_user_settings"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default="default")
+    target_roles: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    target_locations: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    workplace_arrangements: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    sponsorship_requirement: Mapped[str] = mapped_column(String(32), nullable=False, default="not_required")
+    same_company_cooldown_days: Mapped[int] = mapped_column(Integer, nullable=False, default=30, server_default="30")
+    daily_application_cap: Mapped[int] = mapped_column(Integer, nullable=False, default=5)
+    auto_tailor_resume: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    dry_run_simulation_mode: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    ai_provider_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="OFFLINE_MOCK")
+    ai_budget_limit_usd: Mapped[float] = mapped_column(Float, nullable=False, default=5.0)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class SubmissionPlanModel(Base):
+    __tablename__ = "submission_plans"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_submission_plans"),
+        ForeignKeyConstraint(
+            ["application_id"],
+            ["tracked_applications.id"],
+            name="fk_submission_plans_application_id",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["job_posting_id"],
+            ["job_postings.id"],
+            name="fk_submission_plans_job_posting_id",
+            ondelete="RESTRICT",
+        ),
+        Index("ix_submission_plans_application_created", "application_id", "created_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    application_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    job_posting_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    employer_handle: Mapped[str] = mapped_column(String(160), nullable=False)
+    target_role: Mapped[str] = mapped_column(String(255), nullable=False)
+    resume_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    cover_letter_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    packet_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    answers_json: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    is_compensation_eligible: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=sa.text("false"))
+    is_cooldown_clear: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=sa.text("false"))
+    compensation_threshold_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PREPARED")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class ApplicationAttempt(Base):
+    __tablename__ = "application_attempts"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_application_attempts"),
+        ForeignKeyConstraint(
+            ["application_id"],
+            ["tracked_applications.id"],
+            name="fk_application_attempts_application_id",
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["submission_plan_id"],
+            ["submission_plans.id"],
+            name="fk_application_attempts_submission_plan_id",
+            ondelete="RESTRICT",
+        ),
+        UniqueConstraint("application_id", "idempotency_key", name="uq_application_attempts_idempotency"),
+        Index("ix_application_attempts_app_started", "application_id", "started_at"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    application_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    submission_plan_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    attempt_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    idempotency_key: Mapped[str] = mapped_column(String(64), nullable=False)
+    simulation_mode: Mapped[str] = mapped_column(String(32), nullable=False, default="SUCCESS", server_default="SUCCESS")
+    plan_sha256: Mapped[str] = mapped_column(String(64), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="NOT_DISPATCHED", server_default="NOT_DISPATCHED")
+    outcome: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING", server_default="PENDING")
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    error_message: Mapped[str | None] = mapped_column(Text)
+    simulated_receipt: Mapped[str | None] = mapped_column(String(128))
+    metadata_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_audit_events"),
+        Index("ix_audit_events_type_created", "event_type", "created_at"),
+        Index("ix_audit_events_entity", "entity_type", "entity_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    event_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    actor_type: Mapped[str] = mapped_column(String(32), nullable=False, default="USER", server_default="USER")
+    actor_id: Mapped[str] = mapped_column(String(64), nullable=False, default="default", server_default="default")
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

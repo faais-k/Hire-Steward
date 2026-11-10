@@ -1,0 +1,59 @@
+{
+  "profile_id": "P_froz_01",
+  "name": "Elena Rostova",
+  "contact_info": {
+    "email": "elena.rostova@example.invalid",
+    "phone": "+91-98765-01001",
+    "location": "Bengaluru, Karnataka, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Science in Finance and Economics",
+    "degree_level": "Bachelor",
+    "field_of_study": "Finance & Economics",
+    "institution": "University of Mumbai",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Senior Financial Analyst",
+      "employer": "Apex Retail Group",
+      "years": 5.0,
+      "description": "Led corporate budgeting, 5-year financial modeling, variance reporting, and capital expenditure analysis using Excel VBA and PowerBI."
+    }
+  ],
+  "projects": [
+    {
+      "name": "Automated Variance Dashboard",
+      "description": "Constructed automated cash flow forecasting dashboard reducing variance by 14%."
+    }
+  ],
+  "skills": [
+    "Financial Modeling",
+    "Corporate Budgeting",
+    "Variance Analysis",
+    "Excel VBA",
+    "PowerBI",
+    "GAAP",
+    "Forecasting"
+  ],
+  "certifications": [
+    "Certified Financial Modeling Specialist (CFMS)"
+  ],
+  "evidence_facts": [
+    {
+      "fact_id": "P_froz_01_F01",
+      "fact_type": "SKILL",
+      "statement": "Elena has 5 years of experience in corporate financial modeling and forecasting.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Financial Modeling",
+        "Forecasting",
+        "Variance Analysis"
+      ],
+      "years_of_experience": 5.0
+    }
+  ]
+}

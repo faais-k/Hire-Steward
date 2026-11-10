@@ -1,0 +1,33 @@
+{
+  "posting_id": "J_calib_07",
+  "title": "Plant Maintenance Technician",
+  "employer_id": "EMP_CALIB_04",
+  "employer_name": "Vanguard Industrial Works",
+  "workplace_type": "on_site",
+  "location": "Jamshedpur, India",
+  "description_plain": "Inspect pneumatic machinery, replace hydraulic seals, and perform routine plant maintenance.\nRequirements: 4+ years industrial machinery repair.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 600000.0,
+    "amount_max": 720000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 600000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Hydraulic Systems",
+      "Pneumatic Maintenance",
+      "Preventive Maintenance"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 4
+  },
+  "lists_json": []
+}

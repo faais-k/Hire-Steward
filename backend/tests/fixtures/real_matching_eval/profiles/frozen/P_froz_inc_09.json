@@ -1,0 +1,27 @@
+{
+  "profile_id": "P_froz_inc_09",
+  "name": "Deepak Verma",
+  "contact_info": {
+    "email": "deepak.verma@example.invalid",
+    "phone": "+91-98765-02009",
+    "location": "Chandigarh, India"
+  },
+  "education_status": {
+    "declaration_state": "ABSENT",
+    "status_stated": "",
+    "degree_level": null,
+    "field_of_study": null,
+    "institution": null,
+    "is_verified": false
+  },
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate education status declaration is empty/unstated.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "Graphic Design",
+    "Photoshop"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

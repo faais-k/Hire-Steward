@@ -1,0 +1,37 @@
+{
+  "posting_id": "J_froz_14",
+  "title": "100% Commission-Only Direct Sales Agent",
+  "employer_id": "EMP_FROZ_05",
+  "employer_name": "CloudFrontier Commercial Solutions",
+  "workplace_type": "remote",
+  "location": "Mumbai, Maharashtra, India",
+  "description_plain": "Uncapped earning potential selling enterprise commercial memberships.\n\nCompensation Disclosure: This is a 100% commission-only role with ZERO guaranteed base salary. Earnings depend entirely on sales commissions closed. This is NOT an unpaid role, but variable performance compensation with no floor.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": null,
+    "amount_max": null,
+    "period": "YEAR",
+    "compensation_structure": "COMMISSION_ONLY",
+    "guaranteed_base": 0.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": [
+      "NO_GUARANTEED_BASE",
+      "VARIABLE_COMMISSION_STRUCTURE",
+      "COMPENSATION_UNCERTAINTY"
+    ]
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Direct Sales",
+      "Client Prospecting",
+      "Commission Sales"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 1
+  },
+  "lists_json": []
+}

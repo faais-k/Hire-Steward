@@ -1,0 +1,82 @@
+{
+  "case_id": "rw_froz_042",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_01",
+  "source_platform": "ATS_GREENHOUSE",
+  "formatting_cluster_id": "FMT_FROZ_01",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_01",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_02",
+    "title": "Senior Treasury & Cash Flow Analyst",
+    "employer_id": "EMP_FROZ_01",
+    "employer_name": "Apex Global Treasury Solutions",
+    "workplace_type": "hybrid",
+    "location": "Bengaluru, Karnataka, India",
+    "description_plain": "Manage liquidity risk, daily cash positioning, and treasury variance reporting.\n\nRequirements:\n- 4+ years corporate treasury or financial planning experience.\n- In-depth understanding of cash flow modeling and bank reconciliation.\n- Professional degree in Commerce or Finance.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1600000.0,
+      "amount_max": 1900000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1600000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Hybrid on-site in Bengaluru"
+      ],
+      "core_competencies": [
+        "Treasury Operations",
+        "Cash Flow Forecasting",
+        "Bank Reconciliation"
+      ],
+      "preferred_qualifications": [
+        "SAP Treasury"
+      ],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_02",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_02",
+    "name": null,
+    "contact_info": {
+      "email": "inc02.anonymous@example.invalid",
+      "phone": "+91-98765-02002",
+      "location": "Bengaluru, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "B.Com Accounting",
+      "degree_level": "Bachelor",
+      "field_of_study": "Commerce",
+      "institution": "Delhi University",
+      "is_verified": true
+    },
+    "is_complete_profile": false,
+    "incompleteness_reason": "Candidate profile lacks mandatory name/identity field.",
+    "experience": [],
+    "projects": [],
+    "skills": [
+      "Accounting",
+      "Tally ERP"
+    ],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Missing candidate name: blocks matching with MISSING_CANDIDATE_NAME."
+}

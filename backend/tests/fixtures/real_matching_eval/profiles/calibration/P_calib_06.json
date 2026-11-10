@@ -1,0 +1,49 @@
+{
+  "profile_id": "P_calib_06",
+  "name": "Harish Chandra",
+  "contact_info": {
+    "email": "harish.c@example.invalid",
+    "phone": "+91-98765-03006",
+    "location": "Bhopal, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Business Studies",
+    "degree_level": "Bachelor",
+    "field_of_study": "Business Studies",
+    "institution": "Bhopal University",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Inside Sales Representative",
+      "employer": "Apex Wholesale",
+      "years": 3.5,
+      "description": "Conducted outbound B2B tele-sales, CRM pipeline updates, and client demonstrations."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Inside Sales",
+    "Cold Calling",
+    "Lead Qualification",
+    "HubSpot CRM"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_calib_06_F01",
+      "fact_type": "SKILL",
+      "statement": "Harish Chandra exhibits verified background in Inside Sales.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Inside Sales",
+        "Cold Calling",
+        "Lead Qualification"
+      ],
+      "years_of_experience": 3.5
+    }
+  ]
+}

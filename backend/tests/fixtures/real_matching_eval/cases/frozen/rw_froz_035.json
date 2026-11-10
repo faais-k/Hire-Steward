@@ -1,0 +1,106 @@
+{
+  "case_id": "rw_froz_035",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_04",
+  "source_platform": "ATS_ASHBY",
+  "formatting_cluster_id": "FMT_FROZ_04",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_04",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_11",
+    "title": "On-Site Higher-Ed Curriculum Director (London Campus)",
+    "employer_id": "EMP_FROZ_04",
+    "employer_name": "Beacon Global Higher Education",
+    "workplace_type": "on_site",
+    "location": "London, United Kingdom",
+    "description_plain": "Direct our central London university partner curriculum review board.\n\nMandatory Constraints:\n- 100% physical on-site presence at our central London campus.\n- Unrestricted existing right-to-work in the UK (no visa sponsorship provided).\n- 8+ years UK higher education leadership experience.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 6500000.0,
+      "amount_max": 7500000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 6500000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "100% on-site London physical attendance",
+        "Unrestricted UK right-to-work"
+      ],
+      "core_competencies": [
+        "Curriculum Governance",
+        "Academic Leadership"
+      ],
+      "preferred_qualifications": [
+        "PhD in Education"
+      ],
+      "experience_years_requested": 8
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_05",
+  "candidate_profile": {
+    "profile_id": "P_froz_05",
+    "name": "Tariq Al-Mansoor",
+    "contact_info": {
+      "email": "tariq.almansoor@example.invalid",
+      "phone": "+91-98765-01005",
+      "location": "Pune, Maharashtra, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Master of Education (M.Ed) in Learning Design",
+      "degree_level": "Master",
+      "field_of_study": "Education Technology",
+      "institution": "Jamia Millia Islamia",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Senior Instructional Designer",
+        "employer": "Global EdTech Labs",
+        "years": 5.0,
+        "description": "Designed asynchronous corporate and higher-ed curricula, authored SCORM modules in Articulate 360, and administered Canvas LMS."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Instructional Design",
+      "Curriculum Development",
+      "Canvas LMS",
+      "Adult Learning Theory",
+      "SCORM Authoring",
+      "Learning Needs Analysis"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_05_F01",
+        "fact_type": "SKILL",
+        "statement": "5 years designing interactive learning curricula and administering Canvas LMS.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Instructional Design",
+          "Canvas LMS",
+          "Curriculum Development"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Fails mandatory on-site London attendance and UK right-to-work constraint."
+}

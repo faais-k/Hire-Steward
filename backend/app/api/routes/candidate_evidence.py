@@ -265,3 +265,29 @@ def get_provenance(
         return [_evidence_view(item, fact) for item in service.list_fact_evidence(session, fact_id)]
     except CandidateEvidenceError as exc:
         _raise_safe(exc)
+
+
+@router.post("/facts/{fact_id}/verify")
+def verify_fact_endpoint(
+    fact_id: str,
+    session: Session = Depends(get_session),
+    _guard: None = Depends(require_local_same_origin),
+) -> dict[str, object]:
+    try:
+        fact = service.verify_fact(session, fact_id)
+        return _fact_view(fact)
+    except CandidateEvidenceError as exc:
+        _raise_safe(exc)
+
+
+@router.post("/facts/{fact_id}/reject")
+def reject_fact_endpoint(
+    fact_id: str,
+    session: Session = Depends(get_session),
+    _guard: None = Depends(require_local_same_origin),
+) -> dict[str, object]:
+    try:
+        fact = service.reject_fact(session, fact_id)
+        return _fact_view(fact)
+    except CandidateEvidenceError as exc:
+        _raise_safe(exc)

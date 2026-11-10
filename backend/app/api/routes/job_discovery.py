@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 import hashlib
 from typing import Any
 from uuid import uuid4
@@ -11,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.api.dependencies import get_session, require_local_same_origin
 from backend.app.db.models import (
+    CompensationAssessment,
     DiscoveryCheckpoint,
     DiscoveryRun,
     EmployerSubscription,
@@ -601,6 +603,27 @@ def seed_synthetic_fixtures(
             apply_url=f"https://offline-fixtures.local/jobs/{j['posting_id']}/apply",
         )
         session.add(snapshot)
+        comp_assessment = CompensationAssessment(
+            id=str(uuid4()),
+            job_reference=posting.id,
+            reported_status="PAID",
+            evidence_verification_state="VERIFIED",
+            source_minimum=Decimal("1200000.00"),
+            source_maximum=Decimal("1600000.00"),
+            source_currency="INR",
+            source_period="YEAR",
+            threshold_amount=Decimal("1000000.00"),
+            threshold_currency="INR",
+            threshold_period="YEAR",
+            threshold_version=1,
+            normalized_minimum_annual=Decimal("1200000.00"),
+            normalized_maximum_annual=Decimal("1600000.00"),
+            outcome="MEETS_THRESHOLD",
+            reason_code="EXACT_AMOUNT_MEETS_THRESHOLD",
+            explanation="Seeded synthetic verified compensation meeting default threshold.",
+            created_at=now,
+        )
+        session.add(comp_assessment)
         postings_created += 1
 
     session.commit()

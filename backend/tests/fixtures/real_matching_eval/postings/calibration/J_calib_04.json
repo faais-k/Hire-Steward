@@ -1,0 +1,33 @@
+{
+  "posting_id": "J_calib_04",
+  "title": "Cleanroom Protocol Technician",
+  "employer_id": "EMP_CALIB_02",
+  "employer_name": "BioVanguard Therapeutics",
+  "workplace_type": "on_site",
+  "location": "Kolkata, India",
+  "description_plain": "Monitor cleanroom air particulate levels, sterilize laboratory vessels, and enforce gowning procedures.\nRequirements: 2+ years cleanroom operations.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 500000.0,
+    "amount_max": 600000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 500000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Cleanroom Assays",
+      "Sterilization",
+      "Laboratory Safety"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 2
+  },
+  "lists_json": []
+}

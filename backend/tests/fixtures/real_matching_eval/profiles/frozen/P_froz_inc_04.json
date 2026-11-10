@@ -1,0 +1,20 @@
+{
+  "profile_id": "P_froz_inc_04",
+  "name": "Kavita Pillai",
+  "contact_info": {
+    "email": "kavita.pillai@example.invalid",
+    "phone": "+91-98765-02004",
+    "location": "Kochi, Kerala, India"
+  },
+  "education_status": null,
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate profile completely lacks mandatory education status declaration.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "Customer Relations",
+    "Front Desk Operations"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

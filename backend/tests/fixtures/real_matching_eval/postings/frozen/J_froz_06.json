@@ -1,0 +1,35 @@
+{
+  "posting_id": "J_froz_06",
+  "title": "Health Informatics & Patient Records Specialist",
+  "employer_id": "EMP_FROZ_02",
+  "employer_name": "Apollo Regional Health Systems",
+  "workplace_type": "remote",
+  "location": "Hyderabad, Telangana, India",
+  "description_plain": "Remote healthcare informatics specialist overseeing digital patient chart audits and clinical data compliance in Epic EHR.\n\nRequirements:\n- 4+ years of healthcare records management experience.\n- Expertise in Epic EHR workflow design and clinical data privacy.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 1100000.0,
+    "amount_max": 1400000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 1100000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Epic EHR",
+      "Health Records Management",
+      "Clinical Data Compliance"
+    ],
+    "preferred_qualifications": [
+      "RHIA Certification"
+    ],
+    "experience_years_requested": 4
+  },
+  "lists_json": []
+}

@@ -1,0 +1,20 @@
+{
+  "profile_id": "P_froz_inc_06",
+  "name": null,
+  "contact_info": {
+    "email": "contact.only@example.invalid",
+    "phone": "+91-98765-02006",
+    "location": "Mumbai, India"
+  },
+  "education_status": null,
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate profile contains only contact info; name and education missing.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "Warehouse Management",
+    "Packaging"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

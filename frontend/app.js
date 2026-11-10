@@ -7,6 +7,33 @@
 (() => {
   "use strict";
 
+  // Centralized fetch wrapper. Modern browsers automatically attach Origin: window.location.origin
+  // on state-changing requests and forbid manual JavaScript override of the Origin header.
+  const _rawFetch = window.fetch.bind(window);
+  const fetch = async (url, options = {}) => {
+    return _rawFetch(url, options);
+  };
+
+  // Non-blocking toast notification system (replaces disruptive browser alerts)
+  function showToast(message, type = "info") {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.className = "toast-container";
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = `toast-msg toast-${type}`;
+    toast.textContent = String(message);
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.add("toast-fadeout");
+      setTimeout(() => toast.remove(), 400);
+    }, 3200);
+  }
+  const alert = (msg) => showToast(msg, "info");
+
   // Application State
   const state = {
     jobs: [],
@@ -88,7 +115,43 @@
     navOpportunitiesBtn: document.getElementById("nav-opportunities-btn"),
     navPipelineBtn: document.getElementById("nav-pipeline-btn"),
     modalContainer: document.getElementById("modal-container"),
+    mobileMenuBtn: document.getElementById("mobile-menu-btn"),
+    sidebar: document.getElementById("app-sidebar") || document.querySelector(".sidebar"),
+    sidebarBackdrop: document.getElementById("sidebar-backdrop"),
   };
+
+  // Mobile Navigation Drawer Lifecycle
+  function openMobileSidebar() {
+    if (elements.sidebar) {
+      elements.sidebar.classList.add("sidebar-open");
+    }
+    if (elements.sidebarBackdrop) {
+      elements.sidebarBackdrop.classList.add("active");
+    }
+    if (elements.mobileMenuBtn) {
+      elements.mobileMenuBtn.setAttribute("aria-expanded", "true");
+    }
+  }
+
+  function closeMobileSidebar() {
+    if (elements.sidebar) {
+      elements.sidebar.classList.remove("sidebar-open");
+    }
+    if (elements.sidebarBackdrop) {
+      elements.sidebarBackdrop.classList.remove("active");
+    }
+    if (elements.mobileMenuBtn) {
+      elements.mobileMenuBtn.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  function toggleMobileSidebar() {
+    if (elements.sidebar && elements.sidebar.classList.contains("sidebar-open")) {
+      closeMobileSidebar();
+    } else {
+      openMobileSidebar();
+    }
+  }
 
   // Helpers
   function isSafeUrl(url) {
@@ -106,6 +169,40 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
+  function showToast(message, type = "info") {
+    let container = document.getElementById("toast-container");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "toast-container";
+      container.style.cssText = "position:fixed; bottom:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:8px; max-width:400px; pointer-events:none;";
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = `toast toast-${type}`;
+    const bg = type === "error" ? "#fee2e2" : type === "success" ? "#dcfce7" : "#e0e7ff";
+    const border = type === "error" ? "#fca5a5" : type === "success" ? "#86efac" : "#c7d2fe";
+    const color = type === "error" ? "#991b1b" : type === "success" ? "#166534" : "#3730a3";
+    const icon = type === "error" ? "⚠" : type === "success" ? "✓" : "ℹ";
+
+    toast.style.cssText = `background:${bg}; border:1px solid ${border}; color:${color}; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:500; box-shadow:0 4px 12px rgba(0,0,0,0.12); display:flex; align-items:center; gap:8px; pointer-events:auto; transition:opacity 0.25s ease, transform 0.25s ease;`;
+    toast.innerHTML = `<span style="font-weight:700; font-size:14px;">${icon}</span><span style="flex:1;">${escapeHtml(String(message))}</span><button type="button" style="background:none; border:none; color:inherit; cursor:pointer; font-size:14px; padding:0 4px; line-height:1;" aria-label="Dismiss">✕</button>`;
+
+    const closeBtn = toast.querySelector("button");
+    const removeToast = () => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateY(8px)";
+      setTimeout(() => toast.remove(), 250);
+    };
+    if (closeBtn) closeBtn.addEventListener("click", removeToast);
+    container.appendChild(toast);
+    setTimeout(removeToast, 4500);
+  }
+
+  // Intercept window.alert inside the app to eliminate blocking browser alert dialogs
+  window.alert = function (msg) {
+    showToast(msg, "info");
+  };
 
   function formatRelativeTime(isoString) {
     if (!isoString) return "Recently";
@@ -230,7 +327,7 @@
       await fetchJobs();
       await fetchPipelineApplications();
     } catch (err) {
-      alert(`Error loading demo fixtures: ${err.message}`);
+      showToast(`Error loading demo fixtures: ${err.message}`, "error");
     } finally {
       elements.seedBtn.disabled = false;
       elements.seedBtn.innerHTML = originalText;
@@ -321,7 +418,7 @@
       renderJobDetail();
       return app;
     } catch (err) {
-      alert(`Could not track job: ${err.message}`);
+      showToast(`Could not track job: ${err.message}`, "error");
     }
   }
 
@@ -345,7 +442,7 @@
       renderJobDetail();
       return updated;
     } catch (err) {
-      alert(`Error updating application status: ${err.message}`);
+      showToast(`Error updating application status: ${err.message}`, "error");
     }
   }
 
@@ -373,10 +470,10 @@
       state.jobTrackingByPostingId[postingId] = updated;
       await fetchPipelineApplications();
       renderJobDetail();
-      alert("Application materials marked reviewed! Status updated to READY_FOR_REVIEW.");
+      showToast("Application materials marked reviewed! Status updated to READY_FOR_REVIEW.", "success");
       return updated;
     } catch (err) {
-      alert(`Could not mark materials reviewed: ${err.message}`);
+      showToast(`Could not mark materials reviewed: ${err.message}`, "error");
     }
   }
 
@@ -416,10 +513,10 @@
       state.draftSubTab = "submitted_snapshot";
       await fetchPipelineApplications();
       renderJobDetail();
-      alert("Submission confirmed! Immutable snapshot captured with cryptographic SHA-256 hashes.");
+      showToast("Submission confirmed! Immutable snapshot captured with cryptographic SHA-256 hashes.", "success");
       return updated;
     } catch (err) {
-      alert(`Could not confirm submission: ${err.message}`);
+      showToast(`Could not confirm submission: ${err.message}`, "error");
     }
   }
 
@@ -437,7 +534,7 @@
         <div class="modal-dialog">
           <div class="modal-header">
             <div class="modal-title">Confirm External Application Submission</div>
-            <button type="button" class="btn-secondary" id="modal-close-btn" style="padding:4px 8px;">✕</button>
+            <button type="button" class="btn-secondary" id="modal-close-btn" style="padding:4px 8px;" aria-label="Close dialog">✕</button>
           </div>
           <div class="modal-body">
             <div class="heuristic-banner" style="background:#fef3c7; border-color:#fde68a; color:#78350f;">
@@ -508,7 +605,7 @@
         <div class="modal-dialog" style="max-width: 640px;">
           <div class="modal-header">
             <div class="modal-title">Add Job Opportunity (Offline Intake)</div>
-            <button type="button" class="btn-secondary" id="intake-close-btn" style="padding:4px 8px;">✕</button>
+            <button type="button" class="btn-secondary" id="intake-close-btn" style="padding:4px 8px;" aria-label="Close dialog">✕</button>
           </div>
           <div class="modal-body">
             <div class="heuristic-banner" style="background:#e0e7ff; border-color:#c7d2fe; color:#3730a3; margin-bottom:12px;">
@@ -1843,33 +1940,1414 @@
     });
   }
 
+  const VIEW_HEADINGS = {
+    overview: "Overview Dashboard",
+    opportunities: "Job Discovery Workbench",
+    pipeline: "Application Pipeline",
+    preparation: "Application Preparation",
+    profile: "Candidate Profile",
+    evidence: "Evidence Library",
+    answers: "Interview Answer Bank",
+    sources: "Job Source Registry",
+    ai: "AI & Usage Headroom",
+    settings: "Search Policies & Settings",
+    portability: "Data Portability & Backup",
+    activity: "Activity Log & Audit Feed",
+    system: "System Health & Diagnostics",
+  };
+
+  const ALL_VIEWS = [
+    "overview", "opportunities", "pipeline", "preparation",
+    "profile", "evidence", "answers", "sources",
+    "ai", "settings", "portability", "activity", "system"
+  ];
+
   function switchView(targetView) {
+    closeMobileSidebar();
     state.currentView = targetView;
-    if (targetView === "opportunities") {
-      if (elements.navOpportunitiesBtn) {
-        elements.navOpportunitiesBtn.classList.add("active");
-        elements.navOpportunitiesBtn.setAttribute("aria-current", "page");
+
+    // Update headings
+    const headingElem = document.getElementById("current-view-heading") || document.querySelector(".topbar-heading");
+    if (headingElem) headingElem.textContent = VIEW_HEADINGS[targetView] || "Hire-Steward";
+
+    // Toggle topbar search visibility
+    const searchBox = document.getElementById("topbar-search-container");
+    if (searchBox) {
+      searchBox.style.display = (targetView === "opportunities" || targetView === "pipeline") ? "flex" : "none";
+    }
+
+    // Update active nav button
+    document.querySelectorAll(".sidebar-nav .nav-item").forEach(btn => {
+      const v = btn.getAttribute("data-view");
+      const isActive = (v === targetView);
+      btn.classList.toggle("active", isActive);
+      if (isActive) {
+        btn.setAttribute("aria-current", "page");
+      } else {
+        btn.removeAttribute("aria-current");
       }
-      if (elements.navPipelineBtn) {
-        elements.navPipelineBtn.classList.remove("active");
-        elements.navPipelineBtn.removeAttribute("aria-current");
+    });
+
+    // Hide all view containers
+    ALL_VIEWS.forEach(v => {
+      const containerId = v === "opportunities" ? "workbench-view" : `${v}-view`;
+      const elem = document.getElementById(containerId);
+      if (elem) {
+        if (v === targetView) {
+          elem.style.display = (v === "opportunities" || v === "pipeline") ? "flex" : "flex";
+        } else {
+          elem.style.display = "none";
+        }
       }
-      if (elements.workbenchView) elements.workbenchView.style.display = "flex";
-      if (elements.pipelineView) elements.pipelineView.style.display = "none";
-    } else if (targetView === "pipeline") {
-      if (elements.navPipelineBtn) {
-        elements.navPipelineBtn.classList.add("active");
-        elements.navPipelineBtn.setAttribute("aria-current", "page");
+    });
+
+    // Trigger view-specific data loader
+    if (targetView === "overview") loadOverviewData();
+    else if (targetView === "opportunities") fetchJobs();
+    else if (targetView === "pipeline") fetchPipelineApplications();
+    else if (targetView === "profile") loadProfileData();
+    else if (targetView === "evidence") loadEvidenceData();
+    else if (targetView === "preparation") loadPreparationData();
+    else if (targetView === "settings") loadSettingsData();
+    else if (targetView === "answers") loadAnswersData();
+    else if (targetView === "sources") loadSourcesData();
+    else if (targetView === "ai") loadAiData();
+    else if (targetView === "portability") loadPortabilityData();
+    else if (targetView === "activity") loadActivityData();
+    else if (targetView === "system") loadSystemData();
+  }
+
+  // --- 13 View Data Loaders & Handlers ---
+
+  async function loadOverviewData() {
+    try {
+      const [sysRes, profRes, aiRes, actRes] = await Promise.all([
+        fetch("/api/v1/system/status"),
+        fetch("/api/v1/profile"),
+        fetch("/api/v1/ai/status"),
+        fetch("/api/v1/system/activity?limit=5"),
+      ]);
+
+      if (sysRes.ok) {
+        const sys = await sysRes.json();
+        const oCount = document.getElementById("dash-opportunities-count");
+        if (oCount) oCount.textContent = sys.metrics ? sys.metrics.total_opportunities : "0";
+        const pCount = document.getElementById("dash-pipeline-count");
+        if (pCount) pCount.textContent = sys.metrics ? sys.metrics.active_applications : "0";
+        const fCount = document.getElementById("dash-facts-count");
+        if (fCount) fCount.textContent = sys.metrics ? sys.metrics.candidate_facts : "0";
       }
-      if (elements.navOpportunitiesBtn) {
-        elements.navOpportunitiesBtn.classList.remove("active");
-        elements.navOpportunitiesBtn.removeAttribute("aria-current");
+
+      if (profRes.ok) {
+        const prof = await profRes.json();
+        const pct = prof.completeness ? prof.completeness.percentage : 0;
+        const pctEl = document.getElementById("dash-profile-pct");
+        if (pctEl) pctEl.textContent = `${pct}%`;
+        const healthEl = document.getElementById("dash-profile-health-label");
+        if (healthEl) healthEl.textContent = pct >= 80 ? "Complete & Verified" : (pct >= 40 ? "Partially Filled" : "Incomplete");
+        const sidebarProf = document.getElementById("profile-score-indicator");
+        if (sidebarProf) sidebarProf.textContent = `${pct}%`;
       }
-      if (elements.workbenchView) elements.workbenchView.style.display = "none";
-      if (elements.pipelineView) elements.pipelineView.style.display = "flex";
-      fetchPipelineApplications();
+
+      if (aiRes.ok) {
+        const ai = await aiRes.json();
+        const aiBudget = document.getElementById("dash-ai-budget");
+        if (aiBudget) aiBudget.textContent = `$${ai.remaining_budget_usd.toFixed(2)}`;
+      }
+
+      if (actRes.ok) {
+        const acts = await actRes.json();
+        renderActivityList(acts, "overview-activity-feed");
+      }
+    } catch (err) {
+      console.error("Failed to load overview data:", err);
     }
   }
+
+  function addEmploymentRow(d = {}) {
+    const container = document.getElementById("prof-exp-container");
+    if (!container) return;
+    const item = document.createElement("div");
+    item.className = "prof-exp-item";
+    item.style.cssText = "background:var(--raised); border:1px solid var(--border); border-radius:4px; padding:10px; display:flex; flex-direction:column; gap:8px;";
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; font-weight:600; color:var(--text);">Position</span>
+        <button type="button" class="btn-secondary prof-del-btn" style="font-size:10px; padding:2px 6px; color:var(--negative);">Remove</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Company *</label>
+          <input type="text" class="form-input prof-exp-company" placeholder="e.g. Acme Corp" value="${escapeHtml(d.company || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Role / Title *</label>
+          <input type="text" class="form-input prof-exp-role" placeholder="e.g. Senior Software Engineer" value="${escapeHtml(d.role || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Location</label>
+          <input type="text" class="form-input prof-exp-loc" placeholder="e.g. Remote / New York" value="${escapeHtml(d.location || '')}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Start Date</label>
+          <input type="text" class="form-input prof-exp-start" placeholder="e.g. 2021-01" value="${escapeHtml(d.start_date || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">End Date</label>
+          <input type="text" class="form-input prof-exp-end" placeholder="e.g. Present or 2023-12" value="${escapeHtml(d.end_date || '')}">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:11px;">Responsibilities & Achievements</label>
+        <textarea class="form-textarea prof-exp-desc" style="min-height:48px;" placeholder="Led architecture of core microservices, reduced latency by 35%...">${escapeHtml(d.description || '')}</textarea>
+      </div>
+    `;
+    item.querySelector(".prof-del-btn")?.addEventListener("click", () => item.remove());
+    container.appendChild(item);
+  }
+
+  function addEducationRow(d = {}) {
+    const container = document.getElementById("prof-edu-container");
+    if (!container) return;
+    const item = document.createElement("div");
+    item.className = "prof-edu-item";
+    item.style.cssText = "background:var(--raised); border:1px solid var(--border); border-radius:4px; padding:10px; display:flex; flex-direction:column; gap:8px;";
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:12px; font-weight:600; color:var(--text);">Degree / Education</span>
+        <button type="button" class="btn-secondary prof-del-btn" style="font-size:10px; padding:2px 6px; color:var(--negative);">Remove</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Institution / University *</label>
+          <input type="text" class="form-input prof-edu-inst" placeholder="e.g. University of California" value="${escapeHtml(d.institution || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Degree / Credential *</label>
+          <input type="text" class="form-input prof-edu-deg" placeholder="e.g. Bachelor of Science" value="${escapeHtml(d.degree || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Field of Study</label>
+          <input type="text" class="form-input prof-edu-field" placeholder="e.g. Computer Science" value="${escapeHtml(d.field_of_study || '')}">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">Start Year</label>
+          <input type="text" class="form-input prof-edu-start" placeholder="e.g. 2016" value="${escapeHtml(d.start_date || '')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="font-size:11px;">End / Graduation Year</label>
+          <input type="text" class="form-input prof-edu-end" placeholder="e.g. 2020" value="${escapeHtml(d.end_date || '')}">
+        </div>
+      </div>
+    `;
+    item.querySelector(".prof-del-btn")?.addEventListener("click", () => item.remove());
+    container.appendChild(item);
+  }
+
+  function addProjectRow(d = {}) {
+    const container = document.getElementById("prof-proj-container");
+    if (!container) return;
+    const item = document.createElement("div");
+    item.className = "prof-proj-item";
+    item.style.cssText = "background:var(--raised); border:1px solid var(--border); border-radius:4px; padding:8px; display:flex; flex-direction:column; gap:6px;";
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11px; font-weight:600; color:var(--text);">Project</span>
+        <button type="button" class="btn-secondary prof-del-btn" style="font-size:10px; padding:1px 5px; color:var(--negative);">Remove</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <input type="text" class="form-input prof-proj-title" placeholder="Project Name *" value="${escapeHtml(d.title || '')}">
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input prof-proj-role" placeholder="Your Role" value="${escapeHtml(d.role || '')}">
+        </div>
+      </div>
+      <div class="form-group">
+        <input type="url" class="form-input prof-proj-url" placeholder="Project URL (e.g. GitHub repo)" value="${escapeHtml(d.url || '')}">
+      </div>
+      <div class="form-group">
+        <textarea class="form-textarea prof-proj-desc" style="min-height:40px;" placeholder="Brief description and technologies used...">${escapeHtml(d.description || '')}</textarea>
+      </div>
+    `;
+    item.querySelector(".prof-del-btn")?.addEventListener("click", () => item.remove());
+    container.appendChild(item);
+  }
+
+  function addCertRow(d = {}) {
+    const container = document.getElementById("prof-cert-container");
+    if (!container) return;
+    const item = document.createElement("div");
+    item.className = "prof-cert-item";
+    item.style.cssText = "background:var(--raised); border:1px solid var(--border); border-radius:4px; padding:8px; display:flex; flex-direction:column; gap:6px;";
+    item.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:11px; font-weight:600; color:var(--text);">Certification</span>
+        <button type="button" class="btn-secondary prof-del-btn" style="font-size:10px; padding:1px 5px; color:var(--negative);">Remove</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <input type="text" class="form-input prof-cert-name" placeholder="Certification Name *" value="${escapeHtml(d.name || '')}">
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input prof-cert-issuer" placeholder="Issuer (e.g. AWS, CKA)" value="${escapeHtml(d.issuer || '')}">
+        </div>
+        <div class="form-group">
+          <input type="text" class="form-input prof-cert-date" placeholder="Year / Date" value="${escapeHtml(d.issue_date || '')}">
+        </div>
+      </div>
+    `;
+    item.querySelector(".prof-del-btn")?.addEventListener("click", () => item.remove());
+    container.appendChild(item);
+  }
+
+  async function loadProfileData() {
+    try {
+      const res = await fetch("/api/v1/profile");
+      if (!res.ok) return;
+      const data = await res.json();
+      const p = data.profile || {};
+      const c = data.completeness || {};
+
+      const nameIn = document.getElementById("prof-name");
+      if (nameIn) nameIn.value = p.name || "";
+      const hlIn = document.getElementById("prof-headline");
+      if (hlIn) hlIn.value = p.headline || "";
+      const sumIn = document.getElementById("prof-summary");
+      if (sumIn) sumIn.value = p.summary || "";
+
+      const contact = p.contact_info || {};
+      const emIn = document.getElementById("prof-email");
+      if (emIn) emIn.value = contact.email || "";
+      const phIn = document.getElementById("prof-phone");
+      if (phIn) phIn.value = contact.phone || "";
+      const locIn = document.getElementById("prof-location");
+      if (locIn) locIn.value = contact.location || "";
+
+      const liIn = document.getElementById("prof-linkedin");
+      if (liIn) liIn.value = contact.linkedin || "";
+      const ghIn = document.getElementById("prof-github");
+      if (ghIn) ghIn.value = contact.github || "";
+      const portIn = document.getElementById("prof-portfolio");
+      if (portIn) portIn.value = contact.portfolio || "";
+
+      const langIn = document.getElementById("prof-languages");
+      if (langIn) {
+        const langs = Array.isArray(contact.languages) ? contact.languages : [];
+        langIn.value = langs.join(", ");
+      }
+
+      const skillsIn = document.getElementById("prof-skills");
+      if (skillsIn) {
+        const sList = (p.skills || []).map(s => typeof s === "string" ? s : s.name).filter(Boolean);
+        skillsIn.value = sList.join(", ");
+      }
+
+      // Populate dynamic containers
+      const expContainer = document.getElementById("prof-exp-container");
+      if (expContainer) {
+        expContainer.innerHTML = "";
+        (p.employment || []).forEach(emp => addEmploymentRow(emp));
+      }
+      const eduContainer = document.getElementById("prof-edu-container");
+      if (eduContainer) {
+        eduContainer.innerHTML = "";
+        (p.education || []).forEach(edu => addEducationRow(edu));
+      }
+      const projContainer = document.getElementById("prof-proj-container");
+      if (projContainer) {
+        projContainer.innerHTML = "";
+        (p.projects || []).forEach(prj => addProjectRow(prj));
+      }
+      const certContainer = document.getElementById("prof-cert-container");
+      if (certContainer) {
+        certContainer.innerHTML = "";
+        (p.certifications || []).forEach(crt => addCertRow(crt));
+      }
+
+      // Update completeness meter
+      const pct = c.percentage || 0;
+      const badge = document.getElementById("profile-completeness-badge");
+      if (badge) badge.textContent = `${pct}% Complete`;
+      const fill = document.getElementById("profile-completeness-fill");
+      if (fill) fill.style.width = `${pct}%`;
+
+      const recBox = document.getElementById("profile-recommendations-box");
+      const recList = document.getElementById("profile-recommendations-list");
+      if (recBox && recList) {
+        if (c.missing_elements && c.missing_elements.length > 0) {
+          recList.innerHTML = c.missing_elements.map(m => `<li>${escapeHtml(m)}</li>`).join("");
+          recBox.style.display = "block";
+        } else {
+          recBox.style.display = "none";
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load profile:", err);
+    }
+  }
+
+  async function saveProfileData(e) {
+    if (e) e.preventDefault();
+
+    const name = (document.getElementById("prof-name")?.value || "").trim();
+    if (!name) {
+      showToast("Full Name is required.", "error");
+      return;
+    }
+
+    const skillsRaw = (document.getElementById("prof-skills")?.value || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(name => ({ name }));
+
+    const languagesRaw = (document.getElementById("prof-languages")?.value || "")
+      .split(",")
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    // Collect employment
+    const employment = [];
+    document.querySelectorAll(".prof-exp-item").forEach(item => {
+      const company = (item.querySelector(".prof-exp-company")?.value || "").trim();
+      const role = (item.querySelector(".prof-exp-role")?.value || "").trim();
+      const location = (item.querySelector(".prof-exp-loc")?.value || "").trim();
+      const start_date = (item.querySelector(".prof-exp-start")?.value || "").trim();
+      const end_date = (item.querySelector(".prof-exp-end")?.value || "").trim();
+      const description = (item.querySelector(".prof-exp-desc")?.value || "").trim();
+      if (company || role) {
+        employment.push({ company, role, location, start_date, end_date, description });
+      }
+    });
+
+    // Collect education
+    const education = [];
+    document.querySelectorAll(".prof-edu-item").forEach(item => {
+      const institution = (item.querySelector(".prof-edu-inst")?.value || "").trim();
+      const degree = (item.querySelector(".prof-edu-deg")?.value || "").trim();
+      const field_of_study = (item.querySelector(".prof-edu-field")?.value || "").trim();
+      const start_date = (item.querySelector(".prof-edu-start")?.value || "").trim();
+      const end_date = (item.querySelector(".prof-edu-end")?.value || "").trim();
+      if (institution || degree) {
+        education.push({ institution, degree, field_of_study, start_date, end_date });
+      }
+    });
+
+    // Collect projects
+    const projects = [];
+    document.querySelectorAll(".prof-proj-item").forEach(item => {
+      const title = (item.querySelector(".prof-proj-title")?.value || "").trim();
+      const role = (item.querySelector(".prof-proj-role")?.value || "").trim();
+      const url = (item.querySelector(".prof-proj-url")?.value || "").trim();
+      const description = (item.querySelector(".prof-proj-desc")?.value || "").trim();
+      if (title) {
+        projects.push({ title, role, url, description });
+      }
+    });
+
+    // Collect certs
+    const certifications = [];
+    document.querySelectorAll(".prof-cert-item").forEach(item => {
+      const certName = (item.querySelector(".prof-cert-name")?.value || "").trim();
+      const issuer = (item.querySelector(".prof-cert-issuer")?.value || "").trim();
+      const issue_date = (item.querySelector(".prof-cert-date")?.value || "").trim();
+      if (certName) {
+        certifications.push({ name: certName, issuer, issue_date });
+      }
+    });
+
+    const payload = {
+      name: name,
+      headline: (document.getElementById("prof-headline")?.value || "").trim(),
+      summary: (document.getElementById("prof-summary")?.value || "").trim(),
+      contact_info: {
+        email: (document.getElementById("prof-email")?.value || "").trim(),
+        phone: (document.getElementById("prof-phone")?.value || "").trim(),
+        location: (document.getElementById("prof-location")?.value || "").trim(),
+        linkedin: (document.getElementById("prof-linkedin")?.value || "").trim(),
+        github: (document.getElementById("prof-github")?.value || "").trim(),
+        portfolio: (document.getElementById("prof-portfolio")?.value || "").trim(),
+        languages: languagesRaw,
+      },
+      skills: skillsRaw,
+      employment: employment,
+      education: education,
+      projects: projects,
+      certifications: certifications,
+    };
+
+    try {
+      const res = await fetch("/api/v1/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        loadProfileData();
+        showToast("Candidate profile successfully updated!", "success");
+      } else {
+        const errJson = await res.json().catch(() => ({ detail: "Failed to update profile" }));
+        showToast("Save failed: " + (errJson.detail || "Validation error"), "error");
+      }
+    } catch (err) {
+      showToast("Error saving candidate profile: " + err, "error");
+    }
+  }
+
+  async function loadEvidenceData() {
+    try {
+      const res = await fetch("/api/v1/facts");
+      const tbody = document.getElementById("candidate-facts-tbody");
+      if (!tbody) return;
+
+      if (!res.ok) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted);">Failed to load candidate facts.</td></tr>';
+        return;
+      }
+      const facts = await res.json();
+
+      const totalTag = document.getElementById("facts-total-tag");
+      if (totalTag) totalTag.textContent = `${facts.length} Facts`;
+
+      if (facts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--muted);">No candidate facts recorded yet. Upload a resume to extract facts.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = facts.map(f => {
+        let valStr = "";
+        if (typeof f.value === "string") {
+          valStr = f.value;
+        } else if (f.value && typeof f.value === "object") {
+          valStr = f.value.text || f.value.name || f.value.headline || f.value.heading || JSON.stringify(f.value);
+        } else {
+          valStr = String(f.value || "");
+        }
+
+        let stateBg = "#fef3c7";
+        let stateColor = "#92400e";
+        if (f.verification_state === "USER_VERIFIED") {
+          stateBg = "#dcfce7";
+          stateColor = "#166534";
+        } else if (f.verification_state === "REJECTED") {
+          stateBg = "#fee2e2";
+          stateColor = "#b91c1c";
+        }
+
+        const prov = (f.value && f.value.source) ? f.value.source : "Document Extraction";
+
+        let actionsHtml = "";
+        if (f.verification_state !== "USER_VERIFIED") {
+          actionsHtml += `<button type="button" class="btn-secondary" style="font-size:11px; padding:3px 7px; color:var(--positive); font-weight:600;" onclick="verifyCandidateFact('${f.fact_id}')">Verify</button>`;
+        }
+        if (f.verification_state !== "REJECTED") {
+          actionsHtml += `<button type="button" class="btn-secondary" style="font-size:11px; padding:3px 7px; color:var(--negative); font-weight:600; margin-left:4px;" onclick="rejectCandidateFact('${f.fact_id}')">Reject</button>`;
+        }
+
+        return `
+          <tr>
+            <td><span class="tag" style="background:#e0f2fe; color:#0369a1; font-weight:600;">${escapeHtml(f.fact_type)}</span></td>
+            <td><strong>${escapeHtml(valStr)}</strong></td>
+            <td><span class="tag" style="background:${stateBg}; color:${stateColor}; font-weight:600;">${escapeHtml(f.verification_state)}</span></td>
+            <td style="font-size:11px; color:var(--muted);">${escapeHtml(prov)}</td>
+            <td style="text-align:right;">${actionsHtml}</td>
+          </tr>
+        `;
+      }).join("");
+    } catch (err) {
+      console.error("Failed to load evidence:", err);
+    }
+  }
+
+  window.verifyCandidateFact = async function(factId) {
+    try {
+      const res = await fetch(`/api/v1/facts/${factId}/verify`, { method: "POST" });
+      if (res.ok) {
+        loadEvidenceData();
+      } else {
+        const err = await res.json().catch(() => ({ detail: "Verification failed" }));
+        showToast("Verification failed: " + err.detail, "error");
+      }
+    } catch (err) {
+      showToast("Error verifying fact: " + err, "error");
+    }
+  };
+
+  window.rejectCandidateFact = async function(factId) {
+    try {
+      const res = await fetch(`/api/v1/facts/${factId}/reject`, { method: "POST" });
+      if (res.ok) {
+        loadEvidenceData();
+      } else {
+        const err = await res.json().catch(() => ({ detail: "Rejection failed" }));
+        showToast("Rejection failed: " + err.detail, "error");
+      }
+    } catch (err) {
+      showToast("Error rejecting fact: " + err, "error");
+    }
+  };
+
+  let currentParsedSections = [];
+  let currentDocumentVersionId = null;
+
+  window.mapExtractedSectionToFact = async function(idx) {
+    if (!currentParsedSections[idx] || !currentDocumentVersionId) return;
+    const sec = currentParsedSections[idx];
+    const typeSelect = document.getElementById(`sec-fact-type-${idx}`);
+    const factType = typeSelect ? typeSelect.value : "SKILL";
+
+    try {
+      const res = await fetch("/api/v1/profile/map-fact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          document_version_id: currentDocumentVersionId,
+          section_heading: sec.heading,
+          section_text: sec.text,
+          fact_type: factType,
+          byte_start: sec.byte_start,
+          byte_end: sec.byte_end,
+          evidence_hash: sec.evidence_hash,
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({ detail: "Mapping failed" }));
+        showToast("Mapping failed: " + errJson.detail, "error");
+        return;
+      }
+
+      const btn = document.getElementById(`sec-map-btn-${idx}`);
+      if (btn) {
+        btn.textContent = "Mapped (Unreviewed)";
+        btn.disabled = true;
+        btn.style.opacity = "0.6";
+      }
+      loadEvidenceData();
+      showToast(`Mapped section "${sec.heading}" to ${factType} fact! Review it in the table below.`, "success");
+    } catch (err) {
+      showToast("Error mapping fact: " + err, "error");
+    }
+  };
+
+  async function handleFileUpload(file) {
+    if (!file) return;
+    try {
+      const previewBox = document.getElementById("parsed-preview-box");
+      const nameDisp = document.getElementById("parsed-filename-display");
+      const countDisp = document.getElementById("parsed-count-display");
+      const textDisp = document.getElementById("parsed-text-content");
+      const sectionsContainer = document.getElementById("parsed-sections-container");
+
+      const arrayBuffer = await file.arrayBuffer();
+      const res = await fetch("/api/v1/profile/parse-document", {
+        method: "POST",
+        headers: { "x-filename": file.name },
+        body: arrayBuffer,
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({ detail: "Upload failed" }));
+        showToast("Extraction failed: " + errJson.detail, "error");
+        return;
+      }
+
+      const parsed = await res.json();
+      currentParsedSections = parsed.sections || [];
+      currentDocumentVersionId = parsed.document_version_id || parsed.version_id;
+
+      if (previewBox && textDisp) {
+        nameDisp.textContent = parsed.filename;
+        countDisp.textContent = `${parsed.sections_count} sections (${parsed.char_count} chars)`;
+        textDisp.textContent = parsed.raw_text;
+
+        if (sectionsContainer) {
+          sectionsContainer.innerHTML = currentParsedSections.map((sec, idx) => `
+            <div style="background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:10px; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <strong style="font-size:12px; color:var(--text);">${escapeHtml(sec.heading)}</strong>
+                <span style="font-size:11px; color:var(--muted); font-family:monospace;">bytes ${sec.byte_start}..${sec.byte_end}</span>
+              </div>
+              <div style="font-size:11px; color:var(--muted); max-height:60px; overflow-y:auto; white-space:pre-wrap;">${escapeHtml(sec.text)}</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <label style="font-size:11px; color:var(--muted);">Fact Type:</label>
+                  <select id="sec-fact-type-${idx}" class="form-input" style="font-size:11px; padding:2px 6px; width:auto;">
+                    <option value="SKILL">SKILL</option>
+                    <option value="EDUCATION">EDUCATION</option>
+                    <option value="EMPLOYMENT">EMPLOYMENT</option>
+                    <option value="PROJECT">PROJECT</option>
+                    <option value="CERTIFICATION">CERTIFICATION</option>
+                  </select>
+                </div>
+                <button type="button" class="btn-primary" id="sec-map-btn-${idx}" style="font-size:11px; padding:3px 10px;" onclick="mapExtractedSectionToFact(${idx})">Map to Evidence Fact</button>
+              </div>
+            </div>
+          `).join("");
+        }
+
+        previewBox.style.display = "block";
+      }
+
+      // Auto-populate profile summary and skills if empty
+      const sumIn = document.getElementById("prof-summary");
+      if (sumIn && !sumIn.value) {
+        sumIn.value = parsed.raw_text.substring(0, 500) + "...";
+      }
+      loadEvidenceData();
+      showToast(`Successfully extracted ${parsed.sections_count} sections from ${parsed.filename}! You can map sections to candidate facts.`, "success");
+    } catch (err) {
+      showToast("Error parsing document: " + err, "error");
+    }
+  }
+
+  async function loadPreparationData() {
+    try {
+      const select = document.getElementById("prep-job-select");
+      if (!select) return;
+
+      const res = await fetch("/api/v1/jobs");
+      if (!res.ok) return;
+      const data = await res.json();
+      const jobs = data.items || [];
+
+      select.innerHTML = '<option value="">-- Choose Opportunity --</option>' +
+        jobs.map(j => `<option value="${escapeHtml(j.id)}">${escapeHtml(j.title)} (${escapeHtml(j.employer_handle || "Company")})</option>`).join("");
+
+      if (state.selectedPostingId && jobs.some(j => j.id === state.selectedPostingId)) {
+        select.value = state.selectedPostingId;
+        const container = document.getElementById("prep-materials-container");
+        if (!container || container.style.display === "none") {
+          await generatePreparationDraft();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load jobs for prep:", err);
+    }
+  }
+
+  async function generatePreparationDraft() {
+    const select = document.getElementById("prep-job-select");
+    const jobId = select ? select.value : "";
+    if (!jobId) {
+      showToast("Please select a target opportunity from the dropdown first.", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/v1/ai/generate-draft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_posting_id: jobId }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Draft generation failed" }));
+        showToast("Unable to generate draft: " + err.detail, "error");
+        return;
+      }
+
+      const draft = await res.json();
+      const container = document.getElementById("prep-materials-container");
+      const rEdit = document.getElementById("prep-resume-editor");
+      const cEdit = document.getElementById("prep-cover-editor");
+      const claimsDiv = document.getElementById("prep-claims-list");
+
+      if (rEdit) rEdit.value = draft.resume_markdown || "";
+      if (cEdit) cEdit.value = draft.cover_letter_markdown || "";
+
+      if (claimsDiv) {
+        const addressed = (draft.addressed_requirements || []).map(a => `
+          <div style="margin-bottom:8px; padding:10px; border-left:3px solid var(--accent); background:var(--raised);">
+            <strong>Requirement:</strong> ${escapeHtml(a.requirement_text)}<br>
+            <span style="font-size:11px; color:var(--muted);">${escapeHtml(a.explanation)}</span>
+          </div>
+        `).join("");
+        const gaps = (draft.evidence_gaps || []).map(g => `
+          <div style="margin-bottom:8px; padding:10px; border-left:3px solid var(--warning); background:var(--raised);">
+            <strong>Unaddressed Gap:</strong> ${escapeHtml(g.requirement_text)}<br>
+            <span style="font-size:11px; color:var(--warning);">${escapeHtml(g.gap_explanation)}</span>
+          </div>
+        `).join("");
+        claimsDiv.innerHTML = addressed + (gaps || '<div class="state-desc">Zero gaps detected! Full coverage.</div>');
+      }
+
+      if (container) container.style.display = "block";
+    } catch (err) {
+      showToast("Error generating draft: " + err, "error");
+    }
+  }
+
+  async function getOrTrackApplicationForJob(jobId) {
+    try {
+      const trackRes = await fetch(`/api/v1/jobs/${encodeURIComponent(jobId)}/tracking`);
+      if (trackRes.ok) {
+        const data = await trackRes.json();
+        if (data.tracked && data.application) {
+          return data.application.id;
+        }
+      }
+      const postRes = await fetch("/api/v1/applications/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_posting_id: jobId }),
+      });
+      if (postRes.ok) {
+        const app = await postRes.json();
+        return app.id;
+      }
+    } catch (e) {
+      console.warn("Could not get or track application:", e);
+    }
+    return null;
+  }
+
+  async function createSubmissionPlanFromDraft() {
+    const select = document.getElementById("prep-job-select");
+    const jobId = select ? select.value : "";
+    if (!jobId) {
+      showToast("Please select a target opportunity from the dropdown first.", "error");
+      return;
+    }
+    const appId = await getOrTrackApplicationForJob(jobId);
+    if (!appId) {
+      showToast("Could not find or track application for this job.", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/v1/applications/${encodeURIComponent(appId)}/submission-plan`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Failed to generate plan" }));
+        showToast("Plan creation failed: " + err.detail, "error");
+        return;
+      }
+      const plan = await res.json();
+      const planHash = plan.packet_sha256 || plan.plan_hash || plan.plan_id || "";
+      showToast(`Submission plan created: ${planHash.slice(0, 16)}...`, "success");
+      const receiptElem = document.getElementById("prep-simulation-receipt");
+      if (receiptElem) {
+        receiptElem.textContent = `Submission Plan SHA-256: ${planHash}\nResume SHA-256: ${plan.resume_sha256 || "N/A"}\nCover Letter SHA-256: ${plan.cover_letter_sha256 || "N/A"}\nCompensation Eligible: ${plan.is_compensation_eligible}\nStatus: ${plan.status || "PREPARED"}`;
+      }
+    } catch (err) {
+      showToast("Error creating submission plan: " + err, "error");
+    }
+  }
+
+  async function simulateSubmissionFromDraft() {
+    const select = document.getElementById("prep-job-select");
+    const jobId = select ? select.value : "";
+    if (!jobId) {
+      showToast("Please select a target opportunity from the dropdown first.", "error");
+      return;
+    }
+    const appId = await getOrTrackApplicationForJob(jobId);
+    if (!appId) {
+      showToast("Could not find or track application for this job.", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`/api/v1/applications/${encodeURIComponent(appId)}/simulate-submission`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "SUCCESS" }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Simulation failed" }));
+        showToast("Simulation failed: " + err.detail, "error");
+        return;
+      }
+      const receipt = await res.json();
+      showToast("Simulation dry-run completed successfully (READY_FOR_REVIEW preserved).", "success");
+      const receiptElem = document.getElementById("prep-simulation-receipt");
+      if (receiptElem) {
+        receiptElem.textContent = `Simulation Receipt:\nAttempt ID: ${receipt.attempt_id}\nStatus: ${receipt.status}\nDry-Run: ${receipt.is_simulation !== undefined ? receipt.is_simulation : (receipt.mode_used || true)}\nFinal State: ${receipt.application_status} (Never APPLIED)`;
+      }
+    } catch (err) {
+      showToast("Error simulating submission: " + err, "error");
+    }
+  }
+
+  function initPreparationTabs() {
+    const tabResume = document.getElementById("prep-tab-resume");
+    const tabCover = document.getElementById("prep-tab-cover");
+    const tabClaims = document.getElementById("prep-tab-claims");
+    const paneResume = document.getElementById("prep-content-resume");
+    const paneCover = document.getElementById("prep-content-cover");
+    const paneClaims = document.getElementById("prep-content-claims");
+
+    if (tabResume && tabCover && tabClaims) {
+      tabResume.addEventListener("click", () => {
+        tabResume.classList.add("active");
+        tabCover.classList.remove("active");
+        tabClaims.classList.remove("active");
+        if (paneResume) paneResume.style.display = "block";
+        if (paneCover) paneCover.style.display = "none";
+        if (paneClaims) paneClaims.style.display = "none";
+      });
+      tabCover.addEventListener("click", () => {
+        tabCover.classList.add("active");
+        tabResume.classList.remove("active");
+        tabClaims.classList.remove("active");
+        if (paneResume) paneResume.style.display = "none";
+        if (paneCover) paneCover.style.display = "block";
+        if (paneClaims) paneClaims.style.display = "none";
+      });
+      tabClaims.addEventListener("click", () => {
+        tabClaims.classList.add("active");
+        tabResume.classList.remove("active");
+        tabCover.classList.remove("active");
+        if (paneResume) paneResume.style.display = "none";
+        if (paneCover) paneCover.style.display = "none";
+        if (paneClaims) paneClaims.style.display = "block";
+      });
+    }
+  }
+
+  async function loadSettingsData() {
+    try {
+      const res = await fetch("/api/v1/settings");
+      if (!res.ok) return;
+      const s = await res.json();
+
+      const compIn = document.getElementById("setting-min-comp");
+      if (compIn && s.minimum_compensation) compIn.value = s.minimum_compensation.amount || "100000";
+
+      const dailyIn = document.getElementById("setting-daily-cap");
+      if (dailyIn) dailyIn.value = s.daily_application_cap || 5;
+
+      const coolIn = document.getElementById("setting-cooldown");
+      if (coolIn) coolIn.value = s.same_company_cooldown_days || 30;
+
+      const rolesIn = document.getElementById("setting-target-roles");
+      if (rolesIn) rolesIn.value = (s.target_roles || []).join(", ");
+
+      const locsIn = document.getElementById("setting-target-locs");
+      if (locsIn) locsIn.value = (s.target_locations || []).join(", ");
+
+      const sponIn = document.getElementById("setting-sponsorship");
+      if (sponIn) sponIn.value = s.sponsorship_requirement || "not_required";
+
+      const wpArr = s.workplace_arrangements || ["remote", "hybrid"];
+      const rChk = document.getElementById("wp-remote");
+      if (rChk) rChk.checked = wpArr.includes("remote");
+      const hChk = document.getElementById("wp-hybrid");
+      if (hChk) hChk.checked = wpArr.includes("hybrid");
+      const oChk = document.getElementById("wp-onsite");
+      if (oChk) oChk.checked = wpArr.includes("onsite");
+    } catch (err) {
+      console.error("Failed to load settings:", err);
+    }
+  }
+
+  function loadRecommendedDefaults() {
+    const rolesIn = document.getElementById("setting-target-roles");
+    if (rolesIn) rolesIn.value = "AI Engineer, AI Developer, AI + Backend Developer, Forward Deployed Engineer";
+
+    const locsIn = document.getElementById("setting-target-locs");
+    if (locsIn) locsIn.value = "India, Remote";
+
+    const compIn = document.getElementById("setting-min-comp");
+    if (compIn) compIn.value = "300000";
+
+    const coolIn = document.getElementById("setting-cooldown");
+    if (coolIn) coolIn.value = "30";
+
+    const dailyIn = document.getElementById("setting-daily-cap");
+    if (dailyIn) dailyIn.value = "5";
+
+    const sponIn = document.getElementById("setting-sponsorship");
+    if (sponIn) sponIn.value = "not_required";
+
+    const rChk = document.getElementById("wp-remote");
+    if (rChk) rChk.checked = true;
+    const hChk = document.getElementById("wp-hybrid");
+    if (hChk) hChk.checked = true;
+    const oChk = document.getElementById("wp-onsite");
+    if (oChk) oChk.checked = false;
+
+    showToast("Proposed defaults loaded: AI Engineer roles, INR 300,000 min comp, India scope, 30d cooldown. Click 'Save Policies' to confirm.", "info");
+  }
+
+  async function saveSettingsData() {
+    const roles = (document.getElementById("setting-target-roles")?.value || "")
+      .split(",").map(r => r.trim()).filter(Boolean);
+    const locs = (document.getElementById("setting-target-locs")?.value || "")
+      .split(",").map(l => l.trim()).filter(Boolean);
+
+    const wp = [];
+    if (document.getElementById("wp-remote")?.checked) wp.push("remote");
+    if (document.getElementById("wp-hybrid")?.checked) wp.push("hybrid");
+    if (document.getElementById("wp-onsite")?.checked) wp.push("onsite");
+
+    const payload = {
+      minimum_compensation: {
+        amount: document.getElementById("setting-min-comp")?.value || "300000.00",
+      },
+      daily_application_cap: parseInt(document.getElementById("setting-daily-cap")?.value || "5", 10),
+      same_company_cooldown_days: parseInt(document.getElementById("setting-cooldown")?.value || "30", 10),
+      target_roles: roles,
+      target_locations: locs,
+      workplace_arrangements: wp,
+      sponsorship_requirement: document.getElementById("setting-sponsorship")?.value || "not_required",
+    };
+
+    try {
+      const res = await fetch("/api/v1/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        showToast("Search policies and compensation gates updated successfully!", "success");
+        loadSettingsData();
+      } else {
+        const errJson = await res.json().catch(() => ({}));
+        showToast("Error updating settings: " + (errJson.detail || res.statusText), "error");
+      }
+    } catch (err) {
+      showToast("Error saving settings: " + err, "error");
+    }
+  }
+
+  function openNewAnswerModal() {
+    elements.modalContainer.style.display = "block";
+    elements.modalContainer.innerHTML = `
+      <div class="modal-backdrop" id="answer-modal-backdrop">
+        <div class="modal-dialog" style="max-width: 580px;">
+          <div class="modal-header">
+            <div class="modal-title">New Interview Response</div>
+            <button type="button" class="btn-secondary" id="answer-close-btn" style="padding:4px 8px;" aria-label="Close dialog">✕</button>
+          </div>
+          <div class="modal-body">
+            <div id="answer-error-banner" style="display:none; padding:8px 12px; background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; color:#991b1b; font-size:12px; margin-bottom:12px;"></div>
+
+            <div style="margin-bottom:10px;">
+              <label for="answer-cat-select" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Category</label>
+              <select id="answer-cat-select" class="form-input" style="width:100%;">
+                <option value="general">General</option>
+                <option value="technical">Technical</option>
+                <option value="behavioral">Behavioral</option>
+                <option value="compensation">Compensation</option>
+                <option value="work_authorization">Work Authorization</option>
+                <option value="experience">Experience</option>
+              </select>
+            </div>
+
+            <div style="margin-bottom:10px;">
+              <label for="answer-question-input" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Question / Prompt *</label>
+              <input type="text" id="answer-question-input" class="form-input" style="width:100%; box-sizing:border-box;" placeholder="e.g. Describe your experience with distributed systems." required maxlength="500">
+            </div>
+
+            <div style="margin-bottom:12px;">
+              <label for="answer-text-input" style="font-size:12px; font-weight:600; color:var(--text); display:block; margin-bottom:4px;">Approved Response *</label>
+              <textarea id="answer-text-input" class="form-input" style="width:100%; height:120px; font-family:inherit; font-size:12px; line-height:1.4; padding:8px; box-sizing:border-box; resize:vertical;" placeholder="Enter your approved, factual answer here..." required></textarea>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px; padding:10px; background:var(--raised); border-radius:6px;">
+              <input type="checkbox" id="answer-consent-check" style="cursor:pointer;">
+              <label for="answer-consent-check" style="font-size:12px; color:var(--text); cursor:pointer;">
+                <strong>Explicit Reuse Consent:</strong> Allow this response to be used in AI-assisted application questionnaires. Defaults to unchecked (consent required).
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="answer-cancel-btn">Cancel</button>
+            <button type="button" class="btn-primary" id="answer-save-btn" style="background:#4338ca;">Save Response</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("answer-close-btn")?.addEventListener("click", closeModal);
+    document.getElementById("answer-cancel-btn")?.addEventListener("click", closeModal);
+    document.getElementById("answer-modal-backdrop")?.addEventListener("click", e => {
+      if (e.target.id === "answer-modal-backdrop") closeModal();
+    });
+
+    document.getElementById("answer-save-btn")?.addEventListener("click", async () => {
+      const category = document.getElementById("answer-cat-select").value;
+      const question = document.getElementById("answer-question-input").value.trim();
+      const answer = document.getElementById("answer-text-input").value.trim();
+      const reuse_consent = document.getElementById("answer-consent-check").checked;
+      const errorBanner = document.getElementById("answer-error-banner");
+
+      errorBanner.style.display = "none";
+      if (!question) {
+        errorBanner.textContent = "Please enter a question or prompt.";
+        errorBanner.style.display = "block";
+        document.getElementById("answer-question-input").focus();
+        return;
+      }
+      if (!answer) {
+        errorBanner.textContent = "Please enter an answer.";
+        errorBanner.style.display = "block";
+        document.getElementById("answer-text-input").focus();
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/v1/answers", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ question, answer, category, reuse_consent })
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `Server responded with ${res.status}`);
+        }
+        closeModal();
+        loadAnswersData();
+      } catch (err) {
+        errorBanner.textContent = "Failed to save: " + err.message;
+        errorBanner.style.display = "block";
+      }
+    });
+  }
+
+  async function loadAnswersData(catFilter = "") {
+    try {
+      const url = catFilter ? `/api/v1/answers?category=${encodeURIComponent(catFilter)}` : "/api/v1/answers";
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const items = await res.json();
+
+      const countEl = document.getElementById("answers-count");
+      if (countEl) countEl.textContent = items.length;
+
+      const container = document.getElementById("answer-cards-container");
+      if (!container) return;
+
+      if (items.length === 0) {
+        container.innerHTML = '<div class="state-desc" style="grid-column: 1/-1; text-align:center; padding:32px;">No answer bank entries found. Click "+ New Response" to save interview answers.</div>';
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="answer-card" id="answer-card-${item.id}">
+          <div class="answer-card-header">
+            <span class="tag" style="background:#e0f2fe; color:#0369a1; font-weight:600;">${escapeHtml(item.category)}</span>
+            <span style="font-size:11px; color:var(--muted);">
+              v${item.version} • ${item.is_revoked ? '<span style="color:var(--negative); font-weight:600;">Permanently Revoked</span>' : (item.reuse_consent ? '<span style="color:var(--positive); font-weight:600;">Consent Granted</span>' : '<span style="color:#b45309; font-weight:600;">Consent Pending</span>')}
+            </span>
+          </div>
+          <div class="answer-card-question">${escapeHtml(item.question)}</div>
+          <div class="answer-card-text">${escapeHtml(item.answer)}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; gap:8px;">
+            <button type="button" class="btn-secondary" style="font-size:11px; padding:4px 8px;" onclick="navigator.clipboard.writeText('${escapeHtml(item.answer.replace(/'/g, "\\'"))}'); showToast('Copied answer to clipboard!', 'success');">Copy Answer</button>
+            <div style="display:flex; gap:6px;">
+              ${!item.is_revoked ? `
+                <button type="button" class="btn-secondary" style="font-size:11px; padding:4px 8px; ${item.reuse_consent ? 'color:#b45309;' : 'color:var(--positive);'}" onclick="toggleAnswerConsent('${item.id}', ${!item.reuse_consent})">
+                  ${item.reuse_consent ? 'Revoke Consent' : 'Grant Consent'}
+                </button>
+                <button type="button" class="btn-secondary" style="font-size:11px; padding:4px 8px; color:var(--negative);" onclick="permanentlyRevokeAnswer('${item.id}')">
+                  Permanent Revoke
+                </button>
+              ` : `
+                <span style="font-size:11px; color:var(--muted); font-style:italic;">Revoked (Read-only)</span>
+              `}
+            </div>
+          </div>
+        </div>
+      `).join("");
+    } catch (err) {
+      console.error("Failed to load answers:", err);
+    }
+  }
+
+  window.toggleAnswerConsent = async function(id, consent) {
+    try {
+      const res = await fetch(`/api/v1/answers/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reuse_consent: consent })
+      });
+      if (res.ok) {
+        loadAnswersData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast("Failed to update consent: " + (err.detail || res.statusText), "error");
+      }
+    } catch (err) {
+      showToast("Error updating consent: " + err, "error");
+    }
+  };
+
+  window.permanentlyRevokeAnswer = async function(id) {
+    if (!confirm("Are you sure you want to permanently revoke this answer? Revocation is permanent and cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/v1/answers/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_revoked: true, reuse_consent: false })
+      });
+      if (res.ok) {
+        loadAnswersData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        showToast("Failed to revoke: " + (err.detail || res.statusText), "error");
+      }
+    } catch (err) {
+      showToast("Error revoking answer: " + err, "error");
+    }
+  };
+
+  window.revokeAnswerItem = async function(id) {
+    return window.permanentlyRevokeAnswer(id);
+  };
+
+  async function loadSourcesData() {
+    try {
+      const res = await fetch("/api/v1/sources");
+      if (!res.ok) return;
+      const sources = await res.json();
+      const tbody = document.getElementById("source-registry-tbody");
+      if (!tbody) return;
+
+      tbody.innerHTML = sources.map(s => `
+        <tr>
+          <td><strong>${escapeHtml(s.source_name)}</strong></td>
+          <td>${escapeHtml(s.display_name)}</td>
+          <td><span class="tag" style="background:#f1f5f9; color:#1e293b; font-weight:600;">${escapeHtml(s.capability_status)}</span></td>
+          <td>${s.rate_limit_requests_per_minute} req/min</td>
+          <td><span class="tag" style="background:#fee2e2; color:#b91c1c; font-weight:600;">DISABLED</span></td>
+          <td>
+            <button type="button" class="btn-secondary" style="font-size:11px; padding:4px 8px;" onclick="toggleSourceEnabled('${s.source_name}', ${!s.is_enabled})">
+              ${s.is_enabled ? "Disable" : "Enable"}
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    } catch (err) {
+      console.error("Failed to load sources:", err);
+    }
+  }
+
+  window.toggleSourceEnabled = async function(name, enable) {
+    try {
+      const res = await fetch(`/api/v1/sources/${name}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_enabled: enable }),
+      });
+      if (res.ok) {
+        loadSourcesData();
+      }
+    } catch (err) {
+      showToast("Error updating source: " + err, "error");
+    }
+  };
+
+  async function loadAiData() {
+    try {
+      const res = await fetch("/api/v1/ai/status");
+      if (!res.ok) return;
+      const ai = await res.json();
+
+      const modeEl = document.getElementById("ai-mode-display");
+      if (modeEl) modeEl.textContent = ai.active_mode;
+      const capEl = document.getElementById("ai-budget-cap");
+      if (capEl) capEl.textContent = `$${ai.budget_cap_usd.toFixed(2)}`;
+      const spendEl = document.getElementById("ai-committed-spend");
+      if (spendEl) spendEl.textContent = `$${ai.committed_spend_usd.toFixed(2)}`;
+      const remEl = document.getElementById("ai-remaining-funds");
+      if (remEl) remEl.textContent = `$${ai.remaining_budget_usd.toFixed(2)}`;
+    } catch (err) {
+      console.error("Failed to load AI data:", err);
+    }
+  }
+
+  async function askAiQuestion() {
+    const qIn = document.getElementById("ai-test-question");
+    const q = qIn ? qIn.value.trim() : "";
+    if (!q) {
+      showToast("Please enter a question to resolve.", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/v1/ai/answer-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: q }),
+      });
+      if (!res.ok) return;
+      const ans = await res.json();
+
+      const box = document.getElementById("ai-answer-result-box");
+      const srcTag = document.getElementById("ai-answer-source-tag");
+      const confTag = document.getElementById("ai-confidence-tag");
+      const textEl = document.getElementById("ai-answer-text");
+
+      if (srcTag) srcTag.textContent = ans.source;
+      if (confTag) confTag.textContent = `Confidence: ${(ans.confidence * 100).toFixed(0)}%`;
+      if (textEl) textEl.textContent = ans.answer;
+      if (box) box.style.display = "block";
+    } catch (err) {
+      showToast("Error resolving answer: " + err, "error");
+    }
+  }
+
+  function loadPortabilityData() {
+    // Portability view is bound via event listeners
+  }
+
+  async function exportFullBackup() {
+    try {
+      const res = await fetch("/api/v1/data/export", { method: "POST" });
+      if (!res.ok) {
+        showToast("Export failed", "error");
+        return;
+      }
+      const bundle = await res.json();
+      const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `hire-steward-backup-${new Date().toISOString().substring(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast("Error downloading backup: " + err, "error");
+    }
+  }
+
+  let stagedImportBundle = null;
+  let stagedPreviewToken = null;
+
+  async function handleImportFile(file) {
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const bundle = JSON.parse(text);
+      stagedImportBundle = bundle;
+
+      const res = await fetch("/api/v1/data/import/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bundle),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Invalid backup format" }));
+        showToast("Validation error: " + err.detail, "error");
+        return;
+      }
+
+      const prev = await res.json();
+      stagedPreviewToken = prev.preview_token;
+      const modalBox = document.getElementById("import-preview-modal-box");
+      const detailsEl = document.getElementById("import-preview-details");
+
+      if (detailsEl) {
+        detailsEl.innerHTML = `
+          <div><strong>Format Version:</strong> ${escapeHtml(prev.format_version)}</div>
+          <div><strong>Checksum Integrity:</strong> ${prev.checksum_verified ? '<span class="tag" style="background:#dcfce7; color:#166534;">Verified OK</span>' : '<span class="tag" style="background:#fee2e2; color:#b91c1c;">Mismatch</span>'}</div>
+          <div><strong>Preview Token:</strong> <code style="font-size:11px;">${escapeHtml(prev.preview_token ? prev.preview_token.substring(0, 16) + '...' : 'none')}</code></div>
+          <div style="margin-top:6px;"><strong>Records:</strong> Profile: ${prev.new_counts.candidate_profile || 0}, Answers: ${prev.new_counts.answer_bank_items || 0}, Facts: ${prev.new_counts.candidate_facts || 0}, Applications: ${prev.new_counts.tracked_applications || 0}</div>
+          <div style="margin-top:4px;"><strong>Collisions:</strong> Profile: ${prev.collision_counts.candidate_profile || 0}, Answers: ${prev.collision_counts.answer_bank_items || 0}, Facts: ${prev.collision_counts.candidate_facts || 0}</div>
+          <div style="margin-top:4px; color:var(--muted);">Existing records will be safely updated and restored atomically.</div>
+        `;
+      }
+      if (modalBox) modalBox.style.display = "block";
+    } catch (err) {
+      showToast("Error reading backup JSON: " + err, "error");
+    }
+  }
+
+  async function confirmImportCommit() {
+    if (!stagedImportBundle) return;
+    try {
+      const res = await fetch("/api/v1/data/import/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bundle: stagedImportBundle,
+          preview_token: stagedPreviewToken,
+          overwrite_existing: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: "Restore failed" }));
+        showToast("Restore failed: " + err.detail, "error");
+        return;
+      }
+
+      showToast("Backup successfully restored! Refreshing state...", "success");
+      document.getElementById("import-preview-modal-box").style.display = "none";
+      loadOverviewData();
+      switchView("overview");
+    } catch (err) {
+      showToast("Error committing restore: " + err, "error");
+    }
+  }
+
+  async function loadActivityData() {
+    try {
+      const res = await fetch("/api/v1/system/activity?limit=50");
+      if (!res.ok) return;
+      const acts = await res.json();
+      renderActivityList(acts, "full-activity-feed");
+    } catch (err) {
+      console.error("Failed to load activity:", err);
+    }
+  }
+
+  function renderActivityList(items, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (!items || items.length === 0) {
+      container.innerHTML = '<div class="state-desc" style="padding:16px;">No recent events recorded.</div>';
+      return;
+    }
+
+    container.innerHTML = items.map(act => `
+      <div class="activity-item">
+        <div class="activity-item-header">
+          <span class="tag" style="background:#e0f2fe; color:#0369a1; font-size:10px;">${escapeHtml(act.type || "EVENT")}</span>
+          <span class="num">${new Date(act.timestamp).toLocaleString()}</span>
+        </div>
+        <div class="activity-item-title">${escapeHtml(act.title || "")}</div>
+        <div class="activity-item-detail">${escapeHtml(act.detail || "")}</div>
+      </div>
+    `).join("");
+  }
+
+  async function loadSystemData() {
+    try {
+      const res = await fetch("/api/v1/system/status");
+      if (!res.ok) return;
+      const sys = await res.json();
+
+      const stVal = document.getElementById("sys-status-val");
+      if (stVal) stVal.textContent = sys.status === "healthy" ? "Healthy" : "Degraded";
+      const dbVal = document.getElementById("sys-db-val");
+      if (dbVal) dbVal.textContent = sys.database?.connected ? "Connected (OK)" : "Offline";
+      const strVal = document.getElementById("sys-storage-val");
+      if (strVal) strVal.textContent = sys.storage?.writable ? "Writable (OK)" : "Read-Only";
+      const strPath = document.getElementById("sys-storage-path");
+      if (strPath) strPath.textContent = sys.storage?.path || "Local Storage";
+      const jobVal = document.getElementById("sys-total-jobs");
+      if (jobVal) jobVal.textContent = sys.metrics?.total_opportunities || 0;
+    } catch (err) {
+      console.error("Failed to load system data:", err);
+    }
+  }
+
 
   function clearFilters() {
     elements.searchInput.value = "";
@@ -1890,25 +3368,31 @@
   function setupEventListeners() {
     // Search input with debounce
     let searchTimeout;
-    elements.searchInput.addEventListener("input", e => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        state.filters.search = e.target.value.trim();
-        fetchJobs();
-      }, 250);
-    });
+    if (elements.searchInput) {
+      elements.searchInput.addEventListener("input", e => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          state.filters.search = e.target.value.trim();
+          fetchJobs();
+        }, 250);
+      });
+    }
 
     // Workplace filter
-    elements.workplaceFilter.addEventListener("change", e => {
-      state.filters.workplace = e.target.value;
-      fetchJobs();
-    });
+    if (elements.workplaceFilter) {
+      elements.workplaceFilter.addEventListener("change", e => {
+        state.filters.workplace = e.target.value;
+        fetchJobs();
+      });
+    }
 
     // Sort select
-    elements.sortSelect.addEventListener("change", e => {
-      state.filters.sort = e.target.value;
-      fetchJobs();
-    });
+    if (elements.sortSelect) {
+      elements.sortSelect.addEventListener("change", e => {
+        state.filters.sort = e.target.value;
+        fetchJobs();
+      });
+    }
 
     // Tier pills
     elements.tierPills.forEach(btn => {
@@ -1931,13 +3415,91 @@
       elements.addJobBtn.addEventListener("click", openJobIntakeModal);
     }
 
-    // Pipeline navigation
-    if (elements.navOpportunitiesBtn) {
-      elements.navOpportunitiesBtn.addEventListener("click", () => switchView("opportunities"));
+    // All 13 Sidebar Navigation Buttons
+    document.querySelectorAll(".sidebar-nav .nav-item").forEach(btn => {
+      btn.addEventListener("click", () => {
+        closeMobileSidebar();
+        const view = btn.getAttribute("data-view");
+        if (view) switchView(view);
+      });
+    });
+
+    // Quick Action Card Links
+    document.getElementById("qa-upload-resume")?.addEventListener("click", () => switchView("evidence"));
+    document.getElementById("qa-explore-jobs")?.addEventListener("click", () => switchView("opportunities"));
+    document.getElementById("qa-view-pipeline")?.addEventListener("click", () => switchView("pipeline"));
+    document.getElementById("qa-backup-data")?.addEventListener("click", () => switchView("portability"));
+
+    // Candidate Profile Save & Reset
+    document.getElementById("candidate-profile-form")?.addEventListener("submit", saveProfileData);
+    document.getElementById("prof-reset-btn")?.addEventListener("click", loadProfileData);
+    document.getElementById("prof-add-exp-btn")?.addEventListener("click", () => addEmploymentRow({}));
+    document.getElementById("prof-add-edu-btn")?.addEventListener("click", () => addEducationRow({}));
+    document.getElementById("prof-add-proj-btn")?.addEventListener("click", () => addProjectRow({}));
+    document.getElementById("prof-add-cert-btn")?.addEventListener("click", () => addCertRow({}));
+
+    // Evidence Library Dropzone & Browse
+    const dropzone = document.getElementById("document-dropzone");
+    const fileInput = document.getElementById("document-file-input");
+    document.getElementById("browse-doc-btn")?.addEventListener("click", () => fileInput?.click());
+    fileInput?.addEventListener("change", e => {
+      if (e.target.files && e.target.files[0]) handleFileUpload(e.target.files[0]);
+    });
+    if (dropzone) {
+      dropzone.addEventListener("dragover", e => { e.preventDefault(); dropzone.style.borderColor = "var(--accent)"; });
+      dropzone.addEventListener("dragleave", e => { e.preventDefault(); dropzone.style.borderColor = "var(--control)"; });
+      dropzone.addEventListener("drop", e => {
+        e.preventDefault();
+        dropzone.style.borderColor = "var(--control)";
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          handleFileUpload(e.dataTransfer.files[0]);
+        }
+      });
     }
-    if (elements.navPipelineBtn) {
-      elements.navPipelineBtn.addEventListener("click", () => switchView("pipeline"));
-    }
+
+    // Answer Bank New Response & Filter Pills
+    document.getElementById("add-answer-btn")?.addEventListener("click", openNewAnswerModal);
+    document.querySelectorAll("#answer-cat-pills button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#answer-cat-pills button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const cat = btn.getAttribute("data-cat") || "";
+        loadAnswersData(cat);
+      });
+    });
+
+    // Preparation Generate, Plan & Simulation
+    document.getElementById("prep-job-select")?.addEventListener("change", e => {
+      state.selectedPostingId = e.target.value || null;
+    });
+    document.getElementById("prep-generate-btn")?.addEventListener("click", generatePreparationDraft);
+    document.getElementById("prep-create-plan-btn")?.addEventListener("click", createSubmissionPlanFromDraft);
+    document.getElementById("prep-simulate-btn")?.addEventListener("click", simulateSubmissionFromDraft);
+    initPreparationTabs();
+
+    // Settings Save
+    document.getElementById("load-recommended-defaults-btn")?.addEventListener("click", loadRecommendedDefaults);
+    document.getElementById("save-settings-btn")?.addEventListener("click", saveSettingsData);
+
+    // AI Question Answering
+    document.getElementById("ai-ask-btn")?.addEventListener("click", askAiQuestion);
+
+    // Export & Import Buttons
+    document.getElementById("export-download-btn")?.addEventListener("click", exportFullBackup);
+    const importFileInput = document.getElementById("import-file-input");
+    document.getElementById("import-browse-btn")?.addEventListener("click", () => importFileInput?.click());
+    importFileInput?.addEventListener("change", e => {
+      if (e.target.files && e.target.files[0]) handleImportFile(e.target.files[0]);
+    });
+    document.getElementById("import-confirm-btn")?.addEventListener("click", confirmImportCommit);
+    document.getElementById("import-cancel-btn")?.addEventListener("click", () => {
+      const box = document.getElementById("import-preview-modal-box");
+      if (box) box.style.display = "none";
+    });
+
+    // Refresh Buttons
+    document.getElementById("dash-refresh-activity")?.addEventListener("click", () => loadOverviewData());
+    document.getElementById("refresh-activity-btn")?.addEventListener("click", () => loadActivityData());
 
     // Pipeline status filter pills
     if (elements.pipelineStatusPills) {
@@ -1963,10 +3525,46 @@
       });
     }
 
+    // Mobile navigation drawer controls
+    if (elements.mobileMenuBtn) {
+      elements.mobileMenuBtn.addEventListener("click", e => {
+        e.stopPropagation();
+        toggleMobileSidebar();
+      });
+    }
+
+    if (elements.sidebarBackdrop) {
+      elements.sidebarBackdrop.addEventListener("click", () => {
+        closeMobileSidebar();
+      });
+    }
+
+    document.addEventListener("click", e => {
+      if (elements.sidebar && elements.sidebar.classList.contains("sidebar-open")) {
+        if (!elements.sidebar.contains(e.target) && (!elements.mobileMenuBtn || !elements.mobileMenuBtn.contains(e.target))) {
+          closeMobileSidebar();
+        }
+      }
+    });
+
+    const mql = window.matchMedia("(min-width: 901px)");
+    if (mql.addEventListener) {
+      mql.addEventListener("change", e => {
+        if (e.matches) closeMobileSidebar();
+      });
+    } else if (mql.addListener) {
+      mql.addListener(e => {
+        if (e.matches) closeMobileSidebar();
+      });
+    }
+
     // Keyboard shortcuts
     window.addEventListener("keydown", e => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
+        if (state.currentView !== "opportunities") {
+          switchView("opportunities");
+        }
         elements.searchInput.focus();
         elements.searchInput.select();
       } else if (e.key === "Escape") {
@@ -1974,6 +3572,8 @@
           closeModal();
         } else if (elements.detailPane.classList.contains("mobile-visible")) {
           elements.detailPane.classList.remove("mobile-visible");
+        } else if (elements.sidebar && elements.sidebar.classList.contains("sidebar-open")) {
+          closeMobileSidebar();
         } else if (document.activeElement === elements.searchInput) {
           elements.searchInput.blur();
         }
@@ -1983,6 +3583,5 @@
 
   // Initialization
   setupEventListeners();
-  fetchJobs();
-  fetchPipelineApplications();
+  switchView("overview");
 })();

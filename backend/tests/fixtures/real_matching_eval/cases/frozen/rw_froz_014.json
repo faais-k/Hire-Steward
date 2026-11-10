@@ -1,0 +1,109 @@
+{
+  "case_id": "rw_froz_014",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_05",
+  "source_platform": "PIPE_SYNTH_DIRECT",
+  "formatting_cluster_id": "FMT_FROZ_05",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_05",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_14",
+    "title": "100% Commission-Only Direct Sales Agent",
+    "employer_id": "EMP_FROZ_05",
+    "employer_name": "CloudFrontier Commercial Solutions",
+    "workplace_type": "remote",
+    "location": "Mumbai, Maharashtra, India",
+    "description_plain": "Uncapped earning potential selling enterprise commercial memberships.\n\nCompensation Disclosure: This is a 100% commission-only role with ZERO guaranteed base salary. Earnings depend entirely on sales commissions closed. This is NOT an unpaid role, but variable performance compensation with no floor.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": null,
+      "amount_max": null,
+      "period": "YEAR",
+      "compensation_structure": "COMMISSION_ONLY",
+      "guaranteed_base": 0.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": [
+        "NO_GUARANTEED_BASE",
+        "VARIABLE_COMMISSION_STRUCTURE",
+        "COMPENSATION_UNCERTAINTY"
+      ]
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Direct Sales",
+        "Client Prospecting",
+        "Commission Sales"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 1
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_10",
+  "candidate_profile": {
+    "profile_id": "P_froz_10",
+    "name": "Liam O'Connor",
+    "contact_info": {
+      "email": "liam.oconnor@example.invalid",
+      "phone": "+91-98765-01010",
+      "location": "Bengaluru, Karnataka, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Business Administration (BBA) in Marketing",
+      "degree_level": "Bachelor",
+      "field_of_study": "Marketing",
+      "institution": "Christ University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Growth Marketing Specialist",
+        "employer": "D2C Brands Online",
+        "years": 5.0,
+        "description": "Planned multi-channel digital acquisition campaigns across Google Ads and Meta, analyzed funnels in GA4, and executed SEO optimizations."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Digital Marketing",
+      "SEO Optimization",
+      "Performance Marketing",
+      "Google Analytics (GA4)",
+      "Conversion Rate Optimization",
+      "Paid Search (PPC)"
+    ],
+    "certifications": [
+      "Google Ads Certified",
+      "Google Analytics Individual Qualification"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_10_F01",
+        "fact_type": "SKILL",
+        "statement": "5 years performance marketing, Google Analytics (GA4), and SEO optimization.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Digital Marketing",
+          "SEO Optimization",
+          "Google Analytics (GA4)"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Evaluate commission-only handling: must disclose COMMISSION_ONLY & NO_GUARANTEED_BASE, not treat as unpaid."
+}

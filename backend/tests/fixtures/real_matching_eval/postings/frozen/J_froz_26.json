@@ -1,0 +1,24 @@
+{
+  "posting_id": "J_froz_26",
+  "title": "Compensation & Cafeteria Perks Only",
+  "employer_id": "EMP_FROZ_08",
+  "employer_name": "Raw Dump Enterprises",
+  "workplace_type": "hybrid",
+  "location": "Gurugram, India",
+  "description_plain": "Compensation: INR 15,00,000 per annum.\nBenefits: Free catered lunch, comprehensive medical insurance, annual company retreat in Goa.",
+  "completeness_status": "INCOMPLETE_STUB",
+  "incompleteness_reason": "Lists salary and perks only; completely omits job title duties and requirements.",
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 1500000.0,
+    "amount_max": 1500000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 1500000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {},
+  "lists_json": []
+}

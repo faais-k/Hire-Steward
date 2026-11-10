@@ -1,0 +1,33 @@
+{
+  "posting_id": "J_calib_02",
+  "title": "Store Operations Coordinator",
+  "employer_id": "EMP_CALIB_01",
+  "employer_name": "Metro Mart Retail",
+  "workplace_type": "on_site",
+  "location": "Indore, India",
+  "description_plain": "Coordinate daily customer service desks, cash handling, and retail shift rosters.\nRequirements: 2+ years customer assistance and retail store operations.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 350000.0,
+    "amount_max": 420000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 350000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Customer Assistance",
+      "Store Operations",
+      "Cash Handling"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 2
+  },
+  "lists_json": []
+}

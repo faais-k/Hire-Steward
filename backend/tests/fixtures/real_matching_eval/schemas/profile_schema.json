@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CandidateProfileSchema",
+  "type": "object",
+  "required": [
+    "profile_id",
+    "name",
+    "contact_info",
+    "education_status",
+    "is_complete_profile"
+  ],
+  "properties": {
+    "profile_id": {
+      "type": "string"
+    },
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "contact_info": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "phone": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "education_status": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "required": [
+        "declaration_state",
+        "status_stated"
+      ],
+      "properties": {
+        "declaration_state": {
+          "type": "string",
+          "enum": [
+            "DECLARED_VERIFIED",
+            "DECLARED_UNVERIFIED",
+            "DECLARED_SELF_TAUGHT",
+            "ABSENT",
+            "MALFORMED"
+          ]
+        },
+        "status_stated": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "degree_level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "field_of_study": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "institution": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "is_verified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "is_complete_profile": {
+      "type": "boolean"
+    },
+    "incompleteness_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "experience": {
+      "type": "array"
+    },
+    "projects": {
+      "type": "array"
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_facts": {
+      "type": "array"
+    }
+  }
+}

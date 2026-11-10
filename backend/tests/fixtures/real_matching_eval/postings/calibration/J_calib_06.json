@@ -1,0 +1,33 @@
+{
+  "posting_id": "J_calib_06",
+  "title": "Statutory Audit Senior",
+  "employer_id": "EMP_CALIB_03",
+  "employer_name": "Crestview Accounting Services",
+  "workplace_type": "hybrid",
+  "location": "Nagpur, India",
+  "description_plain": "Execute statutory financial audit procedures, sample ledger entries, and draft audit variance reports.\nRequirements: 4+ years statutory auditing experience.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 750000.0,
+    "amount_max": 900000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 750000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Statutory Audit",
+      "Ledger Review",
+      "Audit Variance"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 4
+  },
+  "lists_json": []
+}

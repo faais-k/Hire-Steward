@@ -44,3 +44,7 @@ node_modules/
 /data/
 /backups/
 /docs.zip
+/hire-steward.zip
+/scratch/
+/scratch_prompt.txt
+/.agents/

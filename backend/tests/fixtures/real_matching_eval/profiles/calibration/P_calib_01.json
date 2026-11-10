@@ -1,0 +1,49 @@
+{
+  "profile_id": "P_calib_01",
+  "name": "Rohit Malviya",
+  "contact_info": {
+    "email": "rohit.m@example.invalid",
+    "phone": "+91-98765-03001",
+    "location": "Indore, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Commerce",
+    "degree_level": "Bachelor",
+    "field_of_study": "Commerce",
+    "institution": "DAVV Indore",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Retail Inventory Associate",
+      "employer": "Metro Mart",
+      "years": 3.0,
+      "description": "Maintained point-of-sale inventory and supplier delivery logs."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Retail Inventory",
+    "POS Systems",
+    "Stock Reconciliation",
+    "Customer Assistance"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_calib_01_F01",
+      "fact_type": "SKILL",
+      "statement": "Rohit Malviya exhibits verified background in Retail Inventory.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Retail Inventory",
+        "POS Systems",
+        "Stock Reconciliation"
+      ],
+      "years_of_experience": 3.0
+    }
+  ]
+}

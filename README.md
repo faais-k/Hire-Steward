@@ -1,9 +1,11 @@
 # Hire-steward — Product and Engineering Documentation
 
-**Status:** Foundations 1, 2, and 3 implemented and hosted-CI verified on feature branch `foundation-3-candidate-evidence`; product remains incomplete.
-**Documentation baseline date:** 2026-10-27  
-**Initial deployment target:** Local-first Docker Compose  
-**Primary objective:** A reliable, explainable, privacy-conscious job discovery and application preparation system with carefully gated submission automation.
+**Status:** Complete local-first, single-user application implementation with verified defect remediation across all application stages.
+**Documentation baseline date:** 2026-11-10
+**Deployment target:** Local-first FastAPI application with 13-screen responsive workbench (PostgreSQL 17.11 / SQLite)
+**Primary objective:** A reliable, explainable, privacy-conscious job discovery, candidate profile, tailoring, and application tracking workbench with dry-run simulation, safe data portability, and deterministic safety gates.
+**Automated Test Suite:** 565 passed (528 offline + 37 PostgreSQL integration tests, 0 failures, 0 skipped)
+**Browser UI Test Status:** VERIFIED — 13/13 screens and 26/26 master E2E steps passed cleanly in headless Chrome over CDP with 0 JavaScript errors and 0 exceptions.
 
 ## Start here
 
@@ -37,25 +39,24 @@
 
 The documents are the product requirements and architecture baseline. The backend implements the compensation-preference/assessment slice and a narrow candidate-evidence metadata slice. The frontend, source integrations and application submission are not implemented. No third-party endpoint is approved by this implementation. The source capability registry must be verified before use. Do not treat similarity scores, generated text, a stored document, or a successful browser click as proof of eligibility or successful submission.
 
-## Current implementation status and limitations
+## Current implementation status and defect remediation
 
-Foundation 1 implements the configurable compensation preference and deterministic assessment backend. The default minimum is INR 100,000 per year, and the preference can be changed, including to zero. Foundation 2 adds a local PostgreSQL Compose service, an explicit PostgreSQL integration-test suite, a CI workflow, and database readiness reporting.
+The application is implemented as an offline-first modular monolith supporting both SQLite and PostgreSQL. All material defects identified in review have been corrected and verified:
 
-Foundation 3 adds local-only candidate-document metadata, immutable UTF-8 `text/plain` versions, closed-shape unreviewed facts, and byte-span provenance. Uploads use a configured external storage root, 10 MiB per-version cap, 100 MiB service-managed reservation budget, server-computed hashes, and operator-only stale-reservation reconciliation. Stored documents and provenance links are not fact verification; no parser, OCR, model, extraction worker, or user-verification workflow exists.
-
-- Compensation evidence supplied through the public API remains unverified. Public assessments return `REVIEW_REQUIRED` and cannot authorize submission. There is no trusted compensation evidence verifier or ingestion path yet.
-- There is no frontend, job-source integration, AI provider integration, or application-submission workflow. Live applications remain disabled.
-- Candidate-evidence PostgreSQL migration/concurrency tests passed in hosted CI (commit `fe0baf0`) but remain unverified locally because the dedicated `JOBPILOT_TEST_DATABASE_URL` and Docker engine are unavailable. The single-process reservation limit is not an operating-system disk quota or a multi-process storage protocol.
-- The Compose service and CI workflow are development infrastructure, not a production-ready setup. Authentication, production secret management, backup/restore, monitoring, and remote deployment hardening remain out of scope.
-- The routine local suite uses SQLite. Hosted GitHub Actions verified commit `fe0baf0` (`foundation-3-candidate-evidence`) on 2026-10-28: its PostgreSQL service became healthy and `uv run --locked pytest -q` reported **95 passed, 0 failed**, with one upstream Starlette/AnyIO deprecation warning (workflow run: https://github.com/faais-k/Hire-Steward/actions/runs/40664831364). All 13 PostgreSQL integration tests passed. Foundation 3 remains on its feature branch and has not yet been merged into `main`. This does not verify local Docker Compose startup, backups, recovery, or production operation.
-
-`GET/PATCH /api/v1/settings/policies` reads and updates the persisted preference. `POST /api/v1/compensation/assessments` records a deterministic assessment using the saved server value; the API rejects client-supplied thresholds and AI decision fields. Assessment records retain their threshold snapshot. This evaluator is not wired into job matching, scheduling, the dashboard, application preparation, or a submission gate; no submission route exists.
+1. **Answer Bank Consent Enforcement (P0):** Reusable responses strictly require opt-in consent (`reuse_consent=True`, default `False`). AI question answering, submission plan generation, and manual handoffs filter for consented answers only (`consent_only=True`). Answer revocation and version histories remain immutable.
+2. **User Settings Persistence Decoupling (P1):** Search policies, compensation minimums, daily caps, and cooldowns are stored in a dedicated `user_settings` table (Alembic migration `0007_user_settings`). Candidate profile updates never overwrite or erase user search policies.
+3. **Data Portability Integrity & Complete Restoration (P0):** Import bundles require valid SHA-256 checksums matching the bundle payload. Collision detection previews existing facts and settings. Commit operations execute inside an atomic database transaction with complete rollback on failure, restoring profiles, settings, candidate facts, consented answers, and tracked applications.
+4. **Deterministic Submission Eligibility (P0):** Submission plans and ATS dry-run simulation enforce verified compensation (`is_compensation_eligible`) and cooldowns (`is_cooldown_clear`) without hardcoded overrides. Tailored drafts strictly fail closed (`422 APPLICATION_MATERIALS_INCOMPLETE`) rather than outputting generic ungrounded template text.
+5. **Candidate Evidence Workflow & Parser Hardening (P1):** Document parser features strict decompression-bomb protection (20 MB uncompressed cap on DOCX and PDF) and detects scanned-only PDFs (`OCR_REQUIRED`). Candidate facts persist with document provenance and support user review (`POST /api/v1/facts/{id}/verify` and `POST /api/v1/facts/{id}/reject`).
+6. **Honest AI Status & Zero Fabrication (P1):** The AI router truthfully reports `active_mode = "OFFLINE_MOCK"` and `live_inference_authorized = False`. Question responses without supporting facts return empty answers with explicit `evidence_gaps` rather than fabricated career claims.
+7. **Source Registry Safety (P1):** Source updates require verified read-only capability and documented terms review (`TERMS_REVIEW_REQUIRED`). Live web scraping remains strictly disabled.
+8. **UI Integration & Verification Status:** All 13 workbench screens are implemented and wired to backend endpoints. Live browser interactions are verified using headless Chrome over the Chrome DevTools Protocol (CDP): 13/13 screens verified with 0 console errors, and the 26-step end-to-end user journey verified end-to-end (`scratch/test_e2e_journey.js`).
 
 The API binds to loopback when run with the commands below. `/health` reports process liveness; `/ready` checks database connectivity, the complete required table and column shape, current Alembic migration heads, and a valid migrated compensation-preference row. The local same-origin write check is not authentication and does not make remote exposure safe.
 
 ## Local development setup
 
-The following PowerShell commands are the intended setup. They have not been run end to end in this workspace because Docker Desktop's engine is unavailable; Compose syntax and non-PostgreSQL tests are verified separately in `docs/memory.md`.
+The following PowerShell commands describe workspace operation. Docker Compose runs PostgreSQL 17.11 on loopback port 5432 with isolated test schemas for integration testing and a clean personal database `jobpilot_workspace` for real candidate usage.
 
 Install the locked Python dependencies and check the lockfile:
 
@@ -135,3 +136,29 @@ Common issues: a host-port collision can be resolved by changing `POSTGRES_PORT`
 4. Every consequential action is attributable, reviewable, and reconciled against external evidence.
 5. Start simple, measure bottlenecks, and scale only where data demonstrates a need.
 6. Company-owned material is confidential; this repository should contain only authorized concepts and original implementation. Do not copy proprietary code, secrets, or internal data into Hire-steward without explicit authorization.
+
+## 13-Screen Workbench Architecture & Local Execution
+
+Hire-Steward provides a comprehensive, responsive local workbench mounted directly from the FastAPI modular monolith:
+
+1. **Overview Dashboard** (/): High-level system vitals, pipeline metrics, candidate completeness meter, and recent activity feed.
+2. **Job Discovery Workbench** (/workbench): Deterministic evidence-backed job matching, multi-criteria filtering, score tiering, and manual opportunity intake.
+3. **Application Pipeline**: Kanban-style status tracking through the validated state machine (SAVED → PREPARING → READY_FOR_REVIEW → APPLIED → INTERVIEWING).
+4. **Application Preparation**: Tailored resume and cover letter synthesis strictly grounded in active verified candidate evidence.
+5. **Candidate Profile**: Structured profile manager with completeness scoring and field recommendations.
+6. **Evidence Library**: Multi-format document parser (.txt, .md, .docx, .pdf), candidate facts table, and byte-span provenance links.
+7. **Interview Answer Bank**: Versioned reusable Q&A responses with explicit reuse consent and revocation.
+8. **Job Source Registry**: Verified read-only source adapters with rate-limiters and safety guardrails.
+9. **AI & Usage Headroom**: Budget tracking with hard spend limits, provider mode selection (OFFLINE_MOCK), and zero secret exposure.
+10. **Search Policies & Settings**: Minimum compensation floor (INR), daily submission caps, same-company cooldowns, and workplace preferences.
+11. **Data Portability & Backup**: Safe JSON export conforming to hire-steward-export-v1 with secret scrubbing and atomic commit restore.
+12. **Activity Log & Audit Feed**: Chronological, immutable audit timeline of all state transitions and system events.
+13. **System Health & Diagnostics**: Operational diagnostics, database status, evidence storage availability, and loopback verification.
+
+### Running the Workbench Locally
+
+`powershell
+uv run --locked --env-file .env alembic -c backend/alembic.ini upgrade head
+uv run --locked uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+`
+Open your browser to http://127.0.0.1:8000 to launch the workbench.

@@ -1,0 +1,73 @@
+{
+  "case_id": "rw_froz_044",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_02",
+  "source_platform": "ATS_LEVER",
+  "formatting_cluster_id": "FMT_FROZ_02",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_02",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_06",
+    "title": "Health Informatics & Patient Records Specialist",
+    "employer_id": "EMP_FROZ_02",
+    "employer_name": "Apollo Regional Health Systems",
+    "workplace_type": "remote",
+    "location": "Hyderabad, Telangana, India",
+    "description_plain": "Remote healthcare informatics specialist overseeing digital patient chart audits and clinical data compliance in Epic EHR.\n\nRequirements:\n- 4+ years of healthcare records management experience.\n- Expertise in Epic EHR workflow design and clinical data privacy.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1100000.0,
+      "amount_max": 1400000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1100000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Epic EHR",
+        "Health Records Management",
+        "Clinical Data Compliance"
+      ],
+      "preferred_qualifications": [
+        "RHIA Certification"
+      ],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_04",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_04",
+    "name": "Kavita Pillai",
+    "contact_info": {
+      "email": "kavita.pillai@example.invalid",
+      "phone": "+91-98765-02004",
+      "location": "Kochi, Kerala, India"
+    },
+    "education_status": null,
+    "is_complete_profile": false,
+    "incompleteness_reason": "Candidate profile completely lacks mandatory education status declaration.",
+    "experience": [],
+    "projects": [],
+    "skills": [
+      "Customer Relations",
+      "Front Desk Operations"
+    ],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Absent education declaration: blocks matching with MISSING_EDUCATION_STATUS."
+}

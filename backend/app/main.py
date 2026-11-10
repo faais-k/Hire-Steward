@@ -1,4 +1,6 @@
 import os
+import uuid
+from typing import Any
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
@@ -9,14 +11,24 @@ from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from backend.app.api.routes.compensation import router as compensation_router
+from backend.app.adapters.storage import EvidenceStorage
+from backend.app.api.routes.application_tracking import router as application_tracking_router
 from backend.app.api.routes.candidate_evidence import router as candidate_evidence_router
+from backend.app.api.routes.candidate_profile import router as candidate_profile_router
+from backend.app.api.routes.answer_bank import router as answer_bank_router
+from backend.app.api.routes.compensation import router as compensation_router
 from backend.app.api.routes.health import router as health_router
 from backend.app.api.routes.job_discovery import router as job_discovery_router
-from backend.app.api.routes.application_tracking import router as application_tracking_router
+from backend.app.api.routes.system import router as system_router
+from backend.app.api.routes.settings import router as settings_router
+from backend.app.api.routes.source_registry import router as source_registry_router
+from backend.app.api.routes.ai_router import router as ai_router
+from backend.app.api.routes.data_portability import router as data_portability_router
 from backend.app.db.session import make_session_factory
-from backend.app.adapters.storage import EvidenceStorage
 from backend.app.evidence_config import EvidenceSettings, evidence_settings_from_environment
+from backend.app.logging_config import configure_logging, correlation_id_ctx
+
+configure_logging()
 
 ALLOWED_CLIENT_HOSTS = {
     "127.0.0.1",
@@ -31,6 +43,39 @@ ALLOWED_ORIGIN_HOSTS = {
     "127.0.0.1",
     "::1",
 }
+
+
+class CorrelationIdMiddleware:
+    """Assign or propagate X-Correlation-ID for every request and set contextvar."""
+
+    def __init__(self, app: ASGIApp) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "http":
+            headers = dict(scope.get("headers", []))
+            cid_bytes = headers.get(b"x-correlation-id")
+            if cid_bytes:
+                cid = cid_bytes.decode("utf-8", errors="ignore").strip()
+            else:
+                cid = uuid.uuid4().hex
+
+            token = correlation_id_ctx.set(cid)
+
+            async def send_wrapper(message: dict[str, Any]) -> None:
+                if message["type"] == "http.response.start":
+                    headers_list = list(message.get("headers", []))
+                    headers_list.append((b"x-correlation-id", cid.encode("utf-8")))
+                    message["headers"] = headers_list
+                await send(message)
+
+            try:
+                await self.app(scope, receive, send_wrapper)
+            finally:
+                correlation_id_ctx.reset(token)
+            return
+
+        await self.app(scope, receive, send)
 
 
 class LocalClientOnlyMiddleware:
@@ -118,14 +163,23 @@ def create_app(
     )
     app.add_middleware(
         TrustedHostMiddleware,
-        allowed_hosts=["localhost", "127.0.0.1", "[::1]"],
+        allowed_hosts=["localhost", "127.0.0.1", "[::1]", "testserver"],
     )
     app.add_middleware(LocalClientOnlyMiddleware)
+    app.add_middleware(CorrelationIdMiddleware)
+
     app.include_router(health_router)
+    app.include_router(system_router)
     app.include_router(compensation_router)
     app.include_router(candidate_evidence_router)
+    app.include_router(candidate_profile_router)
+    app.include_router(answer_bank_router)
     app.include_router(job_discovery_router)
     app.include_router(application_tracking_router)
+    app.include_router(settings_router)
+    app.include_router(source_registry_router)
+    app.include_router(ai_router)
+    app.include_router(data_portability_router)
 
     # Mount static frontend workbench if directory exists
     frontend_dir = os.path.abspath(

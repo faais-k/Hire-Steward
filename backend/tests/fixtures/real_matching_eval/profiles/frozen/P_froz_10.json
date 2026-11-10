@@ -1,0 +1,54 @@
+{
+  "profile_id": "P_froz_10",
+  "name": "Liam O'Connor",
+  "contact_info": {
+    "email": "liam.oconnor@example.invalid",
+    "phone": "+91-98765-01010",
+    "location": "Bengaluru, Karnataka, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Business Administration (BBA) in Marketing",
+    "degree_level": "Bachelor",
+    "field_of_study": "Marketing",
+    "institution": "Christ University",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Growth Marketing Specialist",
+      "employer": "D2C Brands Online",
+      "years": 5.0,
+      "description": "Planned multi-channel digital acquisition campaigns across Google Ads and Meta, analyzed funnels in GA4, and executed SEO optimizations."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Digital Marketing",
+    "SEO Optimization",
+    "Performance Marketing",
+    "Google Analytics (GA4)",
+    "Conversion Rate Optimization",
+    "Paid Search (PPC)"
+  ],
+  "certifications": [
+    "Google Ads Certified",
+    "Google Analytics Individual Qualification"
+  ],
+  "evidence_facts": [
+    {
+      "fact_id": "P_froz_10_F01",
+      "fact_type": "SKILL",
+      "statement": "5 years performance marketing, Google Analytics (GA4), and SEO optimization.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Digital Marketing",
+        "SEO Optimization",
+        "Google Analytics (GA4)"
+      ],
+      "years_of_experience": 5.0
+    }
+  ]
+}

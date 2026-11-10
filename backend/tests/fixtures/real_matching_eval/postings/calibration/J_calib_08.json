@@ -1,0 +1,33 @@
+{
+  "posting_id": "J_calib_08",
+  "title": "Industrial Equipment Specialist",
+  "employer_id": "EMP_CALIB_04",
+  "employer_name": "Vanguard Industrial Works",
+  "workplace_type": "on_site",
+  "location": "Jamshedpur, India",
+  "description_plain": "Maintain heavy industrial forging equipment, monitor safety lockouts, and document mechanical downtime.\nRequirements: 3+ years heavy manufacturing maintenance.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 580000.0,
+    "amount_max": 680000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 580000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [],
+    "core_competencies": [
+      "Plant Safety",
+      "Mechanical Maintenance",
+      "Downtime Logging"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 3
+  },
+  "lists_json": []
+}

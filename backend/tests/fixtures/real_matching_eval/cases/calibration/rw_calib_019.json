@@ -1,0 +1,104 @@
+{
+  "case_id": "rw_calib_019",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_02",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_03",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_02",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_03",
+    "title": "Biotechnology QC Analyst",
+    "employer_id": "EMP_CALIB_02",
+    "employer_name": "BioVanguard Therapeutics",
+    "workplace_type": "on_site",
+    "location": "Kolkata, India",
+    "description_plain": "Perform HPLC analytical runs, batch quality testing, and cleanroom bio-burden testing.\nRequirements: 3+ years HPLC and GLP pharmaceutical documentation.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 700000.0,
+      "amount_max": 850000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 700000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "HPLC",
+        "GLP Quality Control",
+        "Cleanroom Assays"
+      ],
+      "preferred_qualifications": [
+        "Certified QA Professional"
+      ],
+      "experience_years_requested": 3
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_03",
+  "candidate_profile": {
+    "profile_id": "P_calib_03",
+    "name": "Gautam Kulkarni",
+    "contact_info": {
+      "email": "gautam.k@example.invalid",
+      "phone": "+91-98765-03003",
+      "location": "Nagpur, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Accounting",
+      "degree_level": "Bachelor",
+      "field_of_study": "Accounting",
+      "institution": "Nagpur University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Tax Compliance Associate",
+        "employer": "Kulkarni & Associates",
+        "years": 4.0,
+        "description": "Prepared corporate GST filings, direct tax returns, and audit schedules."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "GST Filing",
+      "Corporate Tax",
+      "Tally Prime",
+      "Statutory Audit"
+    ],
+    "certifications": [
+      "Tally Certified Professional"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_03_F01",
+        "fact_type": "SKILL",
+        "statement": "Gautam Kulkarni exhibits verified background in GST Filing.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "GST Filing",
+          "Corporate Tax",
+          "Tally Prime"
+        ],
+        "years_of_experience": 4.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_03 with posting J_calib_03."
+}

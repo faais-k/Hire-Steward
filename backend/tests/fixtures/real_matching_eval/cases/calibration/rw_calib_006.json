@@ -1,0 +1,100 @@
+{
+  "case_id": "rw_calib_006",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_03",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_02",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_03",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_06",
+    "title": "Statutory Audit Senior",
+    "employer_id": "EMP_CALIB_03",
+    "employer_name": "Crestview Accounting Services",
+    "workplace_type": "hybrid",
+    "location": "Nagpur, India",
+    "description_plain": "Execute statutory financial audit procedures, sample ledger entries, and draft audit variance reports.\nRequirements: 4+ years statutory auditing experience.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 750000.0,
+      "amount_max": 900000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 750000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Statutory Audit",
+        "Ledger Review",
+        "Audit Variance"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_06",
+  "candidate_profile": {
+    "profile_id": "P_calib_06",
+    "name": "Harish Chandra",
+    "contact_info": {
+      "email": "harish.c@example.invalid",
+      "phone": "+91-98765-03006",
+      "location": "Bhopal, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Business Studies",
+      "degree_level": "Bachelor",
+      "field_of_study": "Business Studies",
+      "institution": "Bhopal University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Inside Sales Representative",
+        "employer": "Apex Wholesale",
+        "years": 3.5,
+        "description": "Conducted outbound B2B tele-sales, CRM pipeline updates, and client demonstrations."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Inside Sales",
+      "Cold Calling",
+      "Lead Qualification",
+      "HubSpot CRM"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_06_F01",
+        "fact_type": "SKILL",
+        "statement": "Harish Chandra exhibits verified background in Inside Sales.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Inside Sales",
+          "Cold Calling",
+          "Lead Qualification"
+        ],
+        "years_of_experience": 3.5
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_06 with posting J_calib_06."
+}

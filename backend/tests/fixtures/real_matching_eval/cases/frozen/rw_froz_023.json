@@ -1,0 +1,114 @@
+{
+  "case_id": "rw_froz_023",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_04",
+  "source_platform": "ATS_ASHBY",
+  "formatting_cluster_id": "FMT_FROZ_04",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_04",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_10",
+    "title": "Senior Instructional Designer",
+    "employer_id": "EMP_FROZ_04",
+    "employer_name": "Beacon Global Higher Education",
+    "workplace_type": "remote",
+    "location": "Pune, Maharashtra, India",
+    "description_plain": "Design modern, asynchronous online degree programs in Canvas LMS for our university partners.\n\nRequirements:\n- 4+ years of instructional design experience in higher-ed or enterprise edtech.\n- Mastery of Canvas LMS course configuration and SCORM authoring in Articulate 360.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1500000.0,
+      "amount_max": 1800000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1500000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Instructional Design",
+        "Canvas LMS",
+        "Curriculum Development",
+        "SCORM Authoring"
+      ],
+      "preferred_qualifications": [
+        "Articulate 360",
+        "Higher Education Experience"
+      ],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_01",
+  "candidate_profile": {
+    "profile_id": "P_froz_01",
+    "name": "Elena Rostova",
+    "contact_info": {
+      "email": "elena.rostova@example.invalid",
+      "phone": "+91-98765-01001",
+      "location": "Bengaluru, Karnataka, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Science in Finance and Economics",
+      "degree_level": "Bachelor",
+      "field_of_study": "Finance & Economics",
+      "institution": "University of Mumbai",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Senior Financial Analyst",
+        "employer": "Apex Retail Group",
+        "years": 5.0,
+        "description": "Led corporate budgeting, 5-year financial modeling, variance reporting, and capital expenditure analysis using Excel VBA and PowerBI."
+      }
+    ],
+    "projects": [
+      {
+        "name": "Automated Variance Dashboard",
+        "description": "Constructed automated cash flow forecasting dashboard reducing variance by 14%."
+      }
+    ],
+    "skills": [
+      "Financial Modeling",
+      "Corporate Budgeting",
+      "Variance Analysis",
+      "Excel VBA",
+      "PowerBI",
+      "GAAP",
+      "Forecasting"
+    ],
+    "certifications": [
+      "Certified Financial Modeling Specialist (CFMS)"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_01_F01",
+        "fact_type": "SKILL",
+        "statement": "Elena has 5 years of experience in corporate financial modeling and forecasting.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Financial Modeling",
+          "Forecasting",
+          "Variance Analysis"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Domain mismatch: corporate financial analyst applied to instructional designer."
+}

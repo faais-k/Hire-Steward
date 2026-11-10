@@ -1,0 +1,108 @@
+{
+  "case_id": "rw_froz_040",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_06",
+  "source_platform": "PIPE_SYNTH_BOARD",
+  "formatting_cluster_id": "FMT_FROZ_06",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_06",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_18",
+    "title": "Approved User / Trading Terminal Operator (Equity Derivatives)",
+    "employer_id": "EMP_FROZ_06",
+    "employer_name": "Precision Engineering Dynamics",
+    "workplace_type": "on_site",
+    "location": "Mumbai, Maharashtra, India",
+    "description_plain": "Operate high-volume trading terminals in the equity derivatives segment of recognized Indian stock exchanges for a SEBI-registered trading member.\n\nStatutory Regulatory Requirement for Approved Users:\n- Pursuant to SEBI notification LAD-NRO/GN/2012-13/16/36422 and NISM Communiqué NISM/Certification/Series-VIII: ED/2012/01, associated persons functioning as approved users (terminal operators) and sales personnel of trading members in the equity derivatives segment must hold an active NISM Series VIII (Equity Derivatives) Certification prior to trading terminal deployment. (Note: Scoped specifically to approved users/sales personnel of trading members; US FINRA Series 7 is for US broker-dealer jurisdiction and does not apply).",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2000000.0,
+      "amount_max": 2500000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2000000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Active NISM Series VIII (Equity Derivatives) Certification for Approved Users (SEBI Mandated)",
+        "On-site presence at Mumbai trading member terminal"
+      ],
+      "core_competencies": [
+        "Equity Derivatives",
+        "Order Execution",
+        "Securities Trading"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_10",
+  "candidate_profile": {
+    "profile_id": "P_froz_10",
+    "name": "Liam O'Connor",
+    "contact_info": {
+      "email": "liam.oconnor@example.invalid",
+      "phone": "+91-98765-01010",
+      "location": "Bengaluru, Karnataka, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Business Administration (BBA) in Marketing",
+      "degree_level": "Bachelor",
+      "field_of_study": "Marketing",
+      "institution": "Christ University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Growth Marketing Specialist",
+        "employer": "D2C Brands Online",
+        "years": 5.0,
+        "description": "Planned multi-channel digital acquisition campaigns across Google Ads and Meta, analyzed funnels in GA4, and executed SEO optimizations."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Digital Marketing",
+      "SEO Optimization",
+      "Performance Marketing",
+      "Google Analytics (GA4)",
+      "Conversion Rate Optimization",
+      "Paid Search (PPC)"
+    ],
+    "certifications": [
+      "Google Ads Certified",
+      "Google Analytics Individual Qualification"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_10_F01",
+        "fact_type": "SKILL",
+        "statement": "5 years performance marketing, Google Analytics (GA4), and SEO optimization.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Digital Marketing",
+          "SEO Optimization",
+          "Google Analytics (GA4)"
+        ],
+        "years_of_experience": 5.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Fails statutory NISM Series VIII certification required for approved users operating trading member terminals in SEBI equity derivatives segment."
+}

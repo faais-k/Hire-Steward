@@ -1,0 +1,107 @@
+{
+  "case_id": "rw_froz_033",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_03",
+  "source_platform": "ATS_WORKDAY",
+  "formatting_cluster_id": "FMT_FROZ_03",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_03",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_08",
+    "title": "Defense Aerospace Logistics Specialist",
+    "employer_id": "EMP_FROZ_03",
+    "employer_name": "TransGlobal Logistics Enterprise",
+    "workplace_type": "on_site",
+    "location": "New Delhi, India",
+    "description_plain": "Manage sensitive defense aerospace equipment shipments.\n\nMandatory Legal & Security Requirements:\n- Candidate must hold an active Government of India Secret security clearance.\n- Indian citizenship strictly required for defense facility entry.\n- 5+ years defense logistics experience.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2400000.0,
+      "amount_max": 2800000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2400000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "Active Government Secret Security Clearance",
+        "Indian Citizenship for defense facility access"
+      ],
+      "core_competencies": [
+        "Defense Logistics",
+        "Aerospace Shipments",
+        "Security Protocols"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_04",
+  "candidate_profile": {
+    "profile_id": "P_froz_04",
+    "name": "Sarah Jenkins",
+    "contact_info": {
+      "email": "sarah.jenkins@example.invalid",
+      "phone": "+91-98765-01004",
+      "location": "Chennai, Tamil Nadu, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Engineering in Industrial Operations",
+      "degree_level": "Bachelor",
+      "field_of_study": "Industrial Engineering",
+      "institution": "Anna University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Supply Chain Operations Lead",
+        "employer": "BlueMaritime Logistics",
+        "years": 6.0,
+        "description": "Directed distribution centers, SAP S/4HANA supply chain workflows, multi-modal carrier procurement, and freight auditing."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Supply Chain Operations",
+      "SAP ERP",
+      "Inventory Forecasting",
+      "3PL Management",
+      "Warehouse Management Systems",
+      "Vendor Procurement"
+    ],
+    "certifications": [
+      "APICS CSCP Certified"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_04_F01",
+        "fact_type": "SKILL",
+        "statement": "6 years managing warehouse operations, 3PL contracts, and SAP supply chain modules.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Supply Chain Operations",
+          "SAP ERP",
+          "3PL Management"
+        ],
+        "years_of_experience": 6.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Fails mandatory Government of India Secret security clearance constraint."
+}

@@ -1,0 +1,37 @@
+{
+  "profile_id": "P_adv_11",
+  "name": "Extreme Negative Numbers",
+  "contact_info": {
+    "email": "adv_11@example.invalid",
+    "phone": "+91-98765-09999",
+    "location": "Test Environment, Localhost"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Verified Security Probe",
+    "degree_level": "Certification",
+    "field_of_study": "Parser Defense",
+    "institution": "Hire-Steward Security Labs",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "AdversarialProbe_NEGATIVE_BOUNDS"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_adv_11_F01",
+      "fact_type": "SKILL",
+      "statement": "Candidate with -9999 years experience in financial risk management.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Probe_NEGATIVE_BOUNDS"
+      ],
+      "years_of_experience": 1.0
+    }
+  ]
+}

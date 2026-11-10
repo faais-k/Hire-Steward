@@ -1,0 +1,84 @@
+{
+  "case_id": "rw_froz_050",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_06",
+  "source_platform": "PIPE_SYNTH_BOARD",
+  "formatting_cluster_id": "FMT_FROZ_06",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_06",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_17",
+    "title": "Senior Full-Stack Cloud Engineer",
+    "employer_id": "EMP_FROZ_06",
+    "employer_name": "Precision Engineering Dynamics",
+    "workplace_type": "remote",
+    "location": "Bengaluru, Karnataka, India",
+    "description_plain": "Build internal engineering telemetry pipelines and dashboard services in Python FastAPI, React TypeScript, and PostgreSQL on AWS.\n\nRequirements:\n- 5+ years full-stack development experience.\n- Production expertise in Python (FastAPI/Django), TypeScript (React), and PostgreSQL.\n- Cloud infrastructure deployment experience on AWS.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2400000.0,
+      "amount_max": 2800000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2400000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Python",
+        "FastAPI",
+        "TypeScript",
+        "React",
+        "PostgreSQL",
+        "AWS"
+      ],
+      "preferred_qualifications": [
+        "Docker",
+        "Docker Compose"
+      ],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_inc_10",
+  "candidate_profile": {
+    "profile_id": "P_froz_inc_10",
+    "name": "Zoya Akhtar",
+    "contact_info": {
+      "email": "not-an-email",
+      "phone": null,
+      "location": "Lucknow, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Arts in English",
+      "degree_level": "Bachelor",
+      "field_of_study": "English",
+      "institution": "University of Lucknow",
+      "is_verified": true
+    },
+    "is_complete_profile": false,
+    "incompleteness_reason": "Candidate contact channel is syntactically malformed and uncontactable.",
+    "experience": [],
+    "projects": [],
+    "skills": [
+      "Proofreading",
+      "Copy Editing"
+    ],
+    "certifications": [],
+    "evidence_facts": []
+  },
+  "intended_evaluation_purpose": "Malformed contact info: blocks matching with MALFORMED_CONTACT_CHANNEL."
+}

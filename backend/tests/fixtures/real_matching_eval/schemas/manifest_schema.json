@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RealWorldEvalDatasetManifestSchema",
+  "type": "object",
+  "required": [
+    "manifest_version",
+    "dataset_version",
+    "created_at",
+    "baseline_source_commit_sha",
+    "tracking_status",
+    "manifest_digest_method",
+    "provenance_and_privacy_summary",
+    "dataset_partitions",
+    "coverage_summary",
+    "fixture_checksums",
+    "manifest_sha256"
+  ],
+  "properties": {
+    "manifest_version": {
+      "type": "string"
+    },
+    "dataset_version": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "baseline_source_commit_sha": {
+      "type": "string"
+    },
+    "tracking_status": {
+      "type": "string"
+    },
+    "manifest_digest_method": {
+      "type": "string"
+    },
+    "provenance_and_privacy_summary": {
+      "type": "object"
+    },
+    "dataset_partitions": {
+      "type": "object"
+    },
+    "coverage_summary": {
+      "type": "object"
+    },
+    "fixture_checksums": {
+      "type": "object"
+    },
+    "manifest_sha256": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "case_id": "rw_calib_015",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_04",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_03",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_04",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_07",
+    "title": "Plant Maintenance Technician",
+    "employer_id": "EMP_CALIB_04",
+    "employer_name": "Vanguard Industrial Works",
+    "workplace_type": "on_site",
+    "location": "Jamshedpur, India",
+    "description_plain": "Inspect pneumatic machinery, replace hydraulic seals, and perform routine plant maintenance.\nRequirements: 4+ years industrial machinery repair.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 600000.0,
+      "amount_max": 720000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 600000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Hydraulic Systems",
+        "Pneumatic Maintenance",
+        "Preventive Maintenance"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_07",
+  "candidate_profile": {
+    "profile_id": "P_calib_07",
+    "name": "Ayesha Farooqi",
+    "contact_info": {
+      "email": "ayesha.f@example.invalid",
+      "phone": "+91-98765-03007",
+      "location": "Hyderabad, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Computer Applications",
+      "degree_level": "Bachelor",
+      "field_of_study": "Computer Applications",
+      "institution": "Osmania University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Web Support Executive",
+        "employer": "HostFast Networks",
+        "years": 3.0,
+        "description": "Assisted hosting clients with DNS records, SSL installation, and cPanel setup."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Web Hosting Support",
+      "DNS Management",
+      "SSL Certificates",
+      "cPanel"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_07_F01",
+        "fact_type": "SKILL",
+        "statement": "Ayesha Farooqi exhibits verified background in Web Hosting Support.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Web Hosting Support",
+          "DNS Management",
+          "SSL Certificates"
+        ],
+        "years_of_experience": 3.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_07 with posting J_calib_07."
+}

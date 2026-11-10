@@ -23,7 +23,8 @@ def set_minimum_compensation(
     session: Session, amount: Decimal
 ) -> CompensationPreference:
     amount = validate_money(amount, field_name="minimum compensation")
-    with session.begin():
+    ctx = session.begin_nested() if session.in_transaction() else session.begin()
+    with ctx:
         preference = get_minimum_compensation(session, lock=True)
         if preference.amount != amount:
             previous_amount = preference.amount
@@ -40,6 +41,21 @@ def set_minimum_compensation(
                     actor_type="local_api",
                     actor_id="local",
                 )
+            )
+            from backend.app.services.audit import record_audit_event
+
+            record_audit_event(
+                session,
+                event_type="COMPENSATION_PREFERENCE_UPDATED",
+                entity_type="COMPENSATION_PREFERENCE",
+                entity_id="1",
+                payload_json={
+                    "previous_amount": str(previous_amount),
+                    "new_amount": str(amount),
+                    "currency": "INR",
+                    "period": "YEAR",
+                    "version": preference.version,
+                },
             )
             session.flush()
     return preference

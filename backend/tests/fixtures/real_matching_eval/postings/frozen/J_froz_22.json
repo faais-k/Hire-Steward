@@ -1,0 +1,14 @@
+{
+  "posting_id": "J_froz_22",
+  "title": "Unsegmented OCR Text Blob",
+  "employer_id": "EMP_FROZ_07",
+  "employer_name": "Syndicated Feeds Hub",
+  "workplace_type": "on_site",
+  "location": "Mumbai, India",
+  "description_plain": "JOBDESC101%%PAGE1OF1---ROLE:OFFICER---REQ:KNOWLEDGE---EXP:VARIOUS---APPLYATINTERNALPORTAL---END",
+  "completeness_status": "MALFORMED",
+  "incompleteness_reason": "Garbled OCR text lacking identifiable sentence structure or qualifications.",
+  "compensation": null,
+  "requirements": {},
+  "lists_json": []
+}

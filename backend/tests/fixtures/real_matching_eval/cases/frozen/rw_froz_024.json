@@ -1,0 +1,109 @@
+{
+  "case_id": "rw_froz_024",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_03",
+  "source_platform": "ATS_WORKDAY",
+  "formatting_cluster_id": "FMT_FROZ_03",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_03",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_07",
+    "title": "Supply Chain Operations Lead",
+    "employer_id": "EMP_FROZ_03",
+    "employer_name": "TransGlobal Logistics Enterprise",
+    "workplace_type": "on_site",
+    "location": "Chennai, Tamil Nadu, India",
+    "description_plain": "Direct our primary automotive logistics hub, oversee SAP S/4HANA supply chain workflows, manage 3PL carrier contracts, and ensure on-time delivery metrics.\n\nRequirements:\n- 5+ years leading warehouse operations, freight procurement, and 3PL vendor performance.\n- Hands-on operational mastery of SAP ERP / S/4HANA supply chain modules.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 2000000.0,
+      "amount_max": 2400000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 2000000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "On-site presence in Chennai logistics hub"
+      ],
+      "core_competencies": [
+        "Supply Chain Operations",
+        "SAP ERP",
+        "3PL Management",
+        "Inventory Forecasting"
+      ],
+      "preferred_qualifications": [
+        "APICS CSCP Certification"
+      ],
+      "experience_years_requested": 5
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_03",
+  "candidate_profile": {
+    "profile_id": "P_froz_03",
+    "name": "Devon Vance",
+    "contact_info": {
+      "email": "devon.vance@example.invalid",
+      "phone": "+91-98765-01003",
+      "location": "Mumbai, Maharashtra, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Arts in Media Communications",
+      "degree_level": "Bachelor",
+      "field_of_study": "Communications",
+      "institution": "University of Delhi",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Senior Enterprise Account Executive",
+        "employer": "CloudScale Solutions",
+        "years": 7.0,
+        "description": "Closed INR 8 Cr annual contract value across B2B SaaS accounts, managed end-to-end sales pipelines, and negotiated multi-year MSAs via Salesforce CRM."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Enterprise Software Sales",
+      "B2B Sales",
+      "Quota Attainment",
+      "Pipeline Management",
+      "Salesforce CRM",
+      "Contract Negotiation"
+    ],
+    "certifications": [
+      "MEDDIC Sales Certified"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_03_F01",
+        "fact_type": "WORK_EXPERIENCE",
+        "statement": "7 years enterprise B2B sales experience with consistent 120% quota attainment.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Enterprise Software Sales",
+          "B2B Sales",
+          "Quota Attainment"
+        ],
+        "years_of_experience": 7.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Domain mismatch: commercial sales executive applied to supply chain warehouse lead."
+}

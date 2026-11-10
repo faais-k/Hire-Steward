@@ -1,0 +1,107 @@
+{
+  "case_id": "rw_froz_016",
+  "partition": "FROZEN_BENCHMARK",
+  "employer_id": "EMP_FROZ_05",
+  "source_platform": "PIPE_SYNTH_DIRECT",
+  "formatting_cluster_id": "FMT_FROZ_05",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "domain_emp_froz_05",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_froz_15",
+    "title": "Customer Support Operations Lead",
+    "employer_id": "EMP_FROZ_05",
+    "employer_name": "CloudFrontier Commercial Solutions",
+    "workplace_type": "remote",
+    "location": "Gurugram, Haryana, India",
+    "description_plain": "Lead our Tier-2 customer advocacy team, manage Zendesk escalation queues, maintain 95%+ CSAT, and track team SLA performance metrics.\n\nRequirements:\n- 4+ years of customer service experience with at least 1 year in a team lead capacity.\n- Expert-level Zendesk ticketing workflow configuration and reporting.\n- Strong verbal and written customer conflict resolution skills.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 1100000.0,
+      "amount_max": 1300000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 1100000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Customer Support Operations",
+        "Zendesk",
+        "SLA Management",
+        "CSAT Improvement"
+      ],
+      "preferred_qualifications": [
+        "Team Leadership"
+      ],
+      "experience_years_requested": 4
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_froz_09",
+  "candidate_profile": {
+    "profile_id": "P_froz_09",
+    "name": "Ananya Sharma",
+    "contact_info": {
+      "email": "ananya.sharma@example.invalid",
+      "phone": "+91-98765-01009",
+      "location": "Noida, Uttar Pradesh, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Master of Business Administration (MBA) in Human Resources",
+      "degree_level": "Master",
+      "field_of_study": "Human Resources",
+      "institution": "Symbiosis Institute of Business Management",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Talent Acquisition Specialist",
+        "employer": "InnovateX Digital",
+        "years": 4.0,
+        "description": "Led full-lifecycle talent acquisition for technical and operational positions, configured Greenhouse ATS, and organized onboarding programs."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Talent Acquisition",
+      "Full-Cycle Recruiting",
+      "Greenhouse ATS",
+      "Candidate Sourcing",
+      "Interview Coordination",
+      "Labor Compliance"
+    ],
+    "certifications": [
+      "SHRM-CP Certified"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_froz_09_F01",
+        "fact_type": "WORK_EXPERIENCE",
+        "statement": "4 years full-cycle recruiting and Greenhouse ATS management.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Talent Acquisition",
+          "Greenhouse ATS",
+          "Full-Cycle Recruiting"
+        ],
+        "years_of_experience": 4.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Transferable HR talent coordination background applied to support escalation leadership."
+}

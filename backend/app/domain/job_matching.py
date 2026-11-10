@@ -109,23 +109,33 @@ class CandidateEvidenceItem:
 
     @property
     def display_label(self) -> str:
+        fact_val = self.value if isinstance(self.value, dict) else {}
         if self.fact_type == FactType.SKILL.value:
-            return str(self.value.get("name", "Skill"))
+            return (
+                str(fact_val.get("name") or "").strip()
+                or str(fact_val.get("text") or "").strip()
+                or str(fact_val.get("skill") or "").strip()
+                or "Skill"
+            )
         if self.fact_type == FactType.EDUCATION.value:
-            inst = self.value.get("institution", "")
-            cred = self.value.get("credential", "")
-            field_name = self.value.get("field_of_study", "")
+            inst = fact_val.get("institution", "")
+            cred = fact_val.get("credential", "")
+            field_name = fact_val.get("field_of_study", "")
             parts = [p for p in (cred, field_name, inst) if p]
             return " - ".join(parts) if parts else "Education"
         if self.fact_type == FactType.EMPLOYMENT.value:
-            employer = self.value.get("employer", "")
-            title = self.value.get("title", "")
+            employer = fact_val.get("employer", "")
+            title = fact_val.get("title", "")
             return f"{title} at {employer}" if title and employer else "Employment"
         if self.fact_type == FactType.PROJECT.value:
-            return str(self.value.get("name", "Project"))
+            return (
+                str(fact_val.get("name") or "").strip()
+                or str(fact_val.get("title") or "").strip()
+                or "Project"
+            )
         if self.fact_type == FactType.CERTIFICATION.value:
-            name = self.value.get("name", "")
-            issuer = self.value.get("issuer", "")
+            name = fact_val.get("name", "")
+            issuer = fact_val.get("issuer", "")
             return f"{name} ({issuer})" if issuer else str(name)
         return f"{self.fact_type}: {self.value}"
 
@@ -597,19 +607,22 @@ def evaluate_requirement(
         ):
             continue
 
+        # Type guard: value must be a dict for all downstream .get() calls; skip non-dict facts.
+        if not isinstance(item.value, dict):
+            continue
         fact_val = item.value
 
         # Check for conflicts
         if item.is_conflicted:
             if item.fact_type == FactType.SKILL.value:
-                skill_name = str(fact_val.get("name", ""))
+                skill_name = str(fact_val.get("name") or fact_val.get("text") or fact_val.get("skill") or "")
                 if symbol_safe_match(skill_name, req.text) and not is_skill_negated_in_text(skill_name, req.text):
                     conflicted.append(item)
             continue
 
         # 1. Skill evaluation using symbol-safe match
         if item.fact_type == FactType.SKILL.value:
-            skill_name = str(fact_val.get("name", "")).strip()
+            skill_name = str(fact_val.get("name") or fact_val.get("text") or fact_val.get("skill") or "").strip()
             if symbol_safe_match(skill_name, req.text):
                 if not is_skill_negated_in_text(skill_name, req.text):
                     matched.append(item)
@@ -647,7 +660,7 @@ def evaluate_requirement(
 
         # 5. Project evaluation
         elif item.fact_type == FactType.PROJECT.value:
-            proj_name = str(fact_val.get("name", "")).strip()
+            proj_name = str(fact_val.get("name") or fact_val.get("title") or "").strip()
             if proj_name and symbol_safe_match(proj_name, req.text):
                 matched.append(item)
 
@@ -676,7 +689,7 @@ def evaluate_requirement(
                 item.value.get("end_date") if isinstance(item.value.get("end_date"), str) else None,
             )
             for item in candidate_evidence
-            if item.is_active and item.fact_type == FactType.EMPLOYMENT.value and not item.is_conflicted
+            if item.is_active and item.fact_type == FactType.EMPLOYMENT.value and not item.is_conflicted and isinstance(item.value, dict)
         ]
         total_exp_years, has_uncertain_dates = calculate_merged_employment_tenure_years(employment_intervals)
         matched_emp = [item for item in candidate_evidence if item.fact_type == FactType.EMPLOYMENT.value and item.is_active]
@@ -847,7 +860,7 @@ def evaluate_requirement(
                         part_matched = any(
                             symbol_safe_match(item.display_label, p)
                             or any(symbol_safe_match(tok, item.display_label) for tok in sub_tokens)
-                            or any(symbol_safe_match(str(v), p) for v in item.value.values() if isinstance(v, str))
+                            or (isinstance(item.value, dict) and any(symbol_safe_match(str(v), p) for v in item.value.values() if isinstance(v, str)))
                             for item in matched
                         )
                         if not part_matched:

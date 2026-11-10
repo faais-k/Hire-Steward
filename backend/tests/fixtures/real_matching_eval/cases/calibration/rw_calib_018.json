@@ -1,0 +1,102 @@
+{
+  "case_id": "rw_calib_018",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_01",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_02",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_01",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_02",
+    "title": "Store Operations Coordinator",
+    "employer_id": "EMP_CALIB_01",
+    "employer_name": "Metro Mart Retail",
+    "workplace_type": "on_site",
+    "location": "Indore, India",
+    "description_plain": "Coordinate daily customer service desks, cash handling, and retail shift rosters.\nRequirements: 2+ years customer assistance and retail store operations.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 350000.0,
+      "amount_max": 420000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 350000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [],
+      "core_competencies": [
+        "Customer Assistance",
+        "Store Operations",
+        "Cash Handling"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 2
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_02",
+  "candidate_profile": {
+    "profile_id": "P_calib_02",
+    "name": "Dr. Neha Sen",
+    "contact_info": {
+      "email": "neha.sen@example.invalid",
+      "phone": "+91-98765-03002",
+      "location": "Kolkata, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Master of Science in Biotechnology",
+      "degree_level": "Master",
+      "field_of_study": "Biotechnology",
+      "institution": "Calcutta University",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Quality Control Analyst",
+        "employer": "BioVanguard Labs",
+        "years": 4.0,
+        "description": "Conducted HPLC batch validation, cleanroom assays, and GLP regulatory logs."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "HPLC",
+      "GLP Quality Control",
+      "Cleanroom Assays",
+      "Microbiology"
+    ],
+    "certifications": [
+      "Certified QA Professional"
+    ],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_02_F01",
+        "fact_type": "SKILL",
+        "statement": "Dr. Neha Sen exhibits verified background in HPLC.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "HPLC",
+          "GLP Quality Control",
+          "Cleanroom Assays"
+        ],
+        "years_of_experience": 4.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_02 with posting J_calib_02."
+}

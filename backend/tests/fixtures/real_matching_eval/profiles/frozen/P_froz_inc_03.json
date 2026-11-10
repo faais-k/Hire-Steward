@@ -1,0 +1,23 @@
+{
+  "profile_id": "P_froz_inc_03",
+  "name": "Rohan Deshmukh",
+  "contact_info": null,
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "B.E. Civil Engineering",
+    "degree_level": "Bachelor",
+    "field_of_study": "Civil Engineering",
+    "institution": "Pune University",
+    "is_verified": true
+  },
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate profile lacks mandatory contact information.",
+  "experience": [],
+  "projects": [],
+  "skills": [
+    "AutoCAD",
+    "Site Inspection"
+  ],
+  "certifications": [],
+  "evidence_facts": []
+}

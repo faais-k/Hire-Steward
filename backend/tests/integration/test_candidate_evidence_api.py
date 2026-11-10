@@ -267,3 +267,21 @@ def test_reconciliation_keeps_failed_owned_cleanup_out_of_unexpected_report(
 
     assert result["protected_reservations"] == 1
     assert result["unexpected_files"] == 0
+
+
+def test_retire_document_lifecycle_endpoint(candidate_client: TestClient) -> None:
+    created = candidate_client.post(
+        "/api/v1/documents", headers=local_headers(), json={"display_name": "Old Resume"}
+    ).json()
+    doc_id = created["document_id"]
+    assert created["state"] == "ACTIVE"
+
+    retire_resp = candidate_client.post(
+        f"/api/v1/documents/{doc_id}/retire", headers=local_headers()
+    )
+    assert retire_resp.status_code == 200
+    assert retire_resp.json()["state"] == "RETIRED"
+
+    get_resp = candidate_client.get(f"/api/v1/documents/{doc_id}", headers=local_headers())
+    assert get_resp.status_code == 200
+    assert get_resp.json()["state"] == "RETIRED"

@@ -1,0 +1,14 @@
+{
+  "posting_id": "J_froz_25",
+  "title": "Truncated HTML Snippet",
+  "employer_id": "EMP_FROZ_08",
+  "employer_name": "Raw Dump Enterprises",
+  "workplace_type": "remote",
+  "location": "Bengaluru, India",
+  "description_plain": "<div><h2>Job Overview</h2><p>Seeking experienced professional for client operations. Detailed requirements will follow in</p>",
+  "completeness_status": "INCOMPLETE_STUB",
+  "incompleteness_reason": "Cut-off unclosed HTML fragment lacking qualifications.",
+  "compensation": null,
+  "requirements": {},
+  "lists_json": []
+}

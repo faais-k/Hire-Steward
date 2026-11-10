@@ -1,6 +1,6 @@
 # Hire-steward — Portable Export and Import Specification
 
-**Status:** Planned; implementation belongs to the portability phase.
+**Status:** Implemented & Verified (Stage 8 & Final Operational Acceptance Loop, format: `hire-steward-export-v1`).
 
 ## 1. Goals
 

@@ -1,0 +1,51 @@
+{
+  "profile_id": "P_froz_08",
+  "name": "Maya Lin",
+  "contact_info": {
+    "email": "maya.lin@example.invalid",
+    "phone": "+91-98765-01008",
+    "location": "Gurugram, Haryana, India"
+  },
+  "education_status": {
+    "declaration_state": "DECLARED_VERIFIED",
+    "status_stated": "Bachelor of Arts in Psychology",
+    "degree_level": "Bachelor",
+    "field_of_study": "Psychology",
+    "institution": "Lady Shri Ram College",
+    "is_verified": true
+  },
+  "is_complete_profile": true,
+  "incompleteness_reason": null,
+  "experience": [
+    {
+      "title": "Customer Support Operations Lead",
+      "employer": "QuickCart Global",
+      "years": 5.0,
+      "description": "Managed Tier-2 customer service teams, monitored Zendesk ticket queues, maintained 98% SLA compliance, and drove customer satisfaction (CSAT)."
+    }
+  ],
+  "projects": [],
+  "skills": [
+    "Customer Support Operations",
+    "Zendesk",
+    "SLA Management",
+    "CSAT Improvement",
+    "Escalation Handling",
+    "Team Leadership"
+  ],
+  "certifications": [],
+  "evidence_facts": [
+    {
+      "fact_id": "P_froz_08_F01",
+      "fact_type": "WORK_EXPERIENCE",
+      "statement": "5 years managing Tier-2 customer support operations and Zendesk SLAs.",
+      "verification_state": "VERIFIED_BY_USER",
+      "skills": [
+        "Customer Support Operations",
+        "Zendesk",
+        "SLA Management"
+      ],
+      "years_of_experience": 5.0
+    }
+  ]
+}

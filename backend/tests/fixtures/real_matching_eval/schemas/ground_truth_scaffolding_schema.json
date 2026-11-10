@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GroundTruthScaffoldingSchema",
+  "type": "object",
+  "required": [
+    "scaffolding_version",
+    "partition",
+    "governance_status",
+    "decision_reference",
+    "total_records",
+    "records"
+  ],
+  "properties": {
+    "scaffolding_version": {
+      "type": "string"
+    },
+    "partition": {
+      "type": "string"
+    },
+    "governance_status": {
+      "type": "string"
+    },
+    "decision_reference": {
+      "type": "string"
+    },
+    "total_records": {
+      "type": "integer"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "case_id",
+          "adjudication_status",
+          "candidate_profile_id",
+          "posting_id",
+          "evaluation_category"
+        ]
+      }
+    }
+  }
+}

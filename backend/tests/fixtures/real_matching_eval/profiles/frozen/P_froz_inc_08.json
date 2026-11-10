@@ -1,0 +1,24 @@
+{
+  "profile_id": "P_froz_inc_08",
+  "name": "   ",
+  "contact_info": {
+    "email": "   ",
+    "phone": "   ",
+    "location": "   "
+  },
+  "education_status": {
+    "declaration_state": "ABSENT",
+    "status_stated": "   ",
+    "degree_level": null,
+    "field_of_study": null,
+    "institution": null,
+    "is_verified": false
+  },
+  "is_complete_profile": false,
+  "incompleteness_reason": "Candidate name, contact, and education status contain only whitespace characters.",
+  "experience": [],
+  "projects": [],
+  "skills": [],
+  "certifications": [],
+  "evidence_facts": []
+}

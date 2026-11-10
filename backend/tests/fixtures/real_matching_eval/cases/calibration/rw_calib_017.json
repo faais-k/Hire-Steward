@@ -1,0 +1,102 @@
+{
+  "case_id": "rw_calib_017",
+  "partition": "CALIBRATION",
+  "employer_id": "EMP_CALIB_01",
+  "source_platform": "ATS_CALIBRATION_LOCAL",
+  "formatting_cluster_id": "FMT_CALIB_01",
+  "provenance": {
+    "type": "SYNTHETIC_RECONSTRUCTION",
+    "source_domain": "calib_emp_calib_01",
+    "original_date_observed": "2026-10-31",
+    "legal_reuse_basis": "SYNTHETIC_ORIGINAL_AUTHORED",
+    "legal_review_status": "OWNER_APPROVED_SYNTHETIC",
+    "anonymized": true,
+    "pii_scrubbed": true
+  },
+  "job_posting": {
+    "posting_id": "J_calib_01",
+    "title": "Retail Inventory Supervisor",
+    "employer_id": "EMP_CALIB_01",
+    "employer_name": "Metro Mart Retail",
+    "workplace_type": "on_site",
+    "location": "Indore, India",
+    "description_plain": "Supervise stock reconciliation, point-of-sale inventory audits, and delivery intake at Metro Mart.\nRequirements: 3+ years retail inventory experience.",
+    "completeness_status": "COMPLETE",
+    "incompleteness_reason": null,
+    "compensation": {
+      "currency": "INR",
+      "amount_min": 450000.0,
+      "amount_max": 550000.0,
+      "period": "YEAR",
+      "compensation_structure": "SALARIED",
+      "guaranteed_base": 450000.0,
+      "is_disclosed": true,
+      "is_explicitly_unpaid": false,
+      "uncertainty_flags": []
+    },
+    "requirements": {
+      "mandatory_constraints": [
+        "On-site in Indore"
+      ],
+      "core_competencies": [
+        "Retail Inventory",
+        "POS Systems",
+        "Stock Reconciliation"
+      ],
+      "preferred_qualifications": [],
+      "experience_years_requested": 3
+    },
+    "lists_json": []
+  },
+  "candidate_profile_id": "P_calib_01",
+  "candidate_profile": {
+    "profile_id": "P_calib_01",
+    "name": "Rohit Malviya",
+    "contact_info": {
+      "email": "rohit.m@example.invalid",
+      "phone": "+91-98765-03001",
+      "location": "Indore, India"
+    },
+    "education_status": {
+      "declaration_state": "DECLARED_VERIFIED",
+      "status_stated": "Bachelor of Commerce",
+      "degree_level": "Bachelor",
+      "field_of_study": "Commerce",
+      "institution": "DAVV Indore",
+      "is_verified": true
+    },
+    "is_complete_profile": true,
+    "incompleteness_reason": null,
+    "experience": [
+      {
+        "title": "Retail Inventory Associate",
+        "employer": "Metro Mart",
+        "years": 3.0,
+        "description": "Maintained point-of-sale inventory and supplier delivery logs."
+      }
+    ],
+    "projects": [],
+    "skills": [
+      "Retail Inventory",
+      "POS Systems",
+      "Stock Reconciliation",
+      "Customer Assistance"
+    ],
+    "certifications": [],
+    "evidence_facts": [
+      {
+        "fact_id": "P_calib_01_F01",
+        "fact_type": "SKILL",
+        "statement": "Rohit Malviya exhibits verified background in Retail Inventory.",
+        "verification_state": "VERIFIED_BY_USER",
+        "skills": [
+          "Retail Inventory",
+          "POS Systems",
+          "Stock Reconciliation"
+        ],
+        "years_of_experience": 3.0
+      }
+    ]
+  },
+  "intended_evaluation_purpose": "Calibration testing for candidate P_calib_01 with posting J_calib_01."
+}

@@ -1,0 +1,36 @@
+{
+  "posting_id": "J_froz_08",
+  "title": "Defense Aerospace Logistics Specialist",
+  "employer_id": "EMP_FROZ_03",
+  "employer_name": "TransGlobal Logistics Enterprise",
+  "workplace_type": "on_site",
+  "location": "New Delhi, India",
+  "description_plain": "Manage sensitive defense aerospace equipment shipments.\n\nMandatory Legal & Security Requirements:\n- Candidate must hold an active Government of India Secret security clearance.\n- Indian citizenship strictly required for defense facility entry.\n- 5+ years defense logistics experience.",
+  "completeness_status": "COMPLETE",
+  "incompleteness_reason": null,
+  "compensation": {
+    "currency": "INR",
+    "amount_min": 2400000.0,
+    "amount_max": 2800000.0,
+    "period": "YEAR",
+    "compensation_structure": "SALARIED",
+    "guaranteed_base": 2400000.0,
+    "is_disclosed": true,
+    "is_explicitly_unpaid": false,
+    "uncertainty_flags": []
+  },
+  "requirements": {
+    "mandatory_constraints": [
+      "Active Government Secret Security Clearance",
+      "Indian Citizenship for defense facility access"
+    ],
+    "core_competencies": [
+      "Defense Logistics",
+      "Aerospace Shipments",
+      "Security Protocols"
+    ],
+    "preferred_qualifications": [],
+    "experience_years_requested": 5
+  },
+  "lists_json": []
+}
