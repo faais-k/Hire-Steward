@@ -12,13 +12,19 @@ import json
 from datetime import datetime, timezone
 from typing import Any, Sequence
 
+import httpx
+
 from backend.app.adapters.job_sources import JobSourceAdapter
 from backend.app.adapters.lever import clean_control_characters, html_to_plain_text
 from backend.app.domain.job_posting import (
     EMPLOYER_HANDLE_PATTERN,
+    InvalidPaginationBoundsError,
     InvalidPostingPayloadError,
     NormalizedPosting,
     PublicationDateStatus,
+    SourceHttpError,
+    SourceRateLimitError,
+    SourceTimeoutError,
 )
 
 ASHBY_SOURCE_NAME = "ashby"
@@ -28,17 +34,86 @@ DEFAULT_PAGE_LIMIT = 100
 class AshbyAdapter(JobSourceAdapter):
     """Adapter for Ashby Public Job Board API."""
 
+    def __init__(self, client: httpx.Client | None = None) -> None:
+        self._client = client
+
     @property
     def source_name(self) -> str:
         return ASHBY_SOURCE_NAME
 
     def fetch_page(
-        self, employer_handle: str, skip: int, limit: int
+        self, employer_handle: str, skip: int = 0, limit: int = DEFAULT_PAGE_LIMIT
     ) -> Sequence[Any] | None:
-        """Offline-safe fetch. Live external network calls require explicit user configuration."""
-        raise NotImplementedError(
-            "Live network fetching is disabled by default for Ashby. Use FixtureJobSourceAdapter or supply verified source credentials."
-        )
+        """Fetch a single page of public job postings from Ashby API."""
+        if not EMPLOYER_HANDLE_PATTERN.match(employer_handle):
+            raise InvalidPostingPayloadError(
+                f"Invalid employer handle '{employer_handle}'", "INVALID_HANDLE"
+            )
+        if skip < 0 or limit <= 0:
+            raise InvalidPaginationBoundsError(
+                "skip must be >= 0 and limit must be > 0", "INVALID_PAGINATION_BOUNDS"
+            )
+
+        url = f"https://api.ashbyhq.com/posting-api/job-board/{employer_handle}"
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "Hire-Steward-Discovery/1.0 (+http://127.0.0.1:8000/docs)",
+        }
+
+        if self._client is not None:
+            try:
+                resp = self._client.get(url, headers=headers)
+            except httpx.TimeoutException as exc:
+                raise SourceTimeoutError(f"Ashby request timed out: {exc}") from exc
+            except httpx.RequestError as exc:
+                raise SourceHttpError(f"Ashby network error: {exc}", status_code=0) from exc
+        else:
+            raise NotImplementedError(
+                "Live Ashby network requests are not authorized or implemented. "
+                "Only mock transport replay is supported in this stage."
+            )
+
+        if resp.status_code == 429:
+            retry_after = None
+            raw_retry = resp.headers.get("Retry-After")
+            if raw_retry and raw_retry.isdigit():
+                retry_after = int(raw_retry)
+            raise SourceRateLimitError(
+                f"Ashby rate limit reached (HTTP 429). Retry after {retry_after}s.",
+                retry_after_seconds=retry_after,
+            )
+
+        if resp.status_code == 404:
+            return []
+
+        if resp.status_code >= 400:
+            raise SourceHttpError(
+                f"Ashby returned HTTP {resp.status_code}: {resp.text[:200]}",
+                status_code=resp.status_code,
+            )
+
+        try:
+            data = resp.json()
+        except Exception as exc:
+            raise InvalidPostingPayloadError(
+                f"Malformed JSON response from Ashby: {exc}", "MALFORMED_JSON"
+            ) from exc
+
+        if not isinstance(data, dict) or "jobs" not in data:
+            raise InvalidPostingPayloadError(
+                "Ashby response missing 'jobs' array", "INVALID_RESPONSE_SHAPE"
+            )
+
+        jobs = data["jobs"]
+        if not isinstance(jobs, list):
+            raise InvalidPostingPayloadError(
+                "Ashby 'jobs' field is not a list", "INVALID_JOBS_TYPE"
+            )
+
+        if skip >= len(jobs):
+            return []
+
+        return jobs[skip : skip + limit]
 
     def parse_posting_payload(
         self, employer_handle: str, payload: Any
@@ -67,7 +142,7 @@ class AshbyAdapter(JobSourceAdapter):
             raise InvalidPostingPayloadError("Missing or invalid 'title'", "INVALID_TITLE")
         title = clean_control_characters(title.strip())
 
-        # Published date
+        # Dates
         published_at_str = payload.get("publishedAt")
         published_at: datetime | None = None
         pub_status = PublicationDateStatus.UNKNOWN
@@ -78,13 +153,28 @@ class AshbyAdapter(JobSourceAdapter):
             except ValueError:
                 pub_status = PublicationDateStatus.INVALID
 
-        # Descriptions
-        desc_plain = payload.get("descriptionPlain") or ""
-        desc_html = payload.get("descriptionHtml")
-        if not desc_plain and desc_html:
-            desc_plain = html_to_plain_text(desc_html)
+        # Location & Workplace type
+        location = payload.get("location")
+        if isinstance(location, dict):
+            location = location.get("name")
 
-        canonical_url = payload.get("jobUrl")
+        workplace_type = None
+        is_remote = payload.get("isRemote")
+        if is_remote is True:
+            workplace_type = "remote"
+        elif is_remote is False:
+            workplace_type = "on-site"
+
+        # Department / Team
+        department = payload.get("department")
+        team = payload.get("team")
+
+        # Description
+        raw_description = payload.get("descriptionHtml") or payload.get("descriptionPlain") or ""
+        description_html = html.unescape(raw_description) if isinstance(raw_description, str) else None
+        description_plain = html_to_plain_text(description_html) if description_html else ""
+
+        canonical_url = payload.get("jobUrl") or payload.get("applyUrl")
         apply_url = payload.get("applyUrl") or canonical_url
 
         canonical_json = json.dumps(
@@ -100,14 +190,14 @@ class AshbyAdapter(JobSourceAdapter):
             published_at=published_at,
             publication_date_status=pub_status,
             raw_created_at_ms=int(published_at.timestamp() * 1000) if published_at else None,
-            location=payload.get("location"),
+            location=location,
             commitment=payload.get("employmentType"),
-            team=payload.get("team"),
-            department=payload.get("department"),
+            team=team,
+            department=department,
             level=None,
-            workplace_type=payload.get("workplaceType"),
-            description_plain=desc_plain,
-            description_html=desc_html,
+            workplace_type=workplace_type,
+            description_plain=description_plain,
+            description_html=description_html,
             lists=[],
             additional_plain=None,
             canonical_url=canonical_url,
@@ -122,7 +212,7 @@ class AshbyAdapter(JobSourceAdapter):
         skip: int = 0,
         limit: int = DEFAULT_PAGE_LIMIT,
     ) -> list[NormalizedPosting]:
-        """Parse a page of postings from Ashby job-board response."""
+        """Parse a page of postings from Ashby job array or envelope."""
         if isinstance(payload, dict) and "jobs" in payload:
             items = payload["jobs"]
         elif isinstance(payload, list):

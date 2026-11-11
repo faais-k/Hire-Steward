@@ -13,6 +13,8 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Sequence
 
+import httpx
+
 from backend.app.adapters.job_sources import JobSourceAdapter
 from backend.app.adapters.lever import clean_control_characters, html_to_plain_text
 from backend.app.domain.job_posting import (
@@ -20,8 +22,10 @@ from backend.app.domain.job_posting import (
     InvalidPaginationBoundsError,
     InvalidPostingPayloadError,
     NormalizedPosting,
-    PostingListSection,
     PublicationDateStatus,
+    SourceHttpError,
+    SourceRateLimitError,
+    SourceTimeoutError,
 )
 
 GREENHOUSE_SOURCE_NAME = "greenhouse"
@@ -31,17 +35,86 @@ DEFAULT_PAGE_LIMIT = 100
 class GreenhouseAdapter(JobSourceAdapter):
     """Adapter for Greenhouse Public Job Board API."""
 
+    def __init__(self, client: httpx.Client | None = None) -> None:
+        self._client = client
+
     @property
     def source_name(self) -> str:
         return GREENHOUSE_SOURCE_NAME
 
     def fetch_page(
-        self, employer_handle: str, skip: int, limit: int
+        self, employer_handle: str, skip: int = 0, limit: int = DEFAULT_PAGE_LIMIT
     ) -> Sequence[Any] | None:
-        """Offline-safe fetch. Live external network calls require explicit user configuration."""
-        raise NotImplementedError(
-            "Live network fetching is disabled by default for Greenhouse. Use FixtureJobSourceAdapter or supply verified source credentials."
-        )
+        """Fetch a single page of public job postings from Greenhouse API."""
+        if not EMPLOYER_HANDLE_PATTERN.match(employer_handle):
+            raise InvalidPostingPayloadError(
+                f"Invalid employer handle '{employer_handle}'", "INVALID_HANDLE"
+            )
+        if skip < 0 or limit <= 0:
+            raise InvalidPaginationBoundsError(
+                "skip must be >= 0 and limit must be > 0", "INVALID_PAGINATION_BOUNDS"
+            )
+
+        url = f"https://boards-api.greenhouse.io/v1/boards/{employer_handle}/jobs?content=true"
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "Hire-Steward-Discovery/1.0 (+http://127.0.0.1:8000/docs)",
+        }
+
+        if self._client is not None:
+            try:
+                resp = self._client.get(url, headers=headers)
+            except httpx.TimeoutException as exc:
+                raise SourceTimeoutError(f"Greenhouse request timed out: {exc}") from exc
+            except httpx.RequestError as exc:
+                raise SourceHttpError(f"Greenhouse network error: {exc}", status_code=0) from exc
+        else:
+            raise NotImplementedError(
+                "Live Greenhouse network requests are not authorized or implemented. "
+                "Only mock transport replay is supported in this stage."
+            )
+
+        if resp.status_code == 429:
+            retry_after = None
+            raw_retry = resp.headers.get("Retry-After")
+            if raw_retry and raw_retry.isdigit():
+                retry_after = int(raw_retry)
+            raise SourceRateLimitError(
+                f"Greenhouse rate limit reached (HTTP 429). Retry after {retry_after}s.",
+                retry_after_seconds=retry_after,
+            )
+
+        if resp.status_code == 404:
+            return []
+
+        if resp.status_code >= 400:
+            raise SourceHttpError(
+                f"Greenhouse returned HTTP {resp.status_code}: {resp.text[:200]}",
+                status_code=resp.status_code,
+            )
+
+        try:
+            data = resp.json()
+        except Exception as exc:
+            raise InvalidPostingPayloadError(
+                f"Malformed JSON response from Greenhouse: {exc}", "MALFORMED_JSON"
+            ) from exc
+
+        if not isinstance(data, dict) or "jobs" not in data:
+            raise InvalidPostingPayloadError(
+                "Greenhouse response missing 'jobs' array", "INVALID_RESPONSE_SHAPE"
+            )
+
+        jobs = data["jobs"]
+        if not isinstance(jobs, list):
+            raise InvalidPostingPayloadError(
+                "Greenhouse 'jobs' field is not a list", "INVALID_JOBS_TYPE"
+            )
+
+        if skip >= len(jobs):
+            return []
+
+        return jobs[skip : skip + limit]
 
     def parse_posting_payload(
         self, employer_handle: str, payload: Any

@@ -9,6 +9,8 @@ import re
 from typing import Any
 import unicodedata
 
+import httpx
+
 from backend.app.adapters.job_sources import JobSourceAdapter
 from backend.app.domain.job_posting import (
     EMPLOYER_HANDLE_PATTERN,
@@ -18,6 +20,9 @@ from backend.app.domain.job_posting import (
     PaginationLoopError,
     PostingListSection,
     PublicationDateStatus,
+    SourceHttpError,
+    SourceRateLimitError,
+    SourceTimeoutError,
 )
 
 
@@ -102,24 +107,83 @@ def validate_pagination_bounds(
 class LeverPostingsAdapter:
     """Source adapter for Lever Postings API v0 public feeds."""
 
-    def __init__(self, source_name: str = LEVER_SOURCE_NAME) -> None:
+    def __init__(
+        self,
+        source_name: str = LEVER_SOURCE_NAME,
+        client: httpx.Client | None = None,
+    ) -> None:
         self._source_name = source_name
+        self._client = client
 
     @property
     def source_name(self) -> str:
         return self._source_name
 
     def fetch_page(
-        self, employer_handle: str, skip: int, limit: int
+        self, employer_handle: str, skip: int = 0, limit: int = DEFAULT_PAGE_LIMIT
     ) -> Sequence[Any] | None:
-        """Live fetching is prohibited and disabled under Phase 0 exit gates.
+        """Fetch a single page of public job postings from Lever API."""
+        if not isinstance(employer_handle, str) or not EMPLOYER_HANDLE_PATTERN.fullmatch(employer_handle):
+            raise InvalidPostingPayloadError(
+                f"Invalid employer handle: {employer_handle!r}",
+                "INVALID_EMPLOYER_HANDLE",
+            )
+        if skip < 0 or limit <= 0:
+            raise InvalidPaginationBoundsError(
+                "skip must be >= 0 and limit must be > 0", "INVALID_PAGINATION_BOUNDS"
+            )
 
-        Raises NotImplementedError directing callers to use FixtureJobSourceAdapter.
-        """
-        raise NotImplementedError(
-            f"Live fetching for source '{self.source_name}' is not authorized or implemented. "
-            "Lever remains in NEEDS_REVIEW status. Use FixtureJobSourceAdapter with synthetic fixtures."
-        )
+        url = f"https://api.lever.co/v0/postings/{employer_handle}?mode=json&skip={skip}&limit={limit}"
+        headers = {
+            "Accept": "application/json",
+            "User-Agent": "Hire-Steward-Discovery/1.0 (+http://127.0.0.1:8000/docs)",
+        }
+
+        if self._client is not None:
+            try:
+                resp = self._client.get(url, headers=headers)
+            except httpx.TimeoutException as exc:
+                raise SourceTimeoutError(f"Lever request timed out: {exc}") from exc
+            except httpx.RequestError as exc:
+                raise SourceHttpError(f"Lever network error: {exc}", status_code=0) from exc
+        else:
+            raise NotImplementedError(
+                "Live Lever network requests are not authorized or implemented. "
+                "Only mock transport replay is supported in this stage."
+            )
+
+        if resp.status_code == 429:
+            retry_after = None
+            raw_retry = resp.headers.get("Retry-After")
+            if raw_retry and raw_retry.isdigit():
+                retry_after = int(raw_retry)
+            raise SourceRateLimitError(
+                f"Lever rate limit reached (HTTP 429). Retry after {retry_after}s.",
+                retry_after_seconds=retry_after,
+            )
+
+        if resp.status_code == 404:
+            return []
+
+        if resp.status_code >= 400:
+            raise SourceHttpError(
+                f"Lever returned HTTP {resp.status_code}: {resp.text[:200]}",
+                status_code=resp.status_code,
+            )
+
+        try:
+            data = resp.json()
+        except Exception as exc:
+            raise InvalidPostingPayloadError(
+                f"Malformed JSON response from Lever: {exc}", "MALFORMED_JSON"
+            ) from exc
+
+        if not isinstance(data, list):
+            raise InvalidPostingPayloadError(
+                "Lever response is not a list", "INVALID_RESPONSE_SHAPE"
+            )
+
+        return data
 
     def parse_posting_payload(
         self, employer_handle: str, payload: Any
@@ -493,3 +557,4 @@ class LeverPostingsAdapter:
         return all_postings
 
 LeverJobSourceAdapter = LeverPostingsAdapter
+LeverAdapter = LeverPostingsAdapter

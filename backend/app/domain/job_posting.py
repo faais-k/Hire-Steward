@@ -123,6 +123,29 @@ class InvalidJobIntakeError(JobDiscoveryError):
         super().__init__(message, code)
 
 
+class SourceRateLimitError(JobDiscoveryError):
+    """Raised when an external public source returns HTTP 429 Too Many Requests."""
+
+    def __init__(self, message: str, retry_after_seconds: int | None = None) -> None:
+        super().__init__(message, "RATE_LIMIT_EXCEEDED")
+        self.retry_after_seconds = retry_after_seconds
+
+
+class SourceHttpError(JobDiscoveryError):
+    """Raised when an external public source returns an HTTP error status."""
+
+    def __init__(self, message: str, status_code: int) -> None:
+        super().__init__(message, f"HTTP_{status_code}")
+        self.status_code = status_code
+
+
+class SourceTimeoutError(JobDiscoveryError):
+    """Raised when an external public source request times out."""
+
+    def __init__(self, message: str = "Source request timed out") -> None:
+        super().__init__(message, "TIMEOUT")
+
+
 class PostingLifecycleStatus(StrEnum):
     """Lifecycle status of a canonical job posting."""
 
