@@ -24,6 +24,7 @@ This document explicitly defines what Hire-Steward does and does **not** do acro
 5. **Application Material Preparation:** Generates tailored resumes, cover letters, recruiter outreach messages, and pre-submission readiness audit reports.
 6. **Submission Planning & Verification:** Prepares step-by-step submission checklists and executes simulated dry-run submissions in a controlled, non-destructive sandbox.
 7. **Local Lifecycle Tracking:** Records application stages (Discovered, Reviewing, Applied, Interviewing, Offered, Rejected, Archived) with full local audit logging.
+8. **Cryptographic Integrity Verification & Frozen Material Auditing (Migration 0011):** Recomputes SHA-256 hashes of frozen resume/cover letter markdown texts and reconstructs canonical JSON packets to verify exact byte integrity before dry-run simulation or execution.
 
 ### 2.2 What the System Does NOT Do
 1. **No Autonomous External Submissions (`NOT_APPLICABLE_BY_DESIGN`):** Hire-Steward **never** submits applications, uploads resumes, or fills external forms without explicit, manual human consent and execution. The system produces frozen submission packets for human-controlled handoff only.
@@ -32,8 +33,9 @@ This document explicitly defines what Hire-Steward does and does **not** do acro
 4. **No Direct Candidate Compensation Authorization by LLM (`ENFORCED`):** A model cannot override user compensation floors or mark an unpaid posting as eligible. Missing or unverified salary evidence fails closed to `REVIEW_REQUIRED`.
 5. **No CAPTCHA Solving or Cloudflare Bypass (`NOT_APPLICABLE_BY_DESIGN`):** Hire-Steward strictly respects anti-bot protections, WAFs, and `robots.txt`. It will never attempt to circumvent access controls or anti-bot challenges.
 6. **No External Telemetry or Cloud Sync (`NOT_APPLICABLE_BY_DESIGN`):** There is no remote SaaS server, user tracking, crash analytics, or phone-home telemetry.
-7. **No Unapproved Live Discovery Ingestion (`DISABLED_PENDING_APPROVAL`):** While Greenhouse, Ashby, and Lever read-only adapters are verified via mock HTTP contracts, live external feed polling remains disabled pending user configuration of approved employer handles.
+7. **No Unapproved Live Discovery Ingestion (`DISABLED_PENDING_APPROVAL`):** While Greenhouse, Ashby, and Lever read-only adapters are verified via mock HTTP contracts, live external feed polling remains disabled pending user configuration of approved employer handles (`LIVE_DISCOVERY_ENABLED=true`).
 8. **No Live External Inference Without User API Keys (`IMPLEMENTED_NOT_FULLY_VERIFIED`):** Frontier AI providers (Groq, Gemini, Anthropic, OpenAI) operate in verified offline mock mode until the user provides active API keys in local environment variables.
+9. **No Unapproved Material Simulation (`ENFORCED`):** Dry-run simulation strictly rejects plans without explicit user approval (`review_approval_state == 'APPROVED'`) or when frozen materials have been tampered with or edited post-freeze.
 
 ---
 

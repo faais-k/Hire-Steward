@@ -639,6 +639,10 @@ class TrackedApplication(Base):
     submitted_cover_letter_sha256: Mapped[str | None] = mapped_column(String(64))
     reviewed_resume_markdown: Mapped[str | None] = mapped_column(Text)
     reviewed_cover_letter_markdown: Mapped[str | None] = mapped_column(Text)
+    reviewed_resume_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    reviewed_cover_letter_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    review_approval_state: Mapped[str] = mapped_column(String(32), nullable=False, default="UNREVIEWED", server_default="UNREVIEWED")
+    approved_submission_plan_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     version: Mapped[int] = mapped_column(Integer, nullable=False, server_default="1")
     created_at: Mapped[datetime] = mapped_column(
@@ -786,6 +790,9 @@ class SubmissionPlanModel(Base):
     is_cooldown_clear: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=sa.text("false"))
     compensation_threshold_version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="PREPARED")
+    resume_markdown: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cover_letter_markdown: Mapped[str | None] = mapped_column(Text, nullable=True)
+    review_state: Mapped[str] = mapped_column(String(32), nullable=False, default="UNREVIEWED", server_default="UNREVIEWED")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )

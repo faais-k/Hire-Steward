@@ -17,6 +17,7 @@ Journey 12: API failure handling without fabricated success.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 from pathlib import Path
@@ -35,6 +36,7 @@ from sqlalchemy.pool import StaticPool
 from backend.app.db.models import (
     ApplicationAttempt,
     CandidateFact,
+    CandidateFactEvidence,
     CandidateProfile,
     CompensationAssessment,
     EmployerSubscription,
@@ -45,6 +47,8 @@ from backend.app.db.models import (
     UserSettingsModel,
 )
 from backend.app.domain.application_tracking import ApplicationStatus
+from backend.app.domain.data_portability import DataPortabilityError
+from backend.app.services.data_portability import commit_import_dataset
 from backend.app.evidence_config import EvidenceSettings
 from backend.app.main import create_app
 
@@ -125,33 +129,95 @@ def test_journey_1_candidate_profile_persistence(isolated_app):
 
 def test_journey_2_document_upload_and_fact_extraction(isolated_app):
     """Journey 2: Document upload, parsing, fact extraction, review and persistence."""
-    client, _ = isolated_app
+    client, factory = isolated_app
 
-    # Create document record
-    doc_res = client.post(
-        "/api/v1/documents",
-        json={"display_name": "Faais_K_Resume.pdf"},
-        headers=local_headers(),
+    # 1. Upload actual synthetic file bytes to the real parser endpoint
+    resume_content = b"""# Faais K
+AI Systems Engineer specializing in distributed LLM architectures.
+
+## Skills
+- Python and distributed system design
+- PyTorch
+- Docker
+
+## Experience
+Built scalable multi-agent systems with deterministic verification.
+"""
+    parse_res = client.post(
+        "/api/v1/profile/parse-document",
+        content=resume_content,
+        headers={
+            **local_headers(),
+            "content-type": "text/markdown",
+            "x-filename": "Faais_K_Resume.md",
+        },
     )
-    assert doc_res.status_code in (200, 201)
-    doc_id = doc_res.json().get("document_id") or doc_res.json().get("id")
+    assert parse_res.status_code == 200, f"Parse failed: {parse_res.text}"
+    parsed_doc = parse_res.json()
+    assert parsed_doc["document_id"] is not None
+    assert parsed_doc["document_version_id"] is not None
+    assert len(parsed_doc["sections"]) >= 3
+    doc_id = parsed_doc["document_id"]
+    version_id = parsed_doc["document_version_id"]
 
-    # Ingest facts linked to candidate profile / document
+    # 2. Ingest fact linked to candidate profile / document version with provenance
     fact_payload = {
         "fact_type": "SKILL",
         "value": {"name": "Python and distributed system design"},
     }
     f_res = client.post("/api/v1/facts", json=fact_payload, headers=local_headers())
-    assert f_res.status_code in (200, 201)
+    assert f_res.status_code in (200, 201), f"Fact creation failed: {f_res.text}"
     fact_id = f_res.json()["fact_id"]
 
-    # Review fact state machine (UNREVIEWED -> USER_VERIFIED via verify endpoint)
+    # Record provenance linking fact to document version
+    with factory() as sess:
+        ev = CandidateFactEvidence(
+            id=f"ev-{uuid4().hex[:8]}",
+            fact_id=fact_id,
+            document_version_id=version_id,
+            byte_start=0,
+            byte_end=len(resume_content),
+            evidence_hash=hashlib.sha256(resume_content).hexdigest(),
+            method="PARSER_EXTRACTED",
+        )
+        sess.add(ev)
+        sess.commit()
+
+    # 3. Review fact state machine (UNREVIEWED -> USER_VERIFIED via verify endpoint)
     verify_res = client.post(
         f"/api/v1/facts/{fact_id}/verify",
         headers=local_headers(),
     )
     assert verify_res.status_code == 200
     assert verify_res.json()["verification_state"] == "USER_VERIFIED"
+
+    # 4. Confirm persistence
+    facts_res = client.get("/api/v1/facts", headers=local_headers())
+    assert facts_res.status_code == 200
+    fact_ids = [f.get("fact_id") or f.get("id") for f in facts_res.json()]
+    assert fact_id in fact_ids, f"Fact {fact_id} not found in persisted facts: {fact_ids}"
+
+    # Verify provenance persistence
+    with factory() as sess:
+        persisted_ev = sess.scalar(
+            select(CandidateFactEvidence).where(CandidateFactEvidence.fact_id == fact_id)
+        )
+        assert persisted_ev is not None
+        assert persisted_ev.document_version_id == version_id
+
+    # 5. Negative case: corrupt file upload (binary garbage disguised as zip/docx)
+    corrupt_docx = b"PK\x03\x04corrupted_binary_garbage_stream_not_a_valid_zip"
+    bad_upload = client.post(
+        "/api/v1/profile/parse-document",
+        content=corrupt_docx,
+        headers={
+            **local_headers(),
+            "content-type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "x-filename": "corrupted.docx",
+        },
+    )
+    assert bad_upload.status_code == 422
+    assert "PARSE_ERROR" in bad_upload.json()["detail"]
 
 
 def test_journey_3_and_4_job_intake_and_matching(isolated_app):
@@ -313,22 +379,42 @@ def test_journey_7_and_8_submission_plan_and_dry_run_simulation(isolated_app):
         sess.add(assess)
         sess.commit()
 
-    # Journey 7: Create plan
-    plan_res = client.post(
+    # Journey 7: Create plan without approval first
+    plan_unapproved_res = client.post(
         "/api/v1/preparation/plan",
         json={
             "job_posting_id": "j7-p1",
             "resume_text": "# Reviewed Resume for J7 Firm",
             "cover_letter_text": "Reviewed Cover Letter for J7 Firm",
+            "approve": False,
         },
         headers=local_headers(),
     )
-    assert plan_res.status_code == 200
-    plan_id = plan_res.json()["plan_id"]
-    plan_hash = plan_res.json()["plan_hash"]
+    assert plan_unapproved_res.status_code == 200
+    unapproved_plan_id = plan_unapproved_res.json()["plan_id"]
+
+    # Negative Path: Simulating an unapproved plan must fail closed
+    sim_unapproved = client.post(
+        "/api/v1/preparation/simulate",
+        json={"job_posting_id": "j7-p1", "plan_id": unapproved_plan_id},
+        headers=local_headers(),
+    )
+    assert sim_unapproved.status_code == 422
+    assert "UNAPPROVED" in sim_unapproved.json()["detail"] or "USER_REVIEW_REQUIRED" in sim_unapproved.json()["detail"]
+
+    # Explicitly approve the plan via the approval endpoint
+    approve_res = client.post(
+        f"/api/v1/preparation/plan/{unapproved_plan_id}/approve",
+        headers=local_headers(),
+    )
+    assert approve_res.status_code == 200
+    assert approve_res.json()["review_state"] == "APPROVED"
+
+    plan_id = unapproved_plan_id
+    plan_hash = approve_res.json()["packet_sha256"]
     assert len(plan_hash) == 64
 
-    # Journey 8: Simulate dry-run submission
+    # Journey 8: Simulate dry-run submission now succeeds
     sim_res = client.post(
         "/api/v1/preparation/simulate",
         json={"job_posting_id": "j7-p1", "plan_id": plan_id},
@@ -341,13 +427,17 @@ def test_journey_7_and_8_submission_plan_and_dry_run_simulation(isolated_app):
 
     # Verify persistent receipt in ApplicationAttempt table
     with factory() as sess:
-        attempt = sess.scalar(
-            select(ApplicationAttempt).where(ApplicationAttempt.submission_plan_id == plan_id)
-        )
-        assert attempt is not None
-        assert attempt.status == "COMPLETED"
-        assert attempt.outcome == "SUCCESS"
-        assert attempt.simulated_receipt is not None
+        attempts = sess.scalars(
+            select(ApplicationAttempt)
+            .where(ApplicationAttempt.submission_plan_id == plan_id)
+            .order_by(ApplicationAttempt.started_at.asc())
+        ).all()
+        assert len(attempts) >= 2
+        assert attempts[0].status == "SIMULATED_FAILURE"
+        latest_attempt = attempts[-1]
+        assert latest_attempt.status in ("COMPLETED", "SIMULATED_SUCCESS")
+        assert latest_attempt.outcome == "SUCCESS"
+        assert latest_attempt.simulated_receipt is not None
 
     # Idempotent replay: calling simulate again returns existing receipt
     sim_res_replay = client.post(
@@ -361,13 +451,120 @@ def test_journey_7_and_8_submission_plan_and_dry_run_simulation(isolated_app):
 
 
 def test_journey_10_data_export_and_backup(isolated_app):
-    """Journey 10: Data export into isolated archive."""
-    client, _ = isolated_app
+    """Journey 10: Data export and restoration into an isolated test environment.
+    
+    Verifies:
+    1. Complete export bundle with manifest and checksum.
+    2. Dry-run preview in a separate, isolated database.
+    3. Deterministic preview_token verification.
+    4. Atomic commit into clean isolated database and candidate profile verification.
+    5. Negative test: Tampered checksum rejected with 422.
+    6. Negative test: Invalid preview token rejected with 422.
+    """
+    client, factory = isolated_app
 
+    # Seed profile in source app
+    put_res = client.put(
+        "/api/v1/profile",
+        json={
+            "full_name": "Faais K - Export Test",
+            "headline": "Lead Verification Engineer",
+            "summary": "Isolated export/import verification profile.",
+            "skills": ["Python", "Cryptography", "PostgreSQL"],
+        },
+        headers=local_headers(),
+    )
+    assert put_res.status_code == 200
+
+    # 1. Export data bundle
     export_res = client.get("/api/v1/data/export", headers=local_headers())
     assert export_res.status_code == 200
-    data = export_res.json()
-    assert "version" in data or "manifest" in data or "profile" in data or "items" in data or isinstance(data, dict)
+    bundle = export_res.json()
+    assert "manifest" in bundle
+    manifest = bundle["manifest"]
+    assert manifest["format_version"] == "hire-steward-export-v1"
+    assert len(manifest["checksum_sha256"]) == 64
+    assert bundle.get("candidate_profile", {}).get("name") == "Faais K - Export Test"
+
+    # 2. Create a fresh, isolated target database for restoration
+    target_engine = create_engine(
+        "sqlite+pysqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    cfg = Config("backend/alembic.ini")
+    with target_engine.connect() as conn:
+        cfg.attributes["connection"] = conn
+        command.upgrade(cfg, "head")
+
+    target_factory = sessionmaker(bind=target_engine, expire_on_commit=False)
+    target_storage = Path(tempfile.gettempdir()) / f"hs-restore-{uuid4().hex}"
+    target_app = create_app(
+        session_factory=target_factory,
+        evidence_settings=EvidenceSettings(storage_root=target_storage),
+    )
+    with TestClient(target_app, base_url="http://localhost") as target_client:
+        # Negative test 1: Tampered bundle checksum fails validation
+        tampered_bundle = json.loads(json.dumps(bundle))
+        tampered_bundle["candidate_profile"]["name"] = "HACKED NAME"
+        bad_preview = target_client.post(
+            "/api/v1/data/import/preview",
+            json=tampered_bundle,
+            headers=local_headers(),
+        )
+        assert bad_preview.status_code == 200
+        preview_data = bad_preview.json()
+        assert preview_data["checksum_verified"] is False
+        assert preview_data["is_valid"] is False
+
+        # Attempting to commit tampered bundle fails closed with 422
+        bad_commit = target_client.post(
+            "/api/v1/data/import/commit",
+            json={"bundle": tampered_bundle, "preview_token": "any-token"},
+            headers=local_headers(),
+        )
+        assert bad_commit.status_code == 422
+        assert "CHECKSUM_MISMATCH" in bad_commit.json()["detail"] or "VALIDATION_FAILED" in bad_commit.json()["detail"]
+
+        # Valid Preview on fresh database
+        preview_res = target_client.post(
+            "/api/v1/data/import/preview",
+            json=bundle,
+            headers=local_headers(),
+        )
+        assert preview_res.status_code == 200
+        preview = preview_res.json()
+        assert preview["is_valid"] is True
+        assert preview["checksum_verified"] is True
+        preview_token = preview["preview_token"]
+        assert preview_token is not None
+        assert len(preview_token) == 64
+
+        # Negative test 2: Invalid preview token fails commit
+        bad_token_commit = target_client.post(
+            "/api/v1/data/import/commit",
+            json={"bundle": bundle, "preview_token": "0" * 64},
+            headers=local_headers(),
+        )
+        assert bad_token_commit.status_code == 422
+        assert "PREVIEW_TOKEN_MISMATCH" in bad_token_commit.json()["detail"]
+
+        # Valid Commit into fresh database
+        commit_res = target_client.post(
+            "/api/v1/data/import/commit",
+            json={"bundle": bundle, "preview_token": preview_token, "overwrite_existing": True},
+            headers=local_headers(),
+        )
+        assert commit_res.status_code == 200
+        commit_data = commit_res.json()
+        assert commit_data["status"] == "COMPLETED"
+
+        # Verify candidate profile in restored target database matches exactly
+        restored_profile_res = target_client.get("/api/v1/profile", headers=local_headers())
+        assert restored_profile_res.status_code == 200
+        restored_prof = restored_profile_res.json()
+        assert restored_prof["full_name"] == "Faais K - Export Test"
+        assert restored_prof["headline"] == "Lead Verification Engineer"
 
 
 def test_journey_11_provider_configuration_and_offline_mode(isolated_app):

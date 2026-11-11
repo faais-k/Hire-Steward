@@ -762,6 +762,7 @@ def assess_application_readiness(
     is_cooldown_active: bool,
     unreviewed_fact_count: int = 0,
     conflicted_fact_count: int = 0,
+    is_explicitly_approved: bool = True,
 ) -> ApplicationReadinessReport:
     """Audit application readiness against submission safety policies and completeness requirements."""
     checks: list[ReadinessCheckItem] = []
@@ -879,6 +880,27 @@ def assess_application_readiness(
                 passed=True,
                 severity="INFO",
                 details="Candidate identity and contact details verified.",
+            )
+        )
+
+    # 5. Explicit Candidate Approval Gate
+    if not is_explicitly_approved:
+        checks.append(
+            ReadinessCheckItem(
+                name="Explicit Material Approval Gate",
+                passed=False,
+                severity="BLOCKING",
+                details="Application materials have not received explicit candidate approval. Review and approve materials before submission.",
+            )
+        )
+        blocking_issues.append("Application materials require explicit candidate approval")
+    else:
+        checks.append(
+            ReadinessCheckItem(
+                name="Explicit Material Approval Gate",
+                passed=True,
+                severity="INFO",
+                details="Application materials explicitly approved by candidate.",
             )
         )
 

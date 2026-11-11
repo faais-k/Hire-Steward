@@ -5,6 +5,36 @@
 
 ## 1. Current state
 
+### Master Security & Integrity Hardening, Cryptographic Submission Assurance & Migration 0011 (2026-11-11)
+- **Database Schema Migration 0011 (`0011_plan_frozen_material.py`):**
+  - Added `resume_markdown`, `cover_letter_markdown`, and `review_state` to `submission_plans`.
+  - Added `reviewed_resume_sha256`, `reviewed_cover_letter_sha256`, `review_approval_state`, and `approved_submission_plan_id` to `tracked_applications`.
+  - Applied cleanly and idempotently to PostgreSQL `jobpilot_workspace` and verified across isolated SQLite/Postgres test fixtures.
+- **Unified Cryptographic Simulation Engine (`backend/app/services/simulation_service.py`):**
+  - Recomputes SHA-256 hashes directly from frozen resume and cover letter markdown texts.
+  - Reconstructs canonical JSON submission packets using strict deterministic serialization rules.
+  - Recomputes canonical packet SHA-256 and compares all three digests with persisted plan digests.
+  - Enforces strict 64-char lowercase hex validation; rejects any tampered or altered material with fail-closed domain errors (`SimulationIntegrityError`, `SimulationMaterialsError`).
+  - Unified simulation service shared authoritatively by both API paths (`POST /api/v1/preparation/simulate` and `POST /api/v1/applications/{application_id}/simulate-submission`).
+  - Replay and retry handling: respects caller-specified `idempotency_key` allowing fault injection and retries while returning deterministic receipts on exact replayed keys.
+  - Records persistent audit logs and updates application attempt statuses (`SIMULATED_SUCCESS`, `SIMULATED_FAILURE`, `AMBIGUOUS_RESULT`).
+- **Explicit User Review & Approval Workflow:**
+  - Plan review approval is strictly explicit: requires user approval action (`POST /api/v1/preparation/plan/{plan_id}/approve` or `approve: bool = True` during plan creation).
+  - Editing application materials invalidates prior approval state and resets tracking state to `REVIEW_REQUIRED`.
+  - Candidate readiness gate strictly requires `review_approval_state == "APPROVED"` before dry-run simulation or execution.
+- **Cooldown Policy Hardening:**
+  - Standalone job postings with unknown employer identities fail closed to `REVIEW_REQUIRED` (`UNKNOWN_EMPLOYER_IDENTITY`).
+  - Employer names and handles are normalized across case and whitespace (`func.lower()`, strip).
+- **Offline Source Registry Guard:**
+  - `source_registry.py` enforces offline mock adapters by default; rejects live client instantiation unless `LIVE_DISCOVERY_ENABLED=true` is explicitly set in environment.
+- **Comprehensive Automated Test Coverage:**
+  - Fast offline suite: **671 passed, 40 deselected, 0 failed** in 97s (`uv run --locked pytest -m "not postgres" -q`).
+  - PostgreSQL 17 integration suite: **40 passed, 671 deselected, 0 failed** in 65s against isolated schemas in `jobpilot_test`.
+  - Combined automated tests: **711 / 711 passed (100% pass rate)**.
+  - Frontend: strict TypeScript **0 errors**, Vitest **10 passed, 0 failed**, Vite production build **0 errors**.
+  - All 12 master end-to-end user journeys passing in `test_twelve_journeys_end_to_end.py`.
+  - Authentic candidate profile for Faais K preserved 100% intact in `jobpilot_workspace`.
+
 ### Release Audit Remediation, Fail-Closed Policy Enforcement & Full Verification (2026-11-11)
 - **Eliminated False Frontend Success States (P0):**
   - Completely removed fabricated plan IDs, mock SHA-256 hashes, dummy simulation receipts, fabricated readiness passes, and generic recruiter placeholders from `frontend/src/views/PreparationView.tsx`.

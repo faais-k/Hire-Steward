@@ -18,13 +18,13 @@ This report documents the comprehensive validation and quality assurance results
 ### High-Level Quality Scorecard
 | Test Suite / Area | Tests Executed | Passed | Failed | Skipped / Deselected | Pass Rate | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Backend Fast Unit & Integration** | 641 | 641 | 0 | 40 (postgres-tagged) | **100%** | `IMPLEMENTED_AND_VERIFIED` |
-| **PostgreSQL Integration Suite** | 40 | 40 | 0 | 641 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **Backend Fast Unit & Integration** | 671 | 671 | 0 | 40 (postgres-tagged) | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **PostgreSQL Integration Suite** | 40 | 40 | 0 | 671 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **Frontend TypeScript Typecheck** | Strict Mode | Clean | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **Frontend Component Tests (Vitest)**| 10 | 10 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **UI Screen Responsiveness & Native Scroll**| 13 screens | 13 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **End-to-End User Journeys (1 through 12)** | 12 journeys | 12 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
-| **Total Test Execution Count** | **691** | **691** | **0** | **40** | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **Total Test Execution Count** | **721** | **721** | **0** | **40** | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 
 ---
 
@@ -34,11 +34,12 @@ This report documents the comprehensive validation and quality assurance results
 Command: `uv run --locked pytest -m "not postgres" -q`
 - **Execution Environment:** Windows PowerShell, Python 3.12 (uv managed).
 - **Core Modules Verified:**
-  - `backend/tests/unit/test_submission_eligibility.py`: 14 tests verifying authoritative fail-closed eligibility, 5d/29d/30d cooldown boundaries, withdrawn/rejected handling, and Asia/Kolkata timezone support.
+  - `backend/tests/unit/test_unified_simulation_and_guards.py`: 30 tests verifying SHA-256 hash recomputation, canonical packet serialization check, tampering rejection, unified simulation endpoint routing, and offline source registry enforcement.
+  - `backend/tests/unit/test_submission_eligibility.py`: 14 tests verifying authoritative fail-closed eligibility, unknown employer identity gating, 5d/29d/30d cooldown boundaries, withdrawn/rejected handling, and Asia/Kolkata timezone support.
   - `backend/tests/unit/test_preparation_and_simulation.py`: 7 tests verifying SHA-256 plan freeze, rejection of unverified materials, dry-run simulation receipt logging, and idempotent replaying.
   - `backend/tests/unit/test_source_adapters_contract.py`: 12 tests using `httpx.MockTransport` covering Greenhouse, Ashby, and Lever pagination, 429 rate limit with `Retry-After`, 404 handling, timeouts, and malformed JSON.
-  - `backend/tests/integration/test_twelve_journeys_end_to_end.py`: 9 integration tests covering all 12 user journeys across positive and negative paths.
-- **Result:** **641 passed, 40 deselected, 0 failed.**
+  - `backend/tests/integration/test_twelve_journeys_end_to_end.py`: 9 integration tests covering all 12 user journeys across positive and negative paths (real binary document parsing, provenance spans, simulation gates, and full database export/restore validation).
+- **Result:** **671 passed, 40 deselected, 0 failed.**
 
 ### 2.2 PostgreSQL Isolated Integration Tests
 Command: `uv run --locked pytest -m "postgres" -q`

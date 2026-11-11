@@ -28,8 +28,8 @@ To ensure total transparency and avoid misleading claims, all system capabilitie
 | **Document Parsing & Evidence Storage** | `IMPLEMENTED_AND_VERIFIED` | PDF, DOCX, TXT, CSV, XLSX with decompression bomb safety, byte-span provenance, and review state machine. |
 | **Deterministic Compensation Engine** | `IMPLEMENTED_AND_VERIFIED` | Fail-closed: unverified evidence requires review; confirmed unpaid roles or below-floor jobs blocked. |
 | **Same-Company 30-Day Cooldown** | `IMPLEMENTED_AND_VERIFIED` | Authoritative eligibility service with 5d, 29d, 30d, >30d, rejected/withdrawn, and Asia/Kolkata boundary tests. |
-| **Submission Planning & Hash Freezing** | `IMPLEMENTED_AND_VERIFIED` | Immutable plan freeze with SHA-256 packet hashing; enforces non-empty reviewed materials and gate checks. |
-| **Dry-Run ATS Simulation** | `IMPLEMENTED_AND_VERIFIED` | Idempotent rehearsal, persistent receipts in ApplicationAttempt table, zero external egress. |
+| **Submission Planning & Hash Freezing** | `IMPLEMENTED_AND_VERIFIED` | Migration 0011 immutable plan freeze with frozen markdown text, review state approval tracking, and SHA-256 canonical packet hashing. |
+| **Dry-Run ATS Simulation** | `IMPLEMENTED_AND_VERIFIED` | Unified cryptographic simulation service (`simulation_service.py`), SHA-256 recomputation from frozen text, canonical packet verification, idempotent rehearsal, persistent receipts in ApplicationAttempt table, zero external egress. |
 | **Autonomous External ATS Submission** | `NOT_APPLICABLE_BY_DESIGN` | Human-controlled handoff only. Automated submission to external portals is prohibited by ADR-0003. |
 | **Answer Bank & Granular Consent** | `IMPLEMENTED_AND_VERIFIED` | `reuse_consent` defaults to False; opt-in consent strictly required for automated reuse. |
 | **Job Source Registry & Manual Intake** | `IMPLEMENTED_AND_VERIFIED` | User manual intake with instant indexing, fit calculation, and deduplication. |

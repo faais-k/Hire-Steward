@@ -357,7 +357,20 @@ def mark_application_reviewed(
         app.reviewed_resume_markdown = request.reviewed_resume
     if request.reviewed_cover_letter is not None:
         app.reviewed_cover_letter_markdown = request.reviewed_cover_letter
+
+    resume_content = (app.reviewed_resume_markdown or "").strip()
+    cover_content = (app.reviewed_cover_letter_markdown or "").strip()
+
+    if resume_content:
+        app.reviewed_resume_sha256 = compute_content_sha256(resume_content)
+    if cover_content:
+        app.reviewed_cover_letter_sha256 = compute_content_sha256(cover_content)
+
     app.reviewed_at = now
+    if resume_content and cover_content:
+        app.review_approval_state = "APPROVED"
+    else:
+        app.review_approval_state = "PARTIALLY_REVIEWED"
 
     if current_status in (ApplicationStatus.SAVED.value, ApplicationStatus.PREPARING.value):
         validate_status_transition(current_status, ApplicationStatus.READY_FOR_REVIEW)
@@ -464,6 +477,10 @@ def build_application_view(session: Session, app: TrackedApplication) -> Tracked
             app.submitted_cover_letter_snapshot,
             app.submitted_cover_letter_sha256,
         ),
+        reviewed_resume_sha256=getattr(app, "reviewed_resume_sha256", None),
+        reviewed_cover_letter_sha256=getattr(app, "reviewed_cover_letter_sha256", None),
+        review_approval_state=getattr(app, "review_approval_state", "UNREVIEWED") or "UNREVIEWED",
+        approved_submission_plan_id=getattr(app, "approved_submission_plan_id", None),
     )
 
 

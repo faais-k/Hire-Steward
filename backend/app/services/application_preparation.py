@@ -177,6 +177,13 @@ def check_application_readiness(
     unreviewed = sum(1 for e in evidence if e.verification_state == "UNREVIEWED")
     conflicted = sum(1 for e in evidence if e.is_conflicted or e.verification_state == "CONFLICTED")
 
+    is_explicitly_approved = True
+    if app and (app.reviewed_resume_markdown or app.reviewed_cover_letter_markdown):
+        is_explicitly_approved = bool(
+            getattr(app, "review_approval_state", "UNREVIEWED") == "APPROVED"
+            and app.reviewed_at is not None
+        )
+
     return assess_application_readiness(
         job_posting_id=posting.id,
         has_resume=has_resume,
@@ -186,4 +193,5 @@ def check_application_readiness(
         is_cooldown_active=is_cooldown,
         unreviewed_fact_count=unreviewed,
         conflicted_fact_count=conflicted,
+        is_explicitly_approved=is_explicitly_approved,
     )

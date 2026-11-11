@@ -192,6 +192,7 @@ def test_preparation_plan_flow(prep_client: TestClient) -> None:
             "job_posting_id": "post_test_01",
             "resume_text": "Reviewed Resume Markdown",
             "cover_letter_text": "Reviewed Cover Letter Markdown",
+            "approve": True,
         },
         headers=local_headers(),
     )
@@ -210,6 +211,7 @@ def test_preparation_simulate_flow(prep_client: TestClient) -> None:
             "job_posting_id": "post_test_01",
             "resume_text": "Reviewed Resume Markdown",
             "cover_letter_text": "Reviewed Cover Letter Markdown",
+            "approve": True,
         },
         headers=local_headers(),
     )

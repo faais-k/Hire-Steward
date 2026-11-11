@@ -112,6 +112,7 @@ def test_readiness_fails_when_required_table_is_missing_after_migration(
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) in (
             "0009_binary_docs_attempts",
             "0010_background_tasks",
+            "0011_plan_frozen_material",
         )
         assert connection.scalar(
             text("SELECT amount FROM compensation_preferences WHERE id = 1")
@@ -135,6 +136,7 @@ def test_readiness_fails_when_required_column_is_missing_after_migration(
         assert connection.scalar(text("SELECT version_num FROM alembic_version")) in (
             "0009_binary_docs_attempts",
             "0010_background_tasks",
+            "0011_plan_frozen_material",
         )
 
     with TestClient(create_app(session_factory=migrated_factory)) as client:

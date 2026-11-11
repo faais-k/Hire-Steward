@@ -264,7 +264,10 @@ class TrackedApplicationView(BaseModel):
     apply_url: str | None = None
     job_lifecycle_status: str | None = None
     snapshot_hashes_verified: bool = True
-    snapshot_hashes_verified: bool = True
+    reviewed_resume_sha256: str | None = None
+    reviewed_cover_letter_sha256: str | None = None
+    review_approval_state: str = "UNREVIEWED"
+    approved_submission_plan_id: str | None = None
 
 
 class TrackedApplicationDetailView(TrackedApplicationView):

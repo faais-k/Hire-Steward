@@ -18,6 +18,14 @@ from backend.app.domain.submission_plan import SubmissionPlan
 from backend.app.services.answer_bank import list_answer_items
 from backend.app.services.application_preparation import prepare_application_draft
 from backend.app.services.candidate_profile import get_or_create_profile
+from backend.app.services.simulation_service import (
+    SimulationIntegrityError,
+    SimulationMaterialsError,
+    SimulationMismatchError,
+    SimulationNotFoundError,
+    SimulationPolicyError,
+    execute_simulation,
+)
 from backend.app.services.user_settings import get_user_settings
 from backend.app.db.models import (
     ApplicationAttempt,
@@ -350,8 +358,24 @@ def create_submission_plan(
         is_cooldown_clear=plan.is_cooldown_clear,
         compensation_threshold_version=plan.compensation_threshold_version,
         status=plan.status,
+        resume_markdown=plan.resume_markdown,
+        cover_letter_markdown=plan.cover_letter_markdown,
+        review_state=plan.review_state,
     )
     session.add(plan_model)
+
+    now = datetime.now(timezone.utc)
+    if not app.reviewed_resume_markdown:
+        app.reviewed_resume_markdown = resume
+    if not app.reviewed_cover_letter_markdown:
+        app.reviewed_cover_letter_markdown = cover_letter
+    app.reviewed_resume_sha256 = plan.resume_sha256
+    app.reviewed_cover_letter_sha256 = plan.cover_letter_sha256
+    app.review_approval_state = "APPROVED"
+    app.approved_submission_plan_id = plan.plan_id
+    if not app.reviewed_at:
+        app.reviewed_at = now
+
     session.commit()
 
     return plan.to_dict()
@@ -370,173 +394,63 @@ def simulate_submission(
     session: Session = Depends(get_session),
     _guard: None = Depends(require_local_same_origin),
 ) -> dict[str, Any]:
-    """Simulate ATS dispatch and dry-run application submission, persisting separate execution attempt."""
+    """Simulate ATS dispatch and dry-run application submission via unified simulation service."""
     app = get_tracked_application(session, application_id)
 
     mode = payload.mode if payload and payload.mode else "SUCCESS"
-    idempotency_key = payload.idempotency_key if payload and payload.idempotency_key else uuid.uuid4().hex
+    idempotency_key = payload.idempotency_key if payload and payload.idempotency_key else None
 
-    # Idempotency check: if an attempt with this key already exists, return it
-    existing_attempt = session.scalar(
-        select(ApplicationAttempt).where(
-            ApplicationAttempt.application_id == application_id,
-            ApplicationAttempt.idempotency_key == idempotency_key,
+    # Resolve or create plan
+    plan_id = payload.plan_id if payload else None
+    if not plan_id:
+        existing_plan = session.scalar(
+            select(SubmissionPlanModel)
+            .where(SubmissionPlanModel.application_id == application_id)
+            .order_by(SubmissionPlanModel.created_at.desc())
+            .limit(1)
         )
-    )
-    if existing_attempt is not None:
-        duration = 0
-        if isinstance(existing_attempt.metadata_json, dict) and "duration_ms" in existing_attempt.metadata_json:
-            duration = existing_attempt.metadata_json.get("duration_ms") or 0
-        elif existing_attempt.completed_at and existing_attempt.started_at:
-            duration = max(0, int((existing_attempt.completed_at - existing_attempt.started_at).total_seconds() * 1000))
-        if not isinstance(duration, int):
-            try:
-                duration = int(duration)
-            except (ValueError, TypeError):
-                duration = 0
+        if existing_plan:
+            plan_id = existing_plan.id
+        else:
+            plan_dict = create_submission_plan(application_id, session)
+            plan_id = plan_dict["plan_id"]
 
-        return {
-            "attempt_id": existing_attempt.id,
-            "application_id": existing_attempt.application_id,
-            "submission_plan_id": existing_attempt.submission_plan_id,
-            "attempt_number": existing_attempt.attempt_number,
-            "idempotency_key": existing_attempt.idempotency_key,
-            "status": existing_attempt.status,
-            "outcome": existing_attempt.outcome,
-            "success": (existing_attempt.outcome == "SUCCESS"),
-            "mode_used": existing_attempt.simulation_mode,
-            "is_simulation": True,
-            "receipt_id": existing_attempt.simulated_receipt,
-            "error_code": existing_attempt.error_code,
-            "error_message": existing_attempt.error_message,
-            "duration_ms": duration,
-            "plan_sha256": existing_attempt.plan_sha256,
-            "is_idempotent_replay": True,
-            "started_at": existing_attempt.started_at.isoformat() if existing_attempt.started_at else None,
-            "completed_at": existing_attempt.completed_at.isoformat() if existing_attempt.completed_at else None,
-            "application_status": app.status,
-        }
-
-    # Resolve or create submission plan
-    if payload and payload.plan_id:
-        plan_model = session.get(SubmissionPlanModel, payload.plan_id)
-        if plan_model is None or plan_model.application_id != application_id:
-            raise HTTPException(status_code=404, detail="SUBMISSION_PLAN_NOT_FOUND")
-        plan_dict = {
-            "plan_id": plan_model.id,
-            "application_id": plan_model.application_id,
-            "job_posting_id": plan_model.job_posting_id,
-            "employer_handle": plan_model.employer_handle,
-            "target_role": plan_model.target_role,
-            "resume_sha256": plan_model.resume_sha256,
-            "cover_letter_sha256": plan_model.cover_letter_sha256,
-            "packet_sha256": plan_model.packet_sha256,
-            "answers": plan_model.answers_json,
-            "is_compensation_eligible": plan_model.is_compensation_eligible,
-            "is_cooldown_clear": plan_model.is_cooldown_clear,
-        }
-    else:
-        plan_dict = create_submission_plan(application_id, session)
-
-    start_time = datetime.now(timezone.utc)
-    attempt_count = session.scalar(
-        select(func.count(ApplicationAttempt.id)).where(ApplicationAttempt.application_id == application_id)
-    ) or 0
-    attempt_number = attempt_count + 1
-
-    adapter = SimulatedAtsAdapter()
     try:
-        res = adapter.simulate_dispatch(plan_dict, mode=mode)
+        res = execute_simulation(
+            session,
+            plan_id=plan_id,
+            application_id=application_id,
+            mode=mode,
+            idempotency_key=idempotency_key,
+            raise_on_policy_failure=False,
+        )
+    except SimulationNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.code)
+    except (SimulationIntegrityError, SimulationMaterialsError, SimulationMismatchError) as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"{exc.code}: {exc.message}")
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-
-    end_time = datetime.now(timezone.utc)
-
-    # Classify status & outcome
-    if mode in ("AMBIGUOUS_TIMEOUT", "TIMEOUT", "POST_RECEIPT_ERROR"):
-        attempt_status = "AMBIGUOUS_RESULT"
-        attempt_outcome = "AMBIGUOUS"
-    elif res.success:
-        attempt_status = "SIMULATED_SUCCESS"
-        attempt_outcome = "SUCCESS"
-    else:
-        attempt_status = "SIMULATED_FAILURE"
-        attempt_outcome = "FAILED"
-
-    attempt = ApplicationAttempt(
-        id=uuid.uuid4().hex,
-        application_id=app.id,
-        submission_plan_id=plan_dict["plan_id"],
-        attempt_number=attempt_number,
-        idempotency_key=idempotency_key,
-        simulation_mode=mode,
-        plan_sha256=plan_dict["packet_sha256"],
-        status=attempt_status,
-        outcome=attempt_outcome,
-        error_code=res.error_code,
-        error_message=res.error_message,
-        simulated_receipt=res.simulated_receipt_id,
-        metadata_json={
-            "duration_ms": res.duration_ms,
-            "mode": mode,
-            "target_role": plan_dict.get("target_role"),
-        },
-        started_at=start_time,
-        completed_at=end_time,
-    )
-    session.add(attempt)
-
-    # Record system audit event
-    audit = AuditEvent(
-        id=uuid.uuid4().hex,
-        event_type="SUBMISSION_ATTEMPT_EXECUTED",
-        entity_type="APPLICATION",
-        entity_id=app.id,
-        actor_type="USER",
-        actor_id="local",
-        payload_json={
-            "attempt_id": attempt.id,
-            "attempt_number": attempt_number,
-            "status": attempt_status,
-            "outcome": attempt_outcome,
-            "simulation_mode": mode,
-            "receipt": res.simulated_receipt_id,
-            "plan_sha256": plan_dict["packet_sha256"],
-        },
-        created_at=end_time,
-    )
-    session.add(audit)
-
-    if res.success:
-        if app.status in (ApplicationStatus.SAVED.value, ApplicationStatus.PREPARING.value):
-            app.status = ApplicationStatus.READY_FOR_REVIEW.value
-        note = f"[Dry-Run Passed]: Attempt #{attempt_number} ({res.simulated_receipt_id})"
-        app.notes = f"{app.notes}\n{note}" if app.notes else note
-    else:
-        note = f"[Dry-Run Failed]: Attempt #{attempt_number} ({res.error_code} - {res.error_message})"
-        app.notes = f"{app.notes}\n{note}" if app.notes else note
-
-    session.commit()
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
 
     return {
-        "attempt_id": attempt.id,
-        "application_id": attempt.application_id,
-        "submission_plan_id": attempt.submission_plan_id,
-        "attempt_number": attempt.attempt_number,
-        "idempotency_key": attempt.idempotency_key,
-        "status": attempt.status,
-        "outcome": attempt.outcome,
+        "attempt_id": res.simulation_id,
+        "application_id": res.application_id,
+        "submission_plan_id": res.submission_plan_id,
+        "attempt_number": res.attempt_number,
+        "idempotency_key": res.idempotency_key,
+        "status": res.status,
+        "outcome": res.outcome,
         "success": res.success,
-        "mode_used": res.mode_used,
+        "mode_used": mode,
         "is_simulation": True,
-        "receipt_id": res.simulated_receipt_id,
+        "receipt_id": res.receipt,
         "error_code": res.error_code,
         "error_message": res.error_message,
         "duration_ms": res.duration_ms,
-        "plan_sha256": attempt.plan_sha256,
-        "started_at": attempt.started_at.isoformat(),
-        "completed_at": attempt.completed_at.isoformat() if attempt.completed_at else None,
-        "application_status": app.status,
+        "plan_sha256": res.plan_sha256,
+        "is_idempotent_replay": res.is_idempotent_replay,
+        "started_at": res.started_at.isoformat() if res.started_at else None,
+        "completed_at": res.completed_at.isoformat() if res.completed_at else None,
+        "application_status": res.application_status,
     }
 
 

@@ -25,7 +25,7 @@ from enum import StrEnum
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.app.db.models import (
@@ -284,41 +284,45 @@ def evaluate_same_company_cooldown(
     if posting.subscription_id:
         sub = session.get(EmployerSubscription, posting.subscription_id)
         if sub:
-            employer_handle = sub.employer_handle
+            employer_handle = sub.employer_handle.strip().lower() if sub.employer_handle else None
             sub_ids.append(sub.id)
+        else:
+            # subscription_id referenced but subscription record not found — unknown employer
+            return CooldownEligibilityResult(
+                outcome=EligibilityDecision.REVIEW_REQUIRED,
+                reason_code="UNKNOWN_EMPLOYER_IDENTITY",
+                explanation=(
+                    "Cannot verify same-company cooldown: posting references a subscription "
+                    "that no longer exists. Candidate review required."
+                ),
+                is_clear=False,
+                requires_review=True,
+                cooldown_days=cooldown_days,
+            )
 
     if employer_handle:
-        # Match all subscriptions sharing the same employer handle
+        # Normalize: match all subscriptions sharing the same employer handle
+        # (case-insensitive, whitespace-stripped for cross-ATS de-duplication)
+        normalized = employer_handle.strip().lower()
         matching_subs = session.scalars(
-            select(EmployerSubscription.id).where(EmployerSubscription.employer_handle == employer_handle)
+            select(EmployerSubscription.id).where(
+                func.lower(EmployerSubscription.employer_handle) == normalized
+            )
         ).all()
         sub_ids = list(set(sub_ids) | set(matching_subs))
 
     if not sub_ids:
-        # Standalone posting without subscription; check if employer_handle can be inferred from snapshot
-        snapshot = session.scalar(
-            select(JobPostingSnapshot)
-            .where(JobPostingSnapshot.posting_id == posting.id)
-            .order_by(JobPostingSnapshot.captured_at.desc())
-            .limit(1)
-        )
-        if snapshot and snapshot.employer_name:
-            # Look for existing postings with the same employer name
-            same_employer_subs = session.scalars(
-                select(EmployerSubscription.id).where(
-                    EmployerSubscription.display_name.ilike(snapshot.employer_name)
-                )
-            ).all()
-            sub_ids = list(same_employer_subs)
-
-    if not sub_ids:
-        # No known employer link; cooldown clear
+        # Standalone posting without an identifiable employer subscription.
+        # We cannot verify cooldown, so fail closed per ADR-0003.
         return CooldownEligibilityResult(
-            outcome=EligibilityDecision.ELIGIBLE,
-            reason_code="NO_PRIOR_APPLICATIONS",
-            explanation="No previous applications found for this employer.",
-            is_clear=True,
-            requires_review=False,
+            outcome=EligibilityDecision.REVIEW_REQUIRED,
+            reason_code="UNKNOWN_EMPLOYER_IDENTITY",
+            explanation=(
+                "Cannot verify same-company cooldown: the posting has no linked employer "
+                "subscription and no identifiable employer handle. Candidate review required."
+            ),
+            is_clear=False,
+            requires_review=True,
             cooldown_days=cooldown_days,
         )
 
