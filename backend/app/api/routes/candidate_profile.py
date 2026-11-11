@@ -128,9 +128,9 @@ def infer_suggested_fact_type(heading: str | None, text: str) -> str | None:
         return FactType.PROJECT.value
     if any(k in target for k in ["education", "degree", "university", "college", "bachelor", "master", "phd", "academic"]):
         return FactType.EDUCATION.value
-    if any(k in target for k in ["experience", "employment", "work history", "job history"]):
+    if any(k in target for k in ["experience", "employment", "work history", "job history", "company", "role", "title", "employer", "position"]):
         return FactType.EMPLOYMENT.value
-    if any(k in target for k in ["skill", "technolog", "proficienc", "programming", "languages"]):
+    if any(k in target for k in ["skill", "technolog", "proficienc", "programming", "languages", "tool"]):
         return FactType.SKILL.value
     return None
 
@@ -141,7 +141,7 @@ async def parse_uploaded_resume(
     session: Session = Depends(get_session),
     _guard: None = Depends(require_local_same_origin),
 ) -> dict[str, Any]:
-    """Parse raw text, markdown, docx, or pdf bytes and return extracted sections."""
+    """Parse raw text, markdown, docx, pdf, csv, or xlsx bytes and return extracted sections."""
     max_bytes = 10 * 1024 * 1024  # 10 MB limit
     chunks: list[bytes] = []
     total_bytes = 0
@@ -200,8 +200,10 @@ async def parse_uploaded_resume(
                 if upload_slot_held:
                     storage.release_upload_slot()
         except CandidateEvidenceError as exc:
+            session.rollback()
             raise HTTPException(status_code=exc.status_code, detail=f"EVIDENCE_ERROR: {exc.code}") from exc
         except Exception as exc:
+            session.rollback()
             raise HTTPException(status_code=500, detail=f"STORAGE_PERSISTENCE_FAILED: {str(exc)}") from exc
 
     return {
@@ -225,6 +227,7 @@ async def parse_uploaded_resume(
             }
             for s in parsed.sections
         ],
+        "metadata": parsed.metadata,
         "raw_text": parsed.raw_text,
     }
 

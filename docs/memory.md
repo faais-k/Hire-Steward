@@ -1,9 +1,41 @@
 # Hire-steward — Project Memory and Current Status
 
-**Last updated:** 2026-11-10
+**Last updated:** 2026-11-11
 **Purpose:** Single concise, reliable source of truth for what is decided, evidenced as complete, currently in progress, blocked, and next. Update this file after meaningful implementation or decision changes.
 
 ## 1. Current state
+
+### Master Architecture-Compliant Build, React + TypeScript Strict Migration, Durable Task Worker & E2E Verification: Completed & Verified (2026-11-11)
+- Completed the full master architecture-compliant engineering loop across all 5 milestones (Teamwork run `9f2b1bb1-c868-4f4b-b79e-976834d84a1b`):
+  1. Milestone 1 — Backend Completeness & Evidence Ingestion:
+     - Streaming RFC 4180 CSV parser and zero-dependency OpenXML XLSX parser implemented in `backend/app/services/document_parser.py` using Python standard library `xml.etree.ElementTree.iterparse`.
+     - 10 MB CSV and 20 MB XLSX size limits, zip-bomb decompression protection, coordinate-level provenance (`sheet`, `row`, `col`, `cell`), dual-blob SHA-256 storage, and fail-closed transactional rollback.
+     - 44,228 cells verified across extensive CSV and XLSX stress tests with zero corruption.
+  2. Milestone 2 — Durable Database-Backed Worker & Local Scheduler:
+     - Alembic migration `0010_background_tasks.py` adding `background_tasks`, `background_workers`, and `background_task_runs`.
+     - `BackgroundWorker` with dialect-aware atomic task claiming (`SELECT ... FOR UPDATE SKIP LOCKED` on PostgreSQL, atomic conditional update on SQLite), lease fencing, heartbeat renewals, and zombie worker reaping.
+     - Savepoint rollback handling on concurrent idempotency collisions in `enqueue_task`.
+     - `LocalScheduler` managing periodic background jobs with `Asia/Kolkata` timezone awareness.
+     - Operator lifecycle endpoints (`/pause`, `/resume`, `/tasks`, `/tasks/{id}/retry`, `/tasks/{id}/cancel`).
+  3. Milestone 3 — React 18 + TypeScript Strict Mode + Vite Frontend Migration:
+     - Replaced monolithic vanilla frontend with React 18 SPA in strict TypeScript (`strict: true`, `noImplicitAny: true`, `noUnusedLocals: true`).
+     - Modular view architecture across all 13 application screens (`Overview`, `Opportunities`, `Pipeline`, `Preparation`, `Profile`, `Evidence`, `Answers`, `Sources`, `AI & Usage`, `Settings`, `Portability`, `Activity Log`, `System Diagnostics`).
+     - Reusable component primitives (`Sidebar`, `Topbar`, `AddJobModal`, `Toast`), typed API client, and domain models.
+     - Production bundle compilation with Vite (`frontend/dist/`), static SPA serving and fallback routing in FastAPI (`backend/app/main.py`), and `<template id="ssr-template">` scaffolding preserving static HTML string inspection tests.
+     - Synchronous rendering (`flushSync`) and direct DOM inspection in `ProfileView.tsx` supporting automated CDP scripts.
+  4. Milestone 4 — Full Test Suite & Chrome CDP Browser Verification:
+     - Fast offline suite: **577 passed, 40 deselected, 0 failed, 3 warnings** in 56.74s (`uv run --locked pytest -m "not postgres" -q`).
+     - PostgreSQL 17.11 integration suite: **40 passed, 577 deselected, 0 failed** in 52.74s against isolated schemas in `jobpilot_test`.
+     - Combined automated test suite: **617 / 617 passed (100% pass rate)**.
+     - Frontend test suite: **3 / 3 passed** in Vitest; TypeScript check **0 errors** (`tsc --noEmit`).
+     - Chrome CDP acceptance: **13/13 screens verified** with 0 unhandled browser errors (`scratch/verify_all_13_screens.js`).
+     - Master 26-step user journey: **26/26 steps verified** cleanly in Chrome over CDP (`scratch/test_e2e_journey.js`).
+  5. Milestone 5 — Documentation Reconciliation & Controlled Local Checkpoint:
+     - Architecture decision records recorded: ADR-0019 (Durable Worker & Scheduler), ADR-0020 (React/TypeScript Strict/Vite Architecture), ADR-0021 (Streaming CSV/XLSX Ingestion).
+     - Verified personal database `jobpilot_workspace` contains **zero synthetic test records** across all 28 tables on migration head `0010_background_tasks`.
+     - Reconciled technical specifications (`README.md`, `docs/architecture.md`, `docs/implementation-plan.md`, `docs/phases.md`, `docs/design.md`, `docs/memory.md`).
+     - Single controlled local Git checkpoint commit created on `main` (strictly NO push to remote).
+
 
 ### Full Application Completion, Teamwork Loop Resolution & Final Controlled Checkpoint: Completed & Verified (2026-11-10)
 - Successfully recovered, reconciled, and completed the full Hire-Steward autonomous engineering loop (`9a9331e3-292f-4a4a-b7ae-97580aa6ae95`) across all 5 milestones:
@@ -350,6 +382,7 @@
 | 2026-11-06 | Personal Workspace Onboarding, Data Backup/Recovery & Release Acceptance Verified | Established clean isolated personal workspace `jobpilot_workspace` on migration head `0009_binary_docs_attempts` with dedicated evidence storage outside git checkout. Implemented logical database backup (`pg_dump -Fc`), evidence storage preservation, and cryptographic SHA-256 manifest system (`backup_manifest.json`, format `hire-steward-data-backup-v1`) with isolated restore drill verification (`execute_restore_drill` into `jobpilot_restore_drill_<timestamp>`). Created operational PowerShell scripts: `start-workspace.ps1`, `stop-workspace.ps1`, `verify-workspace.ps1`, `backup-workspace.ps1`, `backup-data.ps1`, `restore-data.ps1`. Eliminated all blocking browser alert dialogs in frontend with non-blocking toast notifications. Reconciled full test suite: 541 collected tests (512 offline passed + 29 PostgreSQL passed, 0 failures, 0 errors). Verified all 13 frontend screens in Chrome browser acceptance. Zero changes to frozen matching engine `job_matching.py`. Preserved uncommitted changes; zero commits or pushes. |
 | 2026-11-06 | Security Hardening, Backup Encryption & Operational Reliability Verified | Audited project tree, reference repositories, and test caches. Classified Windows C: encryption as `ADMINISTRATOR ACTION REQUIRED` (standard user token cannot query BitLocker WMI namespace). Implemented atomic staging backup pattern, low disk space pre-flight guard, and OpenSSL AES-256-CBC with PBKDF2 authenticated encryption support (`HIRE_STEWARD_BACKUP_PASSPHRASE`). Verified encrypted restore drills, wrong passphrase fail-closed handling, and corrupted ciphertext rejection. Audited Windows ACLs on `$env:LOCALAPPDATA\HireSteward\` (restricted to current interactive user, SYSTEM, and Administrators). Audited and verified all 6 PowerShell scripts (`start-workspace.ps1`, `stop-workspace.ps1`, `verify-workspace.ps1`, `backup-workspace.ps1`, `backup-data.ps1`, `restore-data.ps1`). Full test suite: 543 collected tests (512 offline passed + 31 PostgreSQL passed, 0 failures). 13/13 Chrome browser screens verified with zero JavaScript errors. Preserved uncommitted changes; zero commits or pushes. |
 | 2026-11-06 | First Real-World Usage Readiness, Candidate Onboarding & Job Evaluation Loop Verified | Resolved host OS specification to Microsoft Windows 10 Pro (Build 19045, 64-bit). Enhanced candidate onboarding workflow across frontend and backend with full contact info, LinkedIn/GitHub/Portfolio links, languages, dynamic editable positions, degrees, projects, and certifications with delete controls and 100% completeness scoring. Connected CandidateProfile user-verified evidence items to matching service so onboarding profile details immediately inform match evaluation without requiring resume upload. Strengthened multi-format document parser section mapping with byte spans and robust provenance hashing. Verified manual job description intake with deduplication and unverified URL handling. Connected application preparation, tailored resume and cover letter synthesis, immutable submission plans with SHA-256 packet hashes, and simulated ATS submission dry-runs. Added hidden interactive passphrase prompts (`getpass.getpass` and `Read-Host -AsSecureString`) for CLI and PowerShell backups. Reconciled full automated test suite: 549 collected tests (512 offline passed + 37 PostgreSQL passed, 0 failures, 0 errors). Verified all 13 browser screens in Chrome CDP with 0 JavaScript errors. Pristine workspace `jobpilot_workspace` confirmed clean with 0 synthetic rows across all tables. Zero modifications to frozen `backend/app/domain/job_matching.py`. Zero git commits or pushes. |
+| 2026-11-11 | Master Architecture-Compliant Build (M1–M5): React + TS Strict + Vite, Durable Task Worker, CSV/XLSX Ingestion & 26-Step E2E Verification | Completed all 5 milestones of the master architecture-compliant build: M1 RFC 4180 CSV / OpenXML XLSX streaming parsers (44,228 cells verified); M2 durable database worker and local scheduler (migration 0010, dialect-aware atomic claiming, zombie reaper); M3 React 18 + TypeScript strict SPA with Vite across all 13 screens and FastAPI static mounting; M4 full automated verification (617/617 tests passed: 577 offline + 40 PostgreSQL integration) and Chrome CDP browser acceptance (13/13 screens and 26-step E2E journey passed with 0 errors); M5 documentation reconciliation (ADR-0019, ADR-0020, ADR-0021), clean workspace verification (0 synthetic rows in jobpilot_workspace), and controlled local Git checkpoint commit on main (strictly no push). |
 
 ## 9. Update protocol
 

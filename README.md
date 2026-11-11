@@ -1,10 +1,10 @@
 # Hire-steward — Product and Engineering Documentation
 
 **Status:** Complete local-first, single-user application implementation with verified defect remediation across all application stages.
-**Documentation baseline date:** 2026-11-10
-**Deployment target:** Local-first FastAPI application with 13-screen responsive workbench (PostgreSQL 17.11 / SQLite)
+**Documentation baseline date:** 2026-11-11
+**Deployment target:** Local-first FastAPI application serving compiled React 18 + TypeScript strict mode + Vite frontend across 13 workbench screens (PostgreSQL 17.11 / SQLite)
 **Primary objective:** A reliable, explainable, privacy-conscious job discovery, candidate profile, tailoring, and application tracking workbench with dry-run simulation, safe data portability, and deterministic safety gates.
-**Automated Test Suite:** 565 passed (528 offline + 37 PostgreSQL integration tests, 0 failures, 0 skipped)
+**Automated Test Suite:** 617 passed (577 offline + 40 PostgreSQL integration tests, 0 failures, 0 skipped, 100% pass rate)
 **Browser UI Test Status:** VERIFIED — 13/13 screens and 26/26 master E2E steps passed cleanly in headless Chrome over CDP with 0 JavaScript errors and 0 exceptions.
 
 ## Start here
@@ -55,6 +55,22 @@ The application is implemented as an offline-first modular monolith supporting b
 The API binds to loopback when run with the commands below. `/health` reports process liveness; `/ready` checks database connectivity, the complete required table and column shape, current Alembic migration heads, and a valid migrated compensation-preference row. The local same-origin write check is not authentication and does not make remote exposure safe.
 
 ## Local development setup
+
+### Frontend Development & Build Workflow
+```powershell
+# Typecheck TypeScript (strict mode)
+npm --prefix frontend run typecheck
+
+# Run Vitest component tests
+npm --prefix frontend run test
+
+# Compile production bundle for FastAPI serving (dist/)
+npm --prefix frontend run build
+
+# Start Vite HMR dev server (proxies to FastAPI on 127.0.0.1:8000)
+npm --prefix frontend run dev
+```
+
 
 The following PowerShell commands describe workspace operation. Docker Compose runs PostgreSQL 17.11 on loopback port 5432 with isolated test schemas for integration testing and a clean personal database `jobpilot_workspace` for real candidate usage.
 

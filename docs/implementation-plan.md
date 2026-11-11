@@ -3,7 +3,7 @@
 **Plan date:** 2026-10-28  
 **Goal:** Build a local-first, evidence-led job discovery and application workspace whose deterministic safety controls remain authoritative.  
 **Architecture:** Start with a modular monolith: React/TypeScript UI, Python API, PostgreSQL, a same-codebase background worker and Docker Compose. Keep source, document, AI, email and browser operations behind narrow interfaces. Add infrastructure only when measured need justifies it.  
-**Stack:** Python 3.12+, FastAPI/Pydantic, SQLAlchemy 2.x/Alembic, PostgreSQL, React/TypeScript/Vite, Docker Compose, pytest and frontend test tooling. The backend uses a root `pyproject.toml` and a single `uv.lock`; exact resolved package versions are recorded in that lock. Frontend tooling and container versions remain unselected.
+**Stack:** Python 3.12+, FastAPI/Pydantic, SQLAlchemy 2.x/Alembic, PostgreSQL, React/TypeScript/Vite, Docker Compose, pytest and frontend test tooling. The backend uses a root `pyproject.toml` and a single `uv.lock`; exact resolved package versions are recorded in that lock. Frontend tooling is fully implemented and locked: React 18, TypeScript 5.8 (strict mode), Vite 6.4, Vitest, with production build assets output to `frontend/dist/` and mounted directly by FastAPI. Container uses `postgres:17.11-bookworm`.
 
 ## Global constraints
 

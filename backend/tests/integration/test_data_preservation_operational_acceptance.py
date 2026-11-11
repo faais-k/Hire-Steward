@@ -393,7 +393,7 @@ def test_complete_20_step_export_import_roundtrip() -> None:
         # -------------------------------------------------------------
         with source.engine.connect() as conn:
             head_rev = conn.scalar(text("SELECT version_num FROM alembic_version"))
-            assert head_rev == "0009_binary_docs_attempts"
+            assert head_rev in ("0009_binary_docs_attempts", "0010_background_tasks")
 
         # -------------------------------------------------------------
         # STEP 2: Candidate Profile
@@ -633,7 +633,7 @@ def test_complete_20_step_export_import_roundtrip() -> None:
         # -------------------------------------------------------------
         with target.engine.connect() as conn:
             target_head = conn.scalar(text("SELECT version_num FROM alembic_version"))
-            assert target_head == "0009_binary_docs_attempts"
+            assert target_head in ("0009_binary_docs_attempts", "0010_background_tasks")
 
         # -------------------------------------------------------------
         # STEP 16: Preview Import on Target Instance

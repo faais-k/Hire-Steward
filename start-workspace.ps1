@@ -80,7 +80,7 @@ if ($versionResult -like "*ERROR*") {
     Write-Error "Cannot reach jobpilot_workspace: $versionResult"
 }
 $alembicVersion = $versionResult.Trim()
-if ($alembicVersion -ne "0009_binary_docs_attempts") {
+if ($alembicVersion -ne "0010_background_tasks") {
     Write-Host " MIGRATION PENDING" -ForegroundColor Yellow
     Write-Host "      Current version: $alembicVersion. Upgrading to head..." -ForegroundColor Gray
     $env:DATABASE_URL = $dbUrl

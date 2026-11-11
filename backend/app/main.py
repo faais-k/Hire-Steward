@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+import logging
 import os
 import uuid
 from typing import Any
@@ -132,11 +134,79 @@ class LocalClientOnlyMiddleware:
         await self.app(scope, receive, send)
 
 
+logger = logging.getLogger("hire_steward.main")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """FastAPI application lifespan managing background worker and scheduler services."""
+    session_factory = getattr(app.state, "session_factory", None)
+    enable_background = getattr(app.state, "enable_background_services", None)
+    if enable_background is None:
+        env_val = os.getenv("ENABLE_BACKGROUND_SERVICES")
+        if env_val is not None:
+            enable_background = env_val.lower() in ("true", "1", "yes")
+        else:
+            # Default to enabled for live server, but disable for automated test runs
+            # to prevent daemon thread contention on ephemeral SQLite databases.
+            enable_background = "PYTEST_CURRENT_TEST" not in os.environ
+
+    # Safety: Never run background services against protected workspace database
+    if session_factory is not None and enable_background:
+        try:
+            bind = session_factory.kw.get("bind") or getattr(session_factory, "bind", None)
+            if (
+                bind
+                and hasattr(bind, "url")
+                and bind.url
+                and bind.url.database == "jobpilot_workspace"
+            ):
+                enable_background = False
+                logger.info(
+                    "Background services disabled for protected database jobpilot_workspace."
+                )
+        except Exception:
+            pass
+
+    if session_factory is not None and enable_background:
+        try:
+            from backend.app.services.background_worker import BackgroundWorker
+            from backend.app.services.scheduler import LocalScheduler
+
+            worker = BackgroundWorker(session_factory=session_factory)
+            app.state.background_worker = worker
+            worker.start()
+
+            scheduler = LocalScheduler(session_factory=session_factory)
+            app.state.local_scheduler = scheduler
+            scheduler.start()
+            logger.info("BackgroundWorker and LocalScheduler initialized.")
+        except Exception as exc:
+            logger.warning("Could not initialize background services on startup: %s", exc)
+
+    yield
+
+    scheduler = getattr(app.state, "local_scheduler", None)
+    if scheduler is not None:
+        try:
+            scheduler.stop()
+        except Exception as exc:
+            logger.warning("Error stopping LocalScheduler: %s", exc)
+
+    worker = getattr(app.state, "background_worker", None)
+    if worker is not None:
+        try:
+            worker.stop(drain_timeout_seconds=5.0)
+        except Exception as exc:
+            logger.warning("Error stopping BackgroundWorker: %s", exc)
+
+
 def create_app(
     *,
     database_url: str | None = None,
     session_factory: sessionmaker[Session] | None = None,
     evidence_settings: EvidenceSettings | None = None,
+    enable_background_services: bool | None = None,
 ) -> FastAPI:
     resolved_database_url = database_url or os.getenv("DATABASE_URL")
     app = FastAPI(
@@ -147,7 +217,10 @@ def create_app(
             "remain review-required and cannot authorize application submission."
         ),
         version="0.1.0",
+        lifespan=lifespan,
     )
+    if enable_background_services is not None:
+        app.state.enable_background_services = enable_background_services
     app.state.session_factory = (
         session_factory
         if session_factory is not None
@@ -181,16 +254,19 @@ def create_app(
     app.include_router(ai_router)
     app.include_router(data_portability_router)
 
-    # Mount static frontend workbench if directory exists
+    # Mount static frontend workbench (preferring compiled production React dist)
     frontend_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
     )
-    if os.path.isdir(frontend_dir):
+    dist_dir = os.path.join(frontend_dir, "dist")
+    static_dir = dist_dir if os.path.isdir(dist_dir) else frontend_dir
+    index_file = os.path.join(static_dir, "index.html")
+    if os.path.isdir(static_dir) and os.path.isfile(index_file):
         @app.get("/workbench")
         def serve_workbench():
-            return FileResponse(os.path.join(frontend_dir, "index.html"))
+            return FileResponse(index_file)
 
-        app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+        app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request_handler(

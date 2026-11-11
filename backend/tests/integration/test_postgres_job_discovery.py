@@ -64,7 +64,7 @@ def test_upgrade_from_0003_adds_job_discovery_schema_and_seeds_lever(
     } <= names
 
     with postgres_database.engine.connect() as connection:
-        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0009_binary_docs_attempts"
+        assert connection.scalar(text("SELECT version_num FROM alembic_version")) == "0010_background_tasks"
         lever_row = connection.execute(
             text("SELECT source_name, display_name, capability_status, is_enabled FROM job_sources WHERE source_name = 'lever'")
         ).one()

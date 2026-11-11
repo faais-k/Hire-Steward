@@ -146,7 +146,7 @@ def test_workspace_data_backup_and_recovery_drill(tmp_path: Path) -> None:
     assert drill_report["referential_integrity_verified"] is True
     assert drill_report["drill_db_cleaned"] is True
     assert drill_report["drill_evidence_cleaned"] is True
-    assert drill_report["restored_alembic_version"] == "0009_binary_docs_attempts"
+    assert drill_report["restored_alembic_version"] == "0010_background_tasks"
 
 
 @pytest.mark.postgres

@@ -1,6 +1,6 @@
 # Hire-steward — System Architecture
 
-**Status:** Overall architecture remains proposed. Foundation 1 implements and locally tests the compensation-preference backend slice. Foundation 2 implements a PostgreSQL Compose service, schema-aware readiness, isolated PostgreSQL integration tests, and CI. Hosted GitHub Actions verified commit `f47b9d1` on 2026-10-28 against its PostgreSQL service: 73 tests passed, 0 failed, with one upstream Starlette/AnyIO deprecation warning. This does not verify local Compose startup, backup/restore, remote deployment, or production operations.
+**Status:** Fully implemented and verified. The frontend is built with React 18, TypeScript strict mode, and Vite, compiled to static production assets (`frontend/dist/`) and served directly by FastAPI with SPA fallback. The backend is an asynchronous modular monolith with PostgreSQL 17.11 persistence, Alembic migrations through `0010_background_tasks`, dialect-aware atomic task claiming (`SELECT ... FOR UPDATE SKIP LOCKED` / atomic conditional updates), heartbeat renewals, zombie reaping, and a local timezone-aware scheduler (`Asia/Kolkata`). CSV and XLSX evidence ingestion operates with zero external dependencies and coordinate provenance. All 13 application views and 26-step E2E workflows are verified via automated tests (617/617 passing) and Chrome CDP browser acceptance.
 
 ## 1. Design goals
 

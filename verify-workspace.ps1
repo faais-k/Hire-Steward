@@ -71,7 +71,7 @@ except Exception as e:
     $res = uv run python -c $checkCmd 2>&1
     if ($res -match "VERSION:(.*)") {
         $ver = $matches[1].Trim()
-        if ($ver -eq "0009_binary_docs_attempts") {
+        if ($ver -eq "0010_background_tasks") {
             $dbPassed = $true
             $dbDetail = "Head version: $ver"
         } else {

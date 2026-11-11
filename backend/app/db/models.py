@@ -848,3 +848,103 @@ class AuditEvent(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+class BackgroundTask(Base):
+    __tablename__ = "background_tasks"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_background_tasks"),
+        CheckConstraint(
+            "status IN ('PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED', 'PAUSED')",
+            name="ck_background_tasks_status",
+        ),
+        CheckConstraint("attempts_count >= 0", name="ck_background_tasks_attempts_count"),
+        CheckConstraint("max_attempts >= 1", name="ck_background_tasks_max_attempts"),
+        CheckConstraint(
+            "backoff_base_seconds >= 1", name="ck_background_tasks_backoff_base_seconds"
+        ),
+        Index("ix_background_tasks_task_type", "task_type"),
+        Index("ix_background_tasks_priority", "priority"),
+        Index("ix_background_tasks_status", "status"),
+        Index("ix_background_tasks_scheduled_at", "scheduled_at"),
+        Index("ix_background_tasks_lease_expires_at", "lease_expires_at"),
+        Index("ix_background_tasks_idempotency_key", "idempotency_key", unique=True),
+        Index("ix_background_tasks_status_sched_prio", "status", "scheduled_at", "priority"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    task_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    payload_json: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=100, server_default="100")
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="PENDING", server_default="PENDING")
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    scheduled_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    attempts_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=3, server_default="3")
+    backoff_base_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=10, server_default="10")
+    last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    lease_token: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    worker_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    result_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+
+
+class BackgroundWorker(Base):
+    __tablename__ = "background_workers"
+    __table_args__ = (
+        PrimaryKeyConstraint("worker_id", name="pk_background_workers"),
+        CheckConstraint(
+            "status IN ('ACTIVE', 'PAUSED', 'STOPPED', 'DRAINING')",
+            name="ck_background_workers_status",
+        ),
+        Index("ix_background_workers_last_heartbeat_at", "last_heartbeat_at"),
+    )
+
+    worker_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    hostname: Mapped[str] = mapped_column(String(128), nullable=False)
+    pid: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="ACTIVE", server_default="ACTIVE")
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    last_heartbeat_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    current_task_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+
+class BackgroundTaskRun(Base):
+    __tablename__ = "background_task_runs"
+    __table_args__ = (
+        PrimaryKeyConstraint("id", name="pk_background_task_runs"),
+        ForeignKeyConstraint(
+            ["task_id"],
+            ["background_tasks.id"],
+            name="fk_background_task_runs_task_id",
+            ondelete="CASCADE",
+        ),
+        CheckConstraint("attempt_number >= 1", name="ck_background_task_runs_attempt_number"),
+        CheckConstraint("duration_ms >= 0", name="ck_background_task_runs_duration_ms"),
+        Index("ix_background_task_runs_task_id", "task_id"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    task_id: Mapped[str] = mapped_column(String(36), nullable=False)
+    worker_id: Mapped[str] = mapped_column(String(64), nullable=False)
+    attempt_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    duration_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[str] = mapped_column(String(24), nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+

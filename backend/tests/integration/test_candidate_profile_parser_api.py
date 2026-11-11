@@ -1,9 +1,11 @@
 """Integration tests for resume parser and candidate evidence workflow (P0 Remediation)."""
 
+import io
 from pathlib import Path
 import shutil
 import tempfile
 from uuid import uuid4
+import zipfile
 
 import pytest
 from alembic import command
@@ -15,6 +17,7 @@ from sqlalchemy.pool import StaticPool
 
 from backend.app.evidence_config import EvidenceSettings
 from backend.app.main import create_app
+from backend.tests.unit.test_document_parser import _build_synthetic_xlsx
 
 
 def local_headers() -> dict[str, str]:
@@ -169,3 +172,177 @@ def test_map_fact_rolls_back_on_invalid_provenance_excerpt(client: TestClient):
     # Verify no fact was persisted due to rollback
     facts = client.get("/api/v1/facts", headers=local_headers()).json()
     assert len(facts) == 0
+
+
+def test_csv_upload_dual_blob_storage_and_fact_mapping_unreviewed(client: TestClient):
+    csv_content = (
+        "Skill,Proficiency,Category,Years\n"
+        "Python,Expert,Backend,8\n"
+        "PostgreSQL,Advanced,Database,6\n"
+    )
+    resp = client.post(
+        "/api/v1/profile/parse-document",
+        headers={**local_headers(), "x-filename": "skills.csv"},
+        content=csv_content.encode("utf-8"),
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["media_type"] == "text/csv"
+    assert data["metadata"]["format"] == "csv"
+    assert data["metadata"]["row_count"] == 3
+    doc_id = data["document_id"]
+    doc_ver_id = data["document_version_id"]
+    assert doc_id is not None
+    assert doc_ver_id is not None
+
+    # Check suggested fact types from column headers
+    skill_sec = data["sections"][1]
+    assert skill_sec["suggested_fact_type"] == "SKILL"
+    assert "Skill: Python" in skill_sec["text"]
+
+    # Verify dual-blob storage endpoints:
+    # 1. Original CSV blob
+    orig_resp = client.get(
+        f"/api/v1/profile/documents/{doc_id}/versions/{doc_ver_id}/original",
+        headers=local_headers(),
+    )
+    assert orig_resp.status_code == 200
+    assert orig_resp.headers["content-type"].startswith("text/csv")
+    assert orig_resp.content == csv_content.encode("utf-8")
+
+    # 2. UTF-8 text artifact blob
+    text_resp = client.get(
+        f"/api/v1/profile/documents/{doc_id}/versions/{doc_ver_id}/text-artifact",
+        headers=local_headers(),
+    )
+    assert text_resp.status_code == 200
+    assert "text/plain" in text_resp.headers["content-type"]
+    assert text_resp.content == data["raw_text"].encode("utf-8")
+
+    # Map fact and verify UNREVIEWED state
+    map_resp = client.post(
+        "/api/v1/profile/map-fact",
+        headers=local_headers(),
+        json={
+            "document_version_id": doc_ver_id,
+            "fact_type": "SKILL",
+            "value": {"skill": "Python", "category": "Backend"},
+            "byte_start": skill_sec["byte_start"],
+            "byte_end": skill_sec["byte_end"],
+            "excerpt": skill_sec["text"],
+        },
+    )
+    assert map_resp.status_code == 201, map_resp.text
+    fact_data = map_resp.json()
+    assert fact_data["verification_state"] == "UNREVIEWED"
+    assert fact_data["provenance_id"] is not None
+
+    # Verify fact transitions to USER_VERIFIED only upon deliberate user action
+    fact_id = fact_data["fact_id"]
+    verify_resp = client.post(f"/api/v1/facts/{fact_id}/verify", headers=local_headers())
+    assert verify_resp.status_code == 200
+    assert verify_resp.json()["verification_state"] == "USER_VERIFIED"
+
+
+def test_xlsx_upload_dual_blob_storage_and_fact_mapping_unreviewed(client: TestClient):
+    sheets = {
+        "Experience": [
+            [("Company", "inlineStr", "A1"), ("Role", "inlineStr", "B1"), ("Years", "inlineStr", "C1")],
+            [("Acme Corp", "inlineStr", "A2"), ("Principal Engineer", "inlineStr", "B2"), ("5", "inlineStr", "C2")],
+        ]
+    }
+    xlsx_bytes = _build_synthetic_xlsx(sheets=sheets)
+
+    resp = client.post(
+        "/api/v1/profile/parse-document",
+        headers={**local_headers(), "x-filename": "history.xlsx"},
+        content=xlsx_bytes,
+    )
+    assert resp.status_code == 200, resp.text
+    data = resp.json()
+    assert data["media_type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert data["metadata"]["format"] == "xlsx"
+    doc_id = data["document_id"]
+    doc_ver_id = data["document_version_id"]
+
+    # Verify section and fact inference: Company/Role headers suggest EMPLOYMENT
+    emp_sec = next(s for s in data["sections"] if s["type"] == "table_row")
+    assert emp_sec["suggested_fact_type"] == "EMPLOYMENT"
+    assert "Company: Acme Corp" in emp_sec["text"]
+
+    # Verify original blob retrieval
+    orig_resp = client.get(
+        f"/api/v1/profile/documents/{doc_id}/versions/{doc_ver_id}/original",
+        headers=local_headers(),
+    )
+    assert orig_resp.status_code == 200
+    assert "openxmlformats-officedocument.spreadsheetml.sheet" in orig_resp.headers["content-type"]
+    assert orig_resp.content == xlsx_bytes
+
+    # Verify text artifact retrieval
+    text_resp = client.get(
+        f"/api/v1/profile/documents/{doc_id}/versions/{doc_ver_id}/text-artifact",
+        headers=local_headers(),
+    )
+    assert text_resp.status_code == 200
+    assert text_resp.content == data["raw_text"].encode("utf-8")
+
+    # Map fact and verify UNREVIEWED state
+    map_resp = client.post(
+        "/api/v1/profile/map-fact",
+        headers=local_headers(),
+        json={
+            "document_version_id": doc_ver_id,
+            "fact_type": "EMPLOYMENT",
+            "value": {"company": "Acme Corp", "role": "Principal Engineer"},
+            "byte_start": emp_sec["byte_start"],
+            "byte_end": emp_sec["byte_end"],
+            "excerpt": emp_sec["text"],
+        },
+    )
+    assert map_resp.status_code == 201, map_resp.text
+    assert map_resp.json()["verification_state"] == "UNREVIEWED"
+
+
+def test_csv_and_xlsx_parse_error_transaction_rollback(client: TestClient):
+    # 1. Malformed CSV with null bytes
+    bad_csv = b"Col1,Col2\x00\nVal1,Val2"
+    resp_csv = client.post(
+        "/api/v1/profile/parse-document",
+        headers={**local_headers(), "x-filename": "bad.csv"},
+        content=bad_csv,
+    )
+    assert resp_csv.status_code == 422
+    assert "PARSE_ERROR" in resp_csv.text
+
+    # 2. Corrupt XLSX archive
+    resp_xlsx = client.post(
+        "/api/v1/profile/parse-document",
+        headers={**local_headers(), "x-filename": "corrupt.xlsx"},
+        content=b"PK\x03\x04not a valid xlsx",
+    )
+    assert resp_xlsx.status_code == 422
+    assert "PARSE_ERROR" in resp_xlsx.text
+
+    # 3. Decompression bomb XLSX (>20MB)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("xl/worksheets/sheet1.xml", b" " * (21 * 1024 * 1024))
+    bomb_bytes = buf.getvalue()
+
+    resp_bomb = client.post(
+        "/api/v1/profile/parse-document",
+        headers={**local_headers(), "x-filename": "bomb.xlsx"},
+        content=bomb_bytes,
+    )
+    assert resp_bomb.status_code == 422
+    assert "DECOMPRESSION_BOMB_DETECTED" in resp_bomb.text or "PARSE_ERROR" in resp_bomb.text
+
+    # Verify zero documents or facts exist in database
+    docs_resp = client.get("/api/v1/documents", headers=local_headers())
+    assert docs_resp.status_code == 200
+    assert len(docs_resp.json()) == 0
+
+    facts_resp = client.get("/api/v1/facts", headers=local_headers())
+    assert facts_resp.status_code == 200
+    assert len(facts_resp.json()) == 0
