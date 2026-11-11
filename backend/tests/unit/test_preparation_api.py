@@ -98,6 +98,27 @@ def prep_client():
     )
     session.add(snapshot)
 
+    from decimal import Decimal
+    from backend.app.db.models import CompensationAssessment
+
+    # Seed verified compensation assessment to satisfy deterministic policy gate
+    comp_assess = CompensationAssessment(
+        id="assess_test_01",
+        job_reference=posting.id,
+        reported_status="PAID",
+        evidence_verification_state="VERIFIED",
+        source_period="YEAR",
+        source_amount=Decimal("200000.00"),
+        threshold_amount=Decimal("100000.00"),
+        threshold_currency="INR",
+        threshold_period="YEAR",
+        threshold_version=1,
+        outcome="MEETS_THRESHOLD",
+        reason_code="MEETS_THRESHOLD",
+        explanation="Verified compensation satisfies floor.",
+    )
+    session.add(comp_assess)
+
     # Seed Candidate Profile
     profile = CandidateProfile(
         id="default",
@@ -182,9 +203,23 @@ def test_preparation_plan_flow(prep_client: TestClient) -> None:
 
 
 def test_preparation_simulate_flow(prep_client: TestClient) -> None:
+    # 1. Create plan first to freeze materials and hashes
+    plan_resp = prep_client.post(
+        "/api/v1/preparation/plan",
+        json={
+            "job_posting_id": "post_test_01",
+            "resume_text": "Reviewed Resume Markdown",
+            "cover_letter_text": "Reviewed Cover Letter Markdown",
+        },
+        headers=local_headers(),
+    )
+    assert plan_resp.status_code == 200
+    plan_id = plan_resp.json()["plan_id"]
+
+    # 2. Simulate submission with frozen plan
     resp = prep_client.post(
         "/api/v1/preparation/simulate",
-        json={"job_posting_id": "post_test_01"},
+        json={"job_posting_id": "post_test_01", "plan_id": plan_id},
         headers=local_headers(),
     )
     assert resp.status_code == 200

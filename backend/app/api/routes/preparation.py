@@ -1,22 +1,31 @@
-"""Application Preparation and Readiness Endpoints (Area G / Screen 4).
+"""Application Preparation, Gating, and Simulation Endpoints (Area G / Screen 4).
+
+Normative implementation of:
+- ADR-0003: Submission Safety and Reconcilable Intent
+- ADR-0005: Configurable Targeting and Policy Controls
+- ADR-0006: Hard Compensation Floor
+- ADR-0009: Compensation Evidence Trust Boundaries
+- ADR-0016: Application Tracking and Pipeline Model
+- docs/application-safety-policy.md
 
 Provides:
 1. Tailored resume and cover letter generation grounded in candidate evidence.
-2. Submission plan creation and cryptographic content hashing.
-3. Offline dry-run ATS simulation and execution receipts.
-4. Personalized recruiter outreach drafting.
-5. Multi-gate application submission readiness auditing (compensation floor, cooldown, evidence verification).
+2. Submission plan creation with deterministic policy enforcement and SHA-256 integrity hashes.
+3. Offline dry-run ATS simulation with cryptographic verification, idempotency, and persistent attempt logging.
+4. Personalized recruiter outreach drafting grounded in verified evidence.
+5. Multi-gate application submission readiness auditing.
 """
 
 from __future__ import annotations
 
 import hashlib
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from backend.app.adapters.simulated_ats import SimulatedAtsAdapter
@@ -37,6 +46,10 @@ from backend.app.services.application_preparation import (
     check_application_readiness,
     prepare_application_draft,
     prepare_recruiter_message,
+)
+from backend.app.services.submission_eligibility import (
+    EligibilityDecision,
+    evaluate_submission_eligibility,
 )
 
 router = APIRouter(prefix="/api/v1/preparation", tags=["Application Preparation"])
@@ -118,7 +131,7 @@ def create_application_submission_plan(
     session: Session = Depends(get_session),
     _guard: None = Depends(require_local_same_origin),
 ) -> dict[str, Any]:
-    """Freeze and persist an immutable submission plan with SHA-256 integrity hash."""
+    """Freeze and persist an immutable submission plan with authoritative policy evaluation."""
     posting = session.get(JobPosting, payload.job_posting_id)
     if posting is None:
         posting = session.scalar(
@@ -150,6 +163,34 @@ def create_application_submission_plan(
             app.reviewed_cover_letter_markdown = payload.cover_letter_text
         session.flush()
 
+    # Enforce non-empty, reviewed application materials (no placeholder fabrication)
+    resume_content = (payload.resume_text or app.reviewed_resume_markdown or "").strip()
+    cover_content = (payload.cover_letter_text or app.reviewed_cover_letter_markdown or "").strip()
+    if not resume_content or not cover_content:
+        raise HTTPException(
+            status_code=422,
+            detail="APPLICATION_MATERIALS_INCOMPLETE: Reviewed resume and cover letter markdown are both required to freeze a submission plan.",
+        )
+
+    # Authoritative deterministic policy gating (fail closed)
+    eligibility = evaluate_submission_eligibility(
+        session,
+        job_posting_id=posting.id,
+        current_application_id=app.id,
+    )
+
+    if eligibility.overall_decision == EligibilityDecision.BLOCKED:
+        raise HTTPException(
+            status_code=422,
+            detail=f"POLICY_BLOCKED: Submission plan blocked by policy: {'; '.join(eligibility.blocking_reasons)}",
+        )
+
+    if eligibility.overall_decision == EligibilityDecision.REVIEW_REQUIRED:
+        raise HTTPException(
+            status_code=422,
+            detail=f"POLICY_REVIEW_REQUIRED: Submission plan requires verified evidence: {'; '.join(eligibility.review_reasons)}",
+        )
+
     sub = session.get(EmployerSubscription, posting.subscription_id)
     employer_handle = sub.employer_handle if sub else "unknown"
 
@@ -160,9 +201,6 @@ def create_application_submission_plan(
         .limit(1)
     )
     job_title = snapshot.title if snapshot else "Target Role"
-
-    resume_content = payload.resume_text or app.reviewed_resume_markdown or "Resume Content"
-    cover_content = payload.cover_letter_text or app.reviewed_cover_letter_markdown or "Cover Letter"
 
     plan_id = str(uuid.uuid4())
     is_reviewed = bool(app.reviewed_resume_markdown and app.reviewed_cover_letter_markdown)
@@ -177,8 +215,8 @@ def create_application_submission_plan(
         resume_markdown=resume_content,
         cover_letter_markdown=cover_content,
         answers=[],
-        is_compensation_eligible=True,
-        is_cooldown_clear=True,
+        is_compensation_eligible=eligibility.is_compensation_eligible,
+        is_cooldown_clear=eligibility.is_cooldown_clear,
         compensation_threshold_version=1,
         review_state=review_state,
     )
@@ -204,6 +242,8 @@ def create_application_submission_plan(
     return {
         "plan_id": plan.plan_id,
         "plan_hash": plan.packet_sha256,
+        "is_compensation_eligible": plan.is_compensation_eligible,
+        "is_cooldown_clear": plan.is_cooldown_clear,
         "message": "Submission plan created and cryptographically signed for review.",
     }
 
@@ -214,7 +254,19 @@ def simulate_ats_dispatch(
     session: Session = Depends(get_session),
     _guard: None = Depends(require_local_same_origin),
 ) -> dict[str, Any]:
-    """Run an offline dry-run ATS simulation without external network transmission."""
+    """Execute an offline dry-run ATS simulation without external network transmission.
+
+    Guarantees:
+    1. Loads the actual persisted submission plan.
+    2. Validates plan SHA-256 integrity hash.
+    3. Verifies that the plan matches target posting and application.
+    4. Verifies actual reviewed application material is present.
+    5. Re-evaluates current eligibility and policy gates.
+    6. Rejects blocked or review-required plans fail-closed.
+    7. Enforces idempotency via persisted ApplicationAttempt table.
+    8. Persistently records attempt outcome and simulation receipt.
+    9. Never performs external HTTP transmission.
+    """
     posting = session.get(JobPosting, payload.job_posting_id)
     if posting is None:
         posting = session.scalar(
@@ -228,29 +280,189 @@ def simulate_ats_dispatch(
         .where(TrackedApplication.job_posting_id == posting.id)
         .limit(1)
     )
+    if app is None:
+        raise HTTPException(status_code=404, detail="APPLICATION_NOT_FOUND: No application record exists for this posting.")
 
-    adapter = SimulatedAtsAdapter()
+    # 1. Load actual persisted submission plan
+    if payload.plan_id:
+        plan_model = session.get(SubmissionPlanModel, payload.plan_id)
+    else:
+        plan_model = session.scalar(
+            select(SubmissionPlanModel)
+            .where(SubmissionPlanModel.job_posting_id == posting.id)
+            .order_by(SubmissionPlanModel.created_at.desc())
+            .limit(1)
+        )
+
+    if plan_model is None:
+        raise HTTPException(
+            status_code=404,
+            detail="SUBMISSION_PLAN_NOT_FOUND: No persisted submission plan exists for this posting. Create a plan first.",
+        )
+
+    # 2. Verify SHA-256 integrity hashes
+    if (
+        not plan_model.packet_sha256
+        or len(plan_model.packet_sha256) != 64
+        or not plan_model.resume_sha256
+        or len(plan_model.resume_sha256) != 64
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail="INVALID_PLAN_INTEGRITY_HASH: Submission plan has missing or malformed SHA-256 hashes.",
+        )
+
+    # 3. Verify plan references intended posting and application
+    if plan_model.job_posting_id != posting.id:
+        raise HTTPException(
+            status_code=422,
+            detail="PLAN_POSTING_MISMATCH: Plan references a different job posting.",
+        )
+    if plan_model.application_id != app.id:
+        raise HTTPException(
+            status_code=422,
+            detail="PLAN_APPLICATION_MISMATCH: Plan references a different application record.",
+        )
+
+    # 4. Verify actual reviewed application material exists
+    resume_content = (app.reviewed_resume_markdown or app.submitted_resume_snapshot or "").strip()
+    cover_content = (app.reviewed_cover_letter_markdown or app.submitted_cover_letter_snapshot or "").strip()
+    if not resume_content or not cover_content:
+        raise HTTPException(
+            status_code=422,
+            detail="APPLICATION_MATERIALS_INCOMPLETE: Cannot simulate submission without reviewed resume and cover letter markdown.",
+        )
+
+    # 5 & 6. Re-evaluate current eligibility and policy gates
+    eligibility = evaluate_submission_eligibility(
+        session,
+        job_posting_id=posting.id,
+        current_application_id=app.id,
+    )
+
+    # Determine attempt number
+    current_attempt_count = session.scalar(
+        select(func.count(ApplicationAttempt.id))
+        .where(ApplicationAttempt.submission_plan_id == plan_model.id)
+    ) or 0
+    attempt_number = current_attempt_count + 1
+    idempotency_key = f"sim_{plan_model.id}_{attempt_number}"
+
+    # Check for existing idempotent successful attempt
+    existing_success = session.scalar(
+        select(ApplicationAttempt)
+        .where(
+            ApplicationAttempt.submission_plan_id == plan_model.id,
+            ApplicationAttempt.status == "COMPLETED",
+            ApplicationAttempt.outcome == "SUCCESS",
+        )
+        .order_by(ApplicationAttempt.started_at.desc())
+        .limit(1)
+    )
+    if existing_success:
+        return {
+            "simulation_id": existing_success.id,
+            "receipt": existing_success.simulated_receipt,
+            "dry_run": True,
+            "status": "SIMULATED_SUCCESS",
+            "is_idempotent_replay": True,
+        }
+
+    # Reject blocked or review-required plans
+    if eligibility.overall_decision == EligibilityDecision.BLOCKED:
+        attempt = ApplicationAttempt(
+            id=str(uuid.uuid4()),
+            application_id=app.id,
+            submission_plan_id=plan_model.id,
+            attempt_number=attempt_number,
+            idempotency_key=idempotency_key,
+            simulation_mode="BLOCKED",
+            plan_sha256=plan_model.packet_sha256,
+            status="FAILED",
+            outcome="BLOCKED",
+            error_code="POLICY_BLOCKED",
+            error_message="; ".join(eligibility.blocking_reasons),
+            metadata_json={"reasons": eligibility.blocking_reasons},
+            completed_at=datetime.now(timezone.utc),
+        )
+        session.add(attempt)
+        session.commit()
+        raise HTTPException(
+            status_code=422,
+            detail=f"POLICY_BLOCKED: Simulation rejected by policy gate: {'; '.join(eligibility.blocking_reasons)}",
+        )
+
+    if eligibility.overall_decision == EligibilityDecision.REVIEW_REQUIRED:
+        attempt = ApplicationAttempt(
+            id=str(uuid.uuid4()),
+            application_id=app.id,
+            submission_plan_id=plan_model.id,
+            attempt_number=attempt_number,
+            idempotency_key=idempotency_key,
+            simulation_mode="REVIEW_REQUIRED",
+            plan_sha256=plan_model.packet_sha256,
+            status="FAILED",
+            outcome="REVIEW_REQUIRED",
+            error_code="POLICY_REVIEW_REQUIRED",
+            error_message="; ".join(eligibility.review_reasons),
+            metadata_json={"reasons": eligibility.review_reasons},
+            completed_at=datetime.now(timezone.utc),
+        )
+        session.add(attempt)
+        session.commit()
+        raise HTTPException(
+            status_code=422,
+            detail=f"POLICY_REVIEW_REQUIRED: Simulation requires verified evidence: {'; '.join(eligibility.review_reasons)}",
+        )
+
+    # Execute simulation via SimulatedAtsAdapter
     packet = {
         "job_posting_id": posting.id,
-        "is_compensation_eligible": True,
-        "is_cooldown_clear": True,
-        "resume_markdown": "Simulated Resume",
-        "cover_letter_markdown": "Simulated Cover Letter",
+        "is_compensation_eligible": eligibility.is_compensation_eligible,
+        "is_cooldown_clear": eligibility.is_cooldown_clear,
+        "resume_markdown": resume_content,
+        "cover_letter_markdown": cover_content,
+        "packet_sha256": plan_model.packet_sha256,
     }
-    result = adapter.simulate_dispatch(submission_packet=packet)
+    adapter = SimulatedAtsAdapter()
+    sim_result = adapter.simulate_dispatch(submission_packet=packet)
 
-    status_label = "SIMULATED_SUCCESS" if result.success else "SIMULATED_FAILURE"
+    status_label = "SIMULATED_SUCCESS" if sim_result.success else "SIMULATED_FAILURE"
     receipt_str = (
         f"Simulated ATS Submission Receipt (Dry-Run)\n"
         f"Job ID: {posting.id}\n"
-        f"Receipt ID: {result.simulated_receipt_id}\n"
+        f"Plan ID: {plan_model.id}\n"
+        f"Plan SHA-256: {plan_model.packet_sha256}\n"
+        f"Receipt ID: {sim_result.simulated_receipt_id}\n"
         f"Status: {status_label}\n"
         f"Dispatched via: Local Loopback Simulated ATS\n"
         f"State: Verified Dry-Run Complete. Application state remains user-controlled."
     )
 
+    attempt = ApplicationAttempt(
+        id=str(uuid.uuid4()),
+        application_id=app.id,
+        submission_plan_id=plan_model.id,
+        attempt_number=attempt_number,
+        idempotency_key=idempotency_key,
+        simulation_mode="SUCCESS" if sim_result.success else "FAILED",
+        plan_sha256=plan_model.packet_sha256,
+        status="COMPLETED" if sim_result.success else "FAILED",
+        outcome="SUCCESS" if sim_result.success else "FAILED",
+        error_code=sim_result.error_code,
+        error_message=sim_result.error_message,
+        simulated_receipt=receipt_str,
+        metadata_json={
+            "duration_ms": sim_result.duration_ms,
+            "mode_used": sim_result.mode_used,
+        },
+        completed_at=datetime.now(timezone.utc),
+    )
+    session.add(attempt)
+    session.commit()
+
     return {
-        "simulation_id": result.simulated_receipt_id or str(uuid.uuid4()),
+        "simulation_id": attempt.id,
         "receipt": receipt_str,
         "dry_run": True,
         "status": status_label,
@@ -284,9 +496,9 @@ def get_submission_readiness(
     posting_id: str,
     session: Session = Depends(get_session),
 ) -> dict[str, Any]:
-    """Check application readiness across compensation floor, cooldown rules, and fact verification."""
+    """Audit application readiness across compensation floor, cooldown rules, and fact verification states."""
     try:
-        report = check_application_readiness(session, posting_id)
+        report = check_application_readiness(session, posting_id=posting_id)
     except ApplicationPreparationError as exc:
         if exc.code in {"POSTING_NOT_FOUND", "SNAPSHOT_NOT_FOUND"}:
             raise HTTPException(status_code=404, detail=exc.code)

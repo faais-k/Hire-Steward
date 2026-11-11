@@ -162,34 +162,15 @@ def check_application_readiness(
         except Exception:
             has_resume = False
 
-    # Check compensation policy gate
-    comp_assessment = session.scalar(
-        select(CompensationAssessment)
-        .where(
-            (CompensationAssessment.job_reference == posting.id)
-            | (CompensationAssessment.job_reference == posting.posting_id)
-        )
-        .order_by(CompensationAssessment.created_at.desc())
-        .limit(1)
+    # Evaluate deterministic compensation and cooldown policies via authoritative service
+    from backend.app.services.submission_eligibility import evaluate_submission_eligibility
+    eligibility = evaluate_submission_eligibility(
+        session,
+        posting.id,
+        current_application_id=app.id if app else None,
     )
-    meets_floor = True
-    if comp_assessment is not None and comp_assessment.outcome == "BLOCKED":
-        meets_floor = False
-
-    # Check cooldown
-    is_cooldown = False
-    if posting.subscription_id:
-        existing_sub_app = session.scalar(
-            select(TrackedApplication)
-            .join(JobPosting, TrackedApplication.job_posting_id == JobPosting.id)
-            .where(
-                JobPosting.subscription_id == posting.subscription_id,
-                TrackedApplication.status.in_(["SUBMITTED", "INTERVIEWING", "ACCEPTED"]),
-            )
-            .limit(1)
-        )
-        if existing_sub_app and existing_sub_app.job_posting_id != posting.id:
-            is_cooldown = True
+    meets_floor = eligibility.is_compensation_eligible
+    is_cooldown = not eligibility.is_cooldown_clear
 
     # Check candidate evidence state counts
     evidence = load_candidate_evidence(session)

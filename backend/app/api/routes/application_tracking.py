@@ -305,57 +305,15 @@ def create_submission_plan(
         for a in answers_db
     ]
 
-    # Evaluate compensation policy against persisted assessments (fail closed)
-    comp_assess = session.scalar(
-        select(CompensationAssessment)
-        .where(CompensationAssessment.job_reference == posting.id)
-        .order_by(CompensationAssessment.created_at.desc())
-        .limit(1)
+    # Evaluate compensation and cooldown policy via authoritative service (fail closed)
+    from backend.app.services.submission_eligibility import evaluate_submission_eligibility
+    eligibility = evaluate_submission_eligibility(
+        session,
+        posting.id,
+        current_application_id=app.id,
     )
-    is_compensation_eligible = False
-    if comp_assess is not None:
-        if (
-            comp_assess.reported_status == "PAID"
-            and comp_assess.evidence_verification_state == "VERIFIED"
-            and comp_assess.outcome == "MEETS_THRESHOLD"
-        ):
-            is_compensation_eligible = True
-
-    # Evaluate same-company cooldown policy (fail closed on unknown employer)
-    is_cooldown_clear = False
-    if employer_handle and employer_handle.strip() and employer_handle != "unknown":
-        settings_dict = get_user_settings(session)
-        cooldown_days = int(settings_dict.get("same_company_cooldown_days", 90))
-        cutoff = datetime.now(timezone.utc) - timedelta(days=cooldown_days)
-
-        matching_sub_ids = list(session.scalars(
-            select(EmployerSubscription.id).where(EmployerSubscription.employer_handle == employer_handle)
-        ).all())
-
-        if matching_sub_ids:
-            matching_posting_ids = list(session.scalars(
-                select(JobPosting.id).where(JobPosting.subscription_id.in_(matching_sub_ids))
-            ).all())
-            if matching_posting_ids:
-                prior_app = session.scalar(
-                    select(TrackedApplication)
-                    .where(
-                        TrackedApplication.job_posting_id.in_(matching_posting_ids),
-                        TrackedApplication.id != app.id,
-                        TrackedApplication.status.in_([
-                            ApplicationStatus.APPLIED.value,
-                            ApplicationStatus.INTERVIEWING.value,
-                            ApplicationStatus.OFFER_RECEIVED.value,
-                        ]),
-                        TrackedApplication.created_at >= cutoff,
-                    )
-                    .limit(1)
-                )
-                is_cooldown_clear = (prior_app is None)
-            else:
-                is_cooldown_clear = True
-        else:
-            is_cooldown_clear = True
+    is_compensation_eligible = eligibility.is_compensation_eligible
+    is_cooldown_clear = eligibility.is_cooldown_clear
 
     import uuid
     plan_id = str(uuid.uuid4())

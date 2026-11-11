@@ -775,10 +775,10 @@ def assess_application_readiness(
                 name="Compensation Policy Gate",
                 passed=False,
                 severity="BLOCKING",
-                details="Target compensation is below your configured hard compensation floor. Submission blocked.",
+                details="Target compensation is below your configured hard compensation floor, unverified, or confirmed unpaid. Submission blocked.",
             )
         )
-        blocking_issues.append("Compensation below hard floor")
+        blocking_issues.append("Compensation below hard floor or unverified")
     else:
         checks.append(
             ReadinessCheckItem(
