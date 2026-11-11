@@ -325,8 +325,8 @@ def create_submission_plan(
 
     import uuid
     plan_id = str(uuid.uuid4())
-    is_reviewed = bool(app.reviewed_resume_markdown and app.reviewed_cover_letter_markdown)
-    review_state = "USER_REVIEWED" if is_reviewed else "UNREVIEWED"
+    # Creating a plan must never imply user approval; all new plans remain UNREVIEWED
+    review_state = "UNREVIEWED"
 
     plan = SubmissionPlan.create(
         plan_id=plan_id,
@@ -369,16 +369,43 @@ def create_submission_plan(
         app.reviewed_resume_markdown = resume
     if not app.reviewed_cover_letter_markdown:
         app.reviewed_cover_letter_markdown = cover_letter
-    app.reviewed_resume_sha256 = plan.resume_sha256
-    app.reviewed_cover_letter_sha256 = plan.cover_letter_sha256
-    app.review_approval_state = "APPROVED"
-    app.approved_submission_plan_id = plan.plan_id
-    if not app.reviewed_at:
-        app.reviewed_at = now
+
+    # Do not overwrite a previous approval with a new approval when creating or editing a plan.
+    # A newly created plan must require a new approval, even when the user previously approved another plan.
+    # Therefore, creating a new plan does NOT approve this plan.
+    if not app.approved_submission_plan_id:
+        app.review_approval_state = "REVIEW_REQUIRED"
 
     session.commit()
 
     return plan.to_dict()
+
+
+@router.post("/applications/{application_id}/plans/{plan_id}/approve")
+def approve_application_plan(
+    application_id: str,
+    plan_id: str,
+    session: Session = Depends(get_session),
+    _guard: None = Depends(require_local_same_origin),
+) -> dict[str, Any]:
+    """Explicitly review and approve a frozen submission plan for this application."""
+    from backend.app.services.simulation_service import (
+        approve_submission_plan_and_application,
+        SimulationNotFoundError,
+        SimulationIntegrityError,
+        SimulationMaterialsError,
+        SimulationMismatchError,
+    )
+    try:
+        return approve_submission_plan_and_application(
+            session,
+            plan_id=plan_id,
+            application_id=application_id,
+        )
+    except SimulationNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.code)
+    except (SimulationIntegrityError, SimulationMaterialsError, SimulationMismatchError) as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"{exc.code}: {exc.message}")
 
 
 class SimulateSubmissionRequest(BaseModel):
@@ -398,6 +425,12 @@ def simulate_submission(
     app = get_tracked_application(session, application_id)
 
     mode = payload.mode if payload and payload.mode else "SUCCESS"
+    from backend.app.adapters.simulated_ats import VALID_SIMULATION_MODES
+    if mode not in VALID_SIMULATION_MODES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid simulation mode '{mode}'. Valid modes: {sorted(VALID_SIMULATION_MODES)}",
+        )
     idempotency_key = payload.idempotency_key if payload and payload.idempotency_key else None
 
     # Resolve or create plan

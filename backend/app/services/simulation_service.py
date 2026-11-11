@@ -233,7 +233,12 @@ def verify_plan_integrity(
 
     # 4. Canonical packet reconstruction & recomputation
     answers = plan_model.answers_json if isinstance(plan_model.answers_json, list) else []
-    review_state = getattr(plan_model, "review_state", None) or "USER_REVIEWED"
+    review_state = getattr(plan_model, "review_state", None)
+    if not review_state:
+        raise SimulationIntegrityError(
+            "MISSING_PLAN_REVIEW_STATE",
+            "Submission plan is missing review_state metadata.",
+        )
 
     computed_packet_hash = compute_canonical_packet_hash(
         application_id=plan_model.application_id,
@@ -301,6 +306,13 @@ def execute_simulation(
         SimulationResult with complete execution details.
     """
     start_time = datetime.now(timezone.utc)
+
+    # Validate simulation mode
+    from backend.app.adapters.simulated_ats import VALID_SIMULATION_MODES
+    if mode not in VALID_SIMULATION_MODES:
+        raise ValueError(
+            f"Invalid simulation mode '{mode}'. Valid modes: {sorted(VALID_SIMULATION_MODES)}"
+        )
 
     # 1. Resolve posting
     posting: JobPosting | None = None
@@ -381,7 +393,218 @@ def execute_simulation(
             "Cannot simulate submission without reviewed resume and cover letter markdown.",
         )
 
-    # 6. Idempotency check: check if an attempt with matching idempotency_key or plan exists
+    # 5. Determine attempt number and key
+    current_attempt_count = session.scalar(
+        select(func.count(ApplicationAttempt.id)).where(
+            ApplicationAttempt.application_id == app.id
+        )
+    ) or 0
+    attempt_number = current_attempt_count + 1
+    effective_idemp_key = idempotency_key or f"sim_{plan_model.id}_{attempt_number}"
+
+    # 6. Actual SHA-256 integrity verification (Strictly BEFORE any cached-success replay)
+    try:
+        verify_plan_integrity(
+            plan_model,
+            current_resume_text=resume_content,
+            current_cover_letter_text=cover_content,
+        )
+    except (SimulationIntegrityError, SimulationMaterialsError) as exc:
+        attempt_key = effective_idemp_key
+        while session.scalar(
+            select(ApplicationAttempt.id).where(
+                ApplicationAttempt.application_id == app.id,
+                ApplicationAttempt.idempotency_key == attempt_key,
+            )
+        ) is not None:
+            attempt_key = f"{effective_idemp_key}_failed_{attempt_number}_{uuid.uuid4().hex[:8]}"
+        attempt = _persist_attempt(
+            session,
+            app=app,
+            plan_model=plan_model,
+            attempt_number=attempt_number,
+            idempotency_key=attempt_key,
+            simulation_mode=mode,
+            status="FAILED",
+            outcome="FAILED",
+            error_code=exc.code,
+            error_message=exc.message,
+            started_at=start_time,
+        )
+        if raise_on_policy_failure:
+            raise
+        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
+
+    # 7. Re-evaluate current eligibility and policy gates (fail closed)
+    eligibility = evaluate_submission_eligibility(
+        session,
+        job_posting_id=posting.id,
+        current_application_id=app.id,
+    )
+
+    if eligibility.overall_decision == EligibilityDecision.BLOCKED:
+        err_msg = "; ".join(eligibility.blocking_reasons)
+        err_code = "INELIGIBLE_COMPENSATION" if not eligibility.is_compensation_eligible else "ACTIVE_COOLDOWN"
+        if idempotency_key:
+            existing_by_key = session.scalar(
+                select(ApplicationAttempt).where(
+                    ApplicationAttempt.application_id == app.id,
+                    ApplicationAttempt.idempotency_key == idempotency_key,
+                )
+            )
+            if existing_by_key is not None:
+                if raise_on_policy_failure:
+                    raise SimulationPolicyError(
+                        "POLICY_BLOCKED",
+                        f"Simulation rejected by policy gate: {err_msg}",
+                        is_blocked=True,
+                    )
+                return _build_result_from_attempt(existing_by_key, is_replay=True, app_status=app.status)
+        attempt_key = effective_idemp_key
+        while session.scalar(
+            select(ApplicationAttempt.id).where(
+                ApplicationAttempt.application_id == app.id,
+                ApplicationAttempt.idempotency_key == attempt_key,
+            )
+        ) is not None:
+            attempt_key = f"{effective_idemp_key}_failed_{attempt_number}_{uuid.uuid4().hex[:8]}"
+        attempt = _persist_attempt(
+            session,
+            app=app,
+            plan_model=plan_model,
+            attempt_number=attempt_number,
+            idempotency_key=attempt_key,
+            simulation_mode=mode,
+            status="SIMULATED_FAILURE",
+            outcome="FAILED",
+            error_code=err_code,
+            error_message=err_msg,
+            metadata={"reasons": eligibility.blocking_reasons, "eligibility": "BLOCKED"},
+            started_at=start_time,
+        )
+        if raise_on_policy_failure:
+            raise SimulationPolicyError(
+                "POLICY_BLOCKED",
+                f"Simulation rejected by policy gate: {err_msg}",
+                is_blocked=True,
+            )
+        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
+
+    if eligibility.overall_decision == EligibilityDecision.REVIEW_REQUIRED:
+        err_msg = "; ".join(eligibility.review_reasons)
+        err_code = "INELIGIBLE_COMPENSATION" if not eligibility.is_compensation_eligible else "POLICY_REVIEW_REQUIRED"
+        if idempotency_key:
+            existing_by_key = session.scalar(
+                select(ApplicationAttempt).where(
+                    ApplicationAttempt.application_id == app.id,
+                    ApplicationAttempt.idempotency_key == idempotency_key,
+                )
+            )
+            if existing_by_key is not None:
+                if raise_on_policy_failure:
+                    raise SimulationPolicyError(
+                        "POLICY_REVIEW_REQUIRED",
+                        f"Simulation requires verified evidence: {err_msg}",
+                        is_blocked=False,
+                    )
+                return _build_result_from_attempt(existing_by_key, is_replay=True, app_status=app.status)
+        attempt_key = effective_idemp_key
+        while session.scalar(
+            select(ApplicationAttempt.id).where(
+                ApplicationAttempt.application_id == app.id,
+                ApplicationAttempt.idempotency_key == attempt_key,
+            )
+        ) is not None:
+            attempt_key = f"{effective_idemp_key}_failed_{attempt_number}_{uuid.uuid4().hex[:8]}"
+        attempt = _persist_attempt(
+            session,
+            app=app,
+            plan_model=plan_model,
+            attempt_number=attempt_number,
+            idempotency_key=attempt_key,
+            simulation_mode=mode,
+            status="SIMULATED_FAILURE",
+            outcome="FAILED",
+            error_code=err_code,
+            error_message=err_msg,
+            metadata={"reasons": eligibility.review_reasons, "eligibility": "REVIEW_REQUIRED"},
+            started_at=start_time,
+        )
+        if raise_on_policy_failure:
+            raise SimulationPolicyError(
+                "POLICY_REVIEW_REQUIRED",
+                f"Simulation requires verified evidence: {err_msg}",
+                is_blocked=False,
+            )
+        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
+
+    # 8. Strict Approval Verification (ALL conditions must hold, fail closed on missing/mismatched value)
+    plan_review_state = getattr(plan_model, "review_state", None)
+    app_approval_state = getattr(app, "review_approval_state", None)
+    approved_plan_id = getattr(app, "approved_submission_plan_id", None)
+    app_r_hash = getattr(app, "reviewed_resume_sha256", None)
+    app_cl_hash = getattr(app, "reviewed_cover_letter_sha256", None)
+
+    approval_valid = (
+        plan_review_state == "USER_REVIEWED"
+        and app_approval_state == "APPROVED"
+        and approved_plan_id == plan_model.id
+        and bool(app_r_hash)
+        and app_r_hash == plan_model.resume_sha256
+        and bool(app_cl_hash)
+        and app_cl_hash == plan_model.cover_letter_sha256
+    )
+
+    if not approval_valid:
+        err_msg = (
+            "Application and submission plan have not received explicit candidate approval "
+            "for this exact plan and frozen material."
+        )
+        if idempotency_key:
+            existing_by_key = session.scalar(
+                select(ApplicationAttempt).where(
+                    ApplicationAttempt.application_id == app.id,
+                    ApplicationAttempt.idempotency_key == idempotency_key,
+                )
+            )
+            if existing_by_key is not None:
+                if raise_on_policy_failure:
+                    raise SimulationPolicyError(
+                        "USER_REVIEW_REQUIRED",
+                        err_msg,
+                        is_blocked=False,
+                    )
+                return _build_result_from_attempt(existing_by_key, is_replay=True, app_status=app.status)
+        attempt_key = effective_idemp_key
+        while session.scalar(
+            select(ApplicationAttempt.id).where(
+                ApplicationAttempt.application_id == app.id,
+                ApplicationAttempt.idempotency_key == attempt_key,
+            )
+        ) is not None:
+            attempt_key = f"{effective_idemp_key}_failed_{attempt_number}_{uuid.uuid4().hex[:8]}"
+        attempt = _persist_attempt(
+            session,
+            app=app,
+            plan_model=plan_model,
+            attempt_number=attempt_number,
+            idempotency_key=attempt_key,
+            simulation_mode=mode,
+            status="SIMULATED_FAILURE",
+            outcome="FAILED",
+            error_code="USER_REVIEW_REQUIRED",
+            error_message=err_msg,
+            started_at=start_time,
+        )
+        if raise_on_policy_failure:
+            raise SimulationPolicyError(
+                "USER_REVIEW_REQUIRED",
+                err_msg,
+                is_blocked=False,
+            )
+        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
+
+    # 9. Idempotency replay check (ONLY executed after plan integrity, approval, and policy have all passed!)
     if idempotency_key:
         existing_by_key = session.scalar(
             select(ApplicationAttempt).where(
@@ -404,124 +627,6 @@ def execute_simulation(
         )
         if existing_success:
             return _build_result_from_attempt(existing_success, is_replay=True, app_status=app.status)
-
-    # Determine attempt number and key
-    current_attempt_count = session.scalar(
-        select(func.count(ApplicationAttempt.id)).where(
-            ApplicationAttempt.application_id == app.id
-        )
-    ) or 0
-    attempt_number = current_attempt_count + 1
-    effective_idemp_key = idempotency_key or f"sim_{plan_model.id}_{attempt_number}"
-
-    # 7. Actual SHA-256 integrity verification
-    try:
-        verify_plan_integrity(
-            plan_model,
-            current_resume_text=resume_content,
-            current_cover_letter_text=cover_content,
-        )
-    except (SimulationIntegrityError, SimulationMaterialsError) as exc:
-        attempt = _persist_attempt(
-            session,
-            app=app,
-            plan_model=plan_model,
-            attempt_number=attempt_number,
-            idempotency_key=effective_idemp_key,
-            simulation_mode=mode,
-            status="FAILED",
-            outcome="FAILED",
-            error_code=exc.code,
-            error_message=exc.message,
-            started_at=start_time,
-        )
-        if raise_on_policy_failure:
-            raise
-        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
-
-    # 8. Re-evaluate current eligibility and policy gates (fail closed)
-    eligibility = evaluate_submission_eligibility(
-        session,
-        job_posting_id=posting.id,
-        current_application_id=app.id,
-    )
-
-    if eligibility.overall_decision == EligibilityDecision.BLOCKED:
-        err_msg = "; ".join(eligibility.blocking_reasons)
-        err_code = "INELIGIBLE_COMPENSATION" if not eligibility.is_compensation_eligible else "ACTIVE_COOLDOWN"
-        attempt = _persist_attempt(
-            session,
-            app=app,
-            plan_model=plan_model,
-            attempt_number=attempt_number,
-            idempotency_key=effective_idemp_key,
-            simulation_mode=mode,
-            status="SIMULATED_FAILURE",
-            outcome="FAILED",
-            error_code=err_code,
-            error_message=err_msg,
-            metadata={"reasons": eligibility.blocking_reasons, "eligibility": "BLOCKED"},
-            started_at=start_time,
-        )
-        if raise_on_policy_failure:
-            raise SimulationPolicyError(
-                "POLICY_BLOCKED",
-                f"Simulation rejected by policy gate: {err_msg}",
-                is_blocked=True,
-            )
-        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
-
-    if eligibility.overall_decision == EligibilityDecision.REVIEW_REQUIRED:
-        err_msg = "; ".join(eligibility.review_reasons)
-        err_code = "INELIGIBLE_COMPENSATION" if not eligibility.is_compensation_eligible else "POLICY_REVIEW_REQUIRED"
-        attempt = _persist_attempt(
-            session,
-            app=app,
-            plan_model=plan_model,
-            attempt_number=attempt_number,
-            idempotency_key=effective_idemp_key,
-            simulation_mode=mode,
-            status="SIMULATED_FAILURE",
-            outcome="FAILED",
-            error_code=err_code,
-            error_message=err_msg,
-            metadata={"reasons": eligibility.review_reasons, "eligibility": "REVIEW_REQUIRED"},
-            started_at=start_time,
-        )
-        if raise_on_policy_failure:
-            raise SimulationPolicyError(
-                "POLICY_REVIEW_REQUIRED",
-                f"Simulation requires verified evidence: {err_msg}",
-                is_blocked=False,
-            )
-        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
-
-    # 9. Verify user review state
-    plan_review_state = getattr(plan_model, "review_state", None) or "USER_REVIEWED"
-    app_review_state = getattr(app, "review_approval_state", None) or "APPROVED"
-
-    if plan_review_state != "USER_REVIEWED" and app_review_state != "APPROVED":
-        err_msg = "Application materials have not received explicit candidate approval."
-        attempt = _persist_attempt(
-            session,
-            app=app,
-            plan_model=plan_model,
-            attempt_number=attempt_number,
-            idempotency_key=effective_idemp_key,
-            simulation_mode=mode,
-            status="SIMULATED_FAILURE",
-            outcome="FAILED",
-            error_code="USER_REVIEW_REQUIRED",
-            error_message=err_msg,
-            started_at=start_time,
-        )
-        if raise_on_policy_failure:
-            raise SimulationPolicyError(
-                "USER_REVIEW_REQUIRED",
-                err_msg,
-                is_blocked=False,
-            )
-        return _build_result_from_attempt(attempt, is_replay=False, app_status=app.status)
 
     # 10. Execute simulation dispatch via SimulatedAtsAdapter (loopback only)
     packet = {
@@ -711,3 +816,161 @@ def _build_result_from_attempt(
         application_status=app_status,
         metadata=attempt.metadata_json if isinstance(attempt.metadata_json, dict) else {},
     )
+
+
+# ---------------------------------------------------------------------------
+# Authoritative plan & application approval service
+# ---------------------------------------------------------------------------
+
+
+def approve_submission_plan_and_application(
+    session: Session,
+    plan_id: str,
+    *,
+    application_id: str | None = None,
+) -> dict[str, Any]:
+    """Explicitly review and approve a frozen submission plan and its materials.
+
+    Enforces all acceptance constraints:
+    1. Loads the actual frozen submission plan.
+    2. Recomputes both document hashes from frozen markdown text.
+    3. Verifies canonical packet integrity before approval.
+    4. Confirms application and posting identity.
+    5. Cannot approve a plan with corrupted or missing material.
+    6. Cannot approve a plan whose material differs from the current reviewed application version.
+    7. Atomically records approval against exactly that plan, updating application
+       approval state, document hashes, and review timestamp.
+    """
+    plan = session.get(SubmissionPlanModel, plan_id)
+    if plan is None:
+        raise SimulationNotFoundError("SUBMISSION_PLAN_NOT_FOUND", "Submission plan not found.")
+
+    app = session.get(TrackedApplication, plan.application_id)
+    if app is None:
+        raise SimulationNotFoundError("APPLICATION_NOT_FOUND", "Tracked application not found.")
+
+    posting = session.get(JobPosting, plan.job_posting_id)
+    if posting is None:
+        raise SimulationNotFoundError("POSTING_NOT_FOUND", "Target job posting not found.")
+
+    if app.job_posting_id != posting.id:
+        raise SimulationMismatchError(
+            "APP_POSTING_MISMATCH",
+            f"Application '{app.id}' references posting '{app.job_posting_id}', plan references '{posting.id}'.",
+        )
+
+    if application_id and app.id != application_id:
+        raise SimulationMismatchError(
+            "APPLICATION_MISMATCH",
+            f"Target application '{application_id}' does not match plan application '{app.id}'.",
+        )
+
+    # 1. Check frozen materials are non-empty
+    frozen_resume = getattr(plan, "resume_markdown", None)
+    frozen_cover = getattr(plan, "cover_letter_markdown", None)
+    if not frozen_resume or not frozen_resume.strip() or not frozen_cover or not frozen_cover.strip():
+        raise SimulationMaterialsError(
+            "CORRUPTED_MATERIAL",
+            "Submission plan has missing or empty frozen resume or cover letter markdown.",
+        )
+
+    # 2. Recompute document hashes from frozen markdown
+    computed_r_hash = sha256_hex(frozen_resume)
+    computed_cl_hash = sha256_hex(frozen_cover)
+    if computed_r_hash != plan.resume_sha256:
+        raise SimulationIntegrityError(
+            "RESUME_HASH_MISMATCH",
+            "Frozen resume markdown does not match persisted resume_sha256 digest.",
+        )
+    if computed_cl_hash != plan.cover_letter_sha256:
+        raise SimulationIntegrityError(
+            "COVER_LETTER_HASH_MISMATCH",
+            "Frozen cover letter markdown does not match persisted cover_letter_sha256 digest.",
+        )
+
+    # 3. Verify canonical packet integrity with current review state
+    answers = plan.answers_json if isinstance(plan.answers_json, list) else []
+    current_review_state = getattr(plan, "review_state", None) or "UNREVIEWED"
+    expected_packet_hash = compute_canonical_packet_hash(
+        application_id=plan.application_id,
+        job_posting_id=plan.job_posting_id,
+        employer_handle=plan.employer_handle,
+        target_role=plan.target_role,
+        resume_sha256=computed_r_hash,
+        cover_letter_sha256=computed_cl_hash,
+        answers=answers,
+        is_compensation_eligible=bool(plan.is_compensation_eligible),
+        is_cooldown_clear=bool(plan.is_cooldown_clear),
+        compensation_threshold_version=int(plan.compensation_threshold_version),
+        review_state=current_review_state,
+    )
+    if expected_packet_hash != plan.packet_sha256:
+        raise SimulationIntegrityError(
+            "PACKET_HASH_MISMATCH",
+            "Submission plan canonical packet hash does not match recomputed digest.",
+        )
+
+    # 4. Cannot approve a plan whose material differs from current reviewed application version
+    if app.reviewed_resume_markdown and app.reviewed_resume_markdown.strip():
+        if app.reviewed_resume_markdown.strip() != frozen_resume.strip():
+            raise SimulationMaterialsError(
+                "APPLICATION_MATERIALS_DIFFER",
+                "Current application resume differs from this plan's frozen material. Create a new plan.",
+            )
+        if app.reviewed_resume_sha256 and app.reviewed_resume_sha256 != plan.resume_sha256:
+            raise SimulationMaterialsError(
+                "APPLICATION_MATERIALS_DIFFER",
+                "Current application resume hash differs from this plan's frozen material.",
+            )
+
+    if app.reviewed_cover_letter_markdown and app.reviewed_cover_letter_markdown.strip():
+        if app.reviewed_cover_letter_markdown.strip() != frozen_cover.strip():
+            raise SimulationMaterialsError(
+                "APPLICATION_MATERIALS_DIFFER",
+                "Current application cover letter differs from this plan's frozen material. Create a new plan.",
+            )
+        if app.reviewed_cover_letter_sha256 and app.reviewed_cover_letter_sha256 != plan.cover_letter_sha256:
+            raise SimulationMaterialsError(
+                "APPLICATION_MATERIALS_DIFFER",
+                "Current application cover letter hash differs from this plan's frozen material.",
+            )
+
+    # 5. Atomically record approval against exactly this plan
+    now = datetime.now(timezone.utc)
+    plan.review_state = "USER_REVIEWED"
+    plan.packet_sha256 = compute_canonical_packet_hash(
+        application_id=plan.application_id,
+        job_posting_id=plan.job_posting_id,
+        employer_handle=plan.employer_handle,
+        target_role=plan.target_role,
+        resume_sha256=computed_r_hash,
+        cover_letter_sha256=computed_cl_hash,
+        answers=answers,
+        is_compensation_eligible=bool(plan.is_compensation_eligible),
+        is_cooldown_clear=bool(plan.is_cooldown_clear),
+        compensation_threshold_version=int(plan.compensation_threshold_version),
+        review_state="USER_REVIEWED",
+    )
+
+    app.reviewed_resume_markdown = frozen_resume
+    app.reviewed_cover_letter_markdown = frozen_cover
+    app.reviewed_resume_sha256 = plan.resume_sha256
+    app.reviewed_cover_letter_sha256 = plan.cover_letter_sha256
+    app.reviewed_at = now
+    app.review_approval_state = "APPROVED"
+    app.approved_submission_plan_id = plan.id
+    app.status = ApplicationStatus.READY_FOR_REVIEW.value
+    app.last_status_change_at = now
+
+    session.commit()
+
+    return {
+        "plan_id": plan.id,
+        "application_id": app.id,
+        "review_state": plan.review_state,
+        "approval_state": app.review_approval_state,
+        "packet_hash": plan.packet_sha256,
+        "packet_sha256": plan.packet_sha256,
+        "reviewed_at": now.isoformat(),
+        "message": "Submission plan and frozen materials explicitly approved by candidate.",
+    }

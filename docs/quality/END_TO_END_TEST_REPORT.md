@@ -18,13 +18,13 @@ This report documents the comprehensive validation and quality assurance results
 ### High-Level Quality Scorecard
 | Test Suite / Area | Tests Executed | Passed | Failed | Skipped / Deselected | Pass Rate | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Backend Fast Unit & Integration** | 671 | 671 | 0 | 40 (postgres-tagged) | **100%** | `IMPLEMENTED_AND_VERIFIED` |
-| **PostgreSQL Integration Suite** | 40 | 40 | 0 | 671 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **Backend Fast Unit & Integration** | 681 | 681 | 0 | 40 (postgres-tagged) | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **PostgreSQL Integration Suite** | 40 | 40 | 0 | 681 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **Frontend TypeScript Typecheck** | Strict Mode | Clean | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
-| **Frontend Component Tests (Vitest)**| 10 | 10 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **Frontend Component Tests (Vitest)**| 12 | 12 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **UI Screen Responsiveness & Native Scroll**| 13 screens | 13 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 | **End-to-End User Journeys (1 through 12)** | 12 journeys | 12 | 0 | 0 | **100%** | `IMPLEMENTED_AND_VERIFIED` |
-| **Total Test Execution Count** | **721** | **721** | **0** | **40** | **100%** | `IMPLEMENTED_AND_VERIFIED` |
+| **Total Test Execution Count** | **733** | **733** | **0** | **40** | **100%** | `IMPLEMENTED_AND_VERIFIED` |
 
 ---
 
@@ -34,12 +34,12 @@ This report documents the comprehensive validation and quality assurance results
 Command: `uv run --locked pytest -m "not postgres" -q`
 - **Execution Environment:** Windows PowerShell, Python 3.12 (uv managed).
 - **Core Modules Verified:**
-  - `backend/tests/unit/test_unified_simulation_and_guards.py`: 30 tests verifying SHA-256 hash recomputation, canonical packet serialization check, tampering rejection, unified simulation endpoint routing, and offline source registry enforcement.
+  - `backend/tests/unit/test_unified_simulation_and_guards.py`: 40 tests verifying strict 5-condition approval matrix, upfront mode validation, failure replay idempotency, SHA-256 hash recomputation, canonical packet serialization check, tampering rejection, unified simulation endpoint routing, and offline source registry enforcement.
   - `backend/tests/unit/test_submission_eligibility.py`: 14 tests verifying authoritative fail-closed eligibility, unknown employer identity gating, 5d/29d/30d cooldown boundaries, withdrawn/rejected handling, and Asia/Kolkata timezone support.
-  - `backend/tests/unit/test_preparation_and_simulation.py`: 7 tests verifying SHA-256 plan freeze, rejection of unverified materials, dry-run simulation receipt logging, and idempotent replaying.
+  - `backend/tests/unit/test_preparation_and_simulation.py`: 7 tests verifying SHA-256 plan freeze, rejection of unreviewed/unapproved materials, dry-run simulation receipt logging, and idempotent replaying.
   - `backend/tests/unit/test_source_adapters_contract.py`: 12 tests using `httpx.MockTransport` covering Greenhouse, Ashby, and Lever pagination, 429 rate limit with `Retry-After`, 404 handling, timeouts, and malformed JSON.
   - `backend/tests/integration/test_twelve_journeys_end_to_end.py`: 9 integration tests covering all 12 user journeys across positive and negative paths (real binary document parsing, provenance spans, simulation gates, and full database export/restore validation).
-- **Result:** **671 passed, 40 deselected, 0 failed.**
+- **Result:** **681 passed, 40 deselected, 0 failed.**
 
 ### 2.2 PostgreSQL Isolated Integration Tests
 Command: `uv run --locked pytest -m "postgres" -q`
@@ -52,7 +52,7 @@ Command: `uv run --locked pytest -m "postgres" -q`
 Commands:
 - `npm.cmd --prefix frontend run typecheck`: Strict mode TypeScript compilation — **0 errors**.
 - `npm.cmd --prefix frontend run build`: Vite production build — **Compiled in 1.16s, 0 errors, output in `frontend/dist`**.
-- `npm.cmd --prefix frontend test -- --run`: Vitest component runner — **10 passed, 0 failed** (including 7 fail-closed PreparationView error and retry tests).
+- `npm.cmd --prefix frontend test -- --run`: Vitest component runner — **12 passed, 0 failed** (including 7 fail-closed PreparationView error/retry tests, and new approval workflow tests).
 
 ---
 
@@ -67,7 +67,7 @@ All 12 journeys are automated and verified via `backend/tests/integration/test_t
 
 ### Journey 2: Document Ingestion, Provenance & Fact Review State Machine
 - **Workflow:** Ingest candidate document, link candidate facts, and review state machine via `POST /api/v1/facts/{id}/verify`.
-- **Observed Behavior:** Fact verification state progresses correctly from `UNREVIEWED` to `USER_VERIFIED`.
+- **Observed Behavior:** Fact verification state progresses correctly from `UNREVIEWED` to `USER_VERIFIED`. Note: Raw document bytes are uploaded to the parser, but fact extraction and database provenance records in automated tests are unit/contract verified rather than using live external AI services.
 - **Status:** `IMPLEMENTED_AND_VERIFIED`
 
 ### Journey 3 & 4: Job Intake, Querying, and Deterministic Match Scoring
@@ -85,9 +85,9 @@ All 12 journeys are automated and verified via `backend/tests/integration/test_t
 - **Observed Behavior:** No ungrounded claims; tailored draft strictly cites verified evidence.
 - **Status:** `IMPLEMENTED_AND_VERIFIED`
 
-### Journey 7 & 8: Submission Plan Freezing & Dry-Run ATS Simulation
-- **Workflow:** Freeze submission plan with SHA-256 packet hash. Dry-run simulation executes against sandbox, verifies hash, and logs receipt in `ApplicationAttempt`. Replay is idempotent.
-- **Observed Behavior:** Idempotent simulation receipt returned; zero external network egress. Autonomous live submission is `NOT_APPLICABLE_BY_DESIGN`.
+### Journey 7 & 8: Submission Plan Freezing, Explicit Approval & Dry-Run ATS Simulation
+- **Workflow:** Freeze submission plan with SHA-256 packet hash (`review_state = "UNREVIEWED"`). Plan creation never auto-approves. Explicit user approval is executed via `POST /api/v1/preparation/plan/{plan_id}/approve` (or tracked application approval endpoint). Dry-run simulation executes against sandbox, verifies hash, and logs receipt in `ApplicationAttempt`. Replay is idempotent.
+- **Observed Behavior:** Plan creation leaves state `UNREVIEWED`. Backend simulation requires strict 5-condition approval matrix. In `PreparationView.tsx`, UI presents workflow stages (`DRAFT`, `PLAN_CREATED`, `APPROVED`, etc.), `#prep-stage-badge`, `#prep-approve-btn`, disables simulation until approved, and edits to materials automatically invalidate approval back to `DRAFT`. Replay ordering guarantees integrity and policy checks precede cached-success replays. Autonomous live submission is `NOT_APPLICABLE_BY_DESIGN`.
 - **Status:** `IMPLEMENTED_AND_VERIFIED`
 
 ### Journey 9: Application Tracking & Stage Transition History
@@ -97,7 +97,7 @@ All 12 journeys are automated and verified via `backend/tests/integration/test_t
 
 ### Journey 10: Data Portability & Workspace Export
 - **Workflow:** Invoke `GET /api/v1/data/export` to retrieve complete JSON archive.
-- **Observed Behavior:** Complete candidate profile, settings, applications, and answers exported with relational integrity.
+- **Observed Behavior:** Complete candidate profile, settings, applications, and answers exported with relational integrity. Note: The data portability drill in Journey 10 uses isolated SQLite restore, while the full PostgreSQL restore drill is verified in `test_workspace_first_run_acceptance.py`.
 - **Status:** `IMPLEMENTED_AND_VERIFIED`
 
 ### Journey 11: AI Provider Configuration & Offline-Default Operation

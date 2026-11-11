@@ -28,8 +28,8 @@ To ensure total transparency and avoid misleading claims, all system capabilitie
 | **Document Parsing & Evidence Storage** | `IMPLEMENTED_AND_VERIFIED` | PDF, DOCX, TXT, CSV, XLSX with decompression bomb safety, byte-span provenance, and review state machine. |
 | **Deterministic Compensation Engine** | `IMPLEMENTED_AND_VERIFIED` | Fail-closed: unverified evidence requires review; confirmed unpaid roles or below-floor jobs blocked. |
 | **Same-Company 30-Day Cooldown** | `IMPLEMENTED_AND_VERIFIED` | Authoritative eligibility service with 5d, 29d, 30d, >30d, rejected/withdrawn, and Asia/Kolkata boundary tests. |
-| **Submission Planning & Hash Freezing** | `IMPLEMENTED_AND_VERIFIED` | Migration 0011 immutable plan freeze with frozen markdown text, review state approval tracking, and SHA-256 canonical packet hashing. |
-| **Dry-Run ATS Simulation** | `IMPLEMENTED_AND_VERIFIED` | Unified cryptographic simulation service (`simulation_service.py`), SHA-256 recomputation from frozen text, canonical packet verification, idempotent rehearsal, persistent receipts in ApplicationAttempt table, zero external egress. |
+| **Submission Planning & Hash Freezing** | `IMPLEMENTED_AND_VERIFIED` | Migration 0011 immutable plan freeze with frozen markdown text, review state `UNREVIEWED` by default (no auto-approval), explicit approval tracking, and SHA-256 canonical packet hashing. |
+| **Dry-Run ATS Simulation** | `IMPLEMENTED_AND_VERIFIED` | Unified cryptographic simulation service (`simulation_service.py`), SHA-256 recomputation from frozen text, canonical packet verification, strict 5-condition approval gate, replay ordering (integrity & policy checks strictly precede cached-success replay lookup), idempotent rehearsal, persistent receipts in ApplicationAttempt table, zero external egress. |
 | **Autonomous External ATS Submission** | `NOT_APPLICABLE_BY_DESIGN` | Human-controlled handoff only. Automated submission to external portals is prohibited by ADR-0003. |
 | **Answer Bank & Granular Consent** | `IMPLEMENTED_AND_VERIFIED` | `reuse_consent` defaults to False; opt-in consent strictly required for automated reuse. |
 | **Job Source Registry & Manual Intake** | `IMPLEMENTED_AND_VERIFIED` | User manual intake with instant indexing, fit calculation, and deduplication. |
@@ -81,7 +81,8 @@ To ensure total transparency and avoid misleading claims, all system capabilitie
   - **Categorized Error Banners:** Clear error display (`API_UNAVAILABLE`, `POLICY_BLOCKED`, `VALIDATION_FAILURE`, etc.) with retry actions.
   - Personalized recruiter outreach drafting requiring true backend response.
   - Automated submission readiness policy audit via authoritative eligibility service.
-  - Submission plan creation with true SHA-256 cryptographic packet hashing.
+  - Submission plan creation with true SHA-256 cryptographic packet hashing (created in `UNREVIEWED` state without automatic approval).
+  - **Explicit Approval Workflow:** UI surfaces workflow stages (`DRAFT` -> `PLAN_CREATED` -> `APPROVED` -> `SIMULATION_SUCCESS`), `#prep-stage-badge`, `#prep-approve-btn`, disables simulation until approved, and edits to materials automatically invalidate approval back to `DRAFT`.
   - Simulated ATS dry-run execution with persistent receipts in `ApplicationAttempt`.
   - Autonomous external ATS submission is `NOT_APPLICABLE_BY_DESIGN` (human-controlled handoff only).
 
@@ -165,9 +166,9 @@ To ensure total transparency and avoid misleading claims, all system capabilitie
 | Subsystem | Components | Unit / Integration Coverage | Status |
 | :--- | :--- | :--- | :--- |
 | **Authentication & Loopback Guard** | `LocalClientOnlyMiddleware`, `require_local_same_origin` | Loopback socket check, origin header check | **VERIFIED** |
-| **Database & Migrations** | PostgreSQL 17.11, Alembic Head `0010` (28 public tables) | `jobpilot_test` isolated schema migrations | **VERIFIED** |
+| **Database & Migrations** | PostgreSQL 17.11, Alembic Head `0011` (28 public tables) | `jobpilot_test` isolated schema migrations | **VERIFIED** |
 | **AI Provider Abstraction** | Groq, Gemini, Anthropic, OpenAI, Ollama | Mock transports, token metrics, secret safety | **VERIFIED** |
-| **Preparation & Readiness** | Tailoring, Submission Plan, Simulated ATS, Recruiter Outreach | Deterministic fact citation, policy gates | **VERIFIED** |
+| **Preparation & Readiness** | Tailoring, Submission Plan, Explicit Approval, Simulated ATS, Recruiter Outreach | Deterministic fact citation, strict 5-condition approval gate, policy gates | **VERIFIED** |
 | **Job Discovery Adapters** | Lever, Greenhouse, Ashby, Fixtures | Normalized schemas, SHA-256 provenance hashes | **VERIFIED** |
 | **Candidate Evidence Library** | Fact states, byte-span provenance, document blobs | Content hashing, immutable versioning | **VERIFIED** |
 | **Durable Task Queue** | `background_tasks`, `background_workers`, `heartbeats` | Task dispatch, state transitions, scheduling | **VERIFIED** |

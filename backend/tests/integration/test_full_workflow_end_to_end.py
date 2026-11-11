@@ -260,6 +260,13 @@ Senior Engineer at CloudCorp leading database migrations.
     assert plan_data["application_id"] == app_id
     assert len(plan_data["packet_sha256"]) == 64
 
+    # Explicit candidate approval of the frozen plan
+    approve_res = api_client.post(
+        f"/api/v1/applications/{app_id}/plans/{plan_data['plan_id']}/approve",
+        headers=local_headers(),
+    )
+    assert approve_res.status_code == 200
+
     # Run dry-run simulation (offline safe mock adapter)
     sim_res = api_client.post(
         f"/api/v1/applications/{app_id}/simulate-submission",

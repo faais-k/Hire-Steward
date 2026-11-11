@@ -225,20 +225,11 @@ def create_application_submission_plan(
         app.review_approval_state = "INVALIDATED"
         app.approved_submission_plan_id = None
 
-    if payload.approve:
-        app.reviewed_resume_sha256 = r_hash
-        app.reviewed_cover_letter_sha256 = cl_hash
-        app.reviewed_at = datetime.now(timezone.utc)
-        app.review_approval_state = "APPROVED"
-        app.status = "READY_FOR_REVIEW"
-
-    # Require explicit approval — do not infer USER_REVIEWED from non-empty text
-    is_reviewed = (
-        getattr(app, "review_approval_state", "UNREVIEWED") == "APPROVED"
-        and getattr(app, "reviewed_resume_sha256", None) == r_hash
-        and getattr(app, "reviewed_cover_letter_sha256", None) == cl_hash
-    )
-    review_state = "USER_REVIEWED" if is_reviewed else "UNREVIEWED"
+    # Creating a plan must never imply user approval; all new plans remain UNREVIEWED
+    # until an explicit candidate approval action occurs via POST /plan/{plan_id}/approve
+    review_state = "UNREVIEWED"
+    if not app.approved_submission_plan_id:
+        app.review_approval_state = "REVIEW_REQUIRED"
 
     plan_id = str(uuid.uuid4())
     plan = SubmissionPlan.create(
@@ -275,8 +266,6 @@ def create_application_submission_plan(
         review_state=plan.review_state,
     )
     session.add(plan_model)
-    if is_reviewed:
-        app.approved_submission_plan_id = plan.plan_id
     session.commit()
 
     return {
@@ -294,59 +283,15 @@ def approve_submission_plan(
     session: Session = Depends(get_session),
     _guard: None = Depends(require_local_same_origin),
 ) -> dict[str, Any]:
-    """Explicitly review and approve a frozen submission plan and its materials.
+    """Explicitly review and approve a frozen submission plan and its materials."""
+    from backend.app.services.simulation_service import approve_submission_plan_and_application
 
-    Records:
-    - Reviewed resume hash.
-    - Reviewed cover-letter hash.
-    - Review timestamp.
-    - Related submission plan ID.
-    - Approval state: APPROVED.
-    """
-    plan = session.get(SubmissionPlanModel, plan_id)
-    if plan is None:
-        raise HTTPException(status_code=404, detail="SUBMISSION_PLAN_NOT_FOUND")
-
-    app = session.get(TrackedApplication, plan.application_id)
-    if app is None:
-        raise HTTPException(status_code=404, detail="APPLICATION_NOT_FOUND")
-
-    now = datetime.now(timezone.utc)
-
-    # Re-verify hashes from plan
-    resume_hash = plan.resume_sha256
-    cover_hash = plan.cover_letter_sha256
-
-    # Update plan review state
-    plan.review_state = "USER_REVIEWED"
-
-    # Reconstruct packet with USER_REVIEWED review_state
-    from backend.app.services.simulation_service import compute_canonical_packet_hash
-    answers = plan.answers_json if isinstance(plan.answers_json, list) else []
-    plan.packet_sha256 = compute_canonical_packet_hash(
-        application_id=plan.application_id,
-        job_posting_id=plan.job_posting_id,
-        employer_handle=plan.employer_handle,
-        target_role=plan.target_role,
-        resume_sha256=resume_hash,
-        cover_letter_sha256=cover_hash,
-        answers=answers,
-        is_compensation_eligible=bool(plan.is_compensation_eligible),
-        is_cooldown_clear=bool(plan.is_cooldown_clear),
-        compensation_threshold_version=int(plan.compensation_threshold_version),
-        review_state="USER_REVIEWED",
-    )
-
-    # Update application explicit approval records
-    app.reviewed_resume_sha256 = resume_hash
-    app.reviewed_cover_letter_sha256 = cover_hash
-    app.reviewed_at = now
-    app.review_approval_state = "APPROVED"
-    app.approved_submission_plan_id = plan.id
-    app.status = ApplicationStatus.READY_FOR_REVIEW.value
-    app.last_status_change_at = now
-
-    session.commit()
+    try:
+        return approve_submission_plan_and_application(session, plan_id=plan_id)
+    except SimulationNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=exc.code)
+    except (SimulationIntegrityError, SimulationMaterialsError, SimulationMismatchError) as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"{exc.code}: {exc.message}")
 
     return {
         "plan_id": plan.id,

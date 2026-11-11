@@ -297,6 +297,13 @@ def test_submission_attempts_lifecycle_and_idempotency() -> None:
         assert plan_res.status_code == 200, plan_res.text
         plan_id = plan_res.json()["plan_id"]
 
+        # Explicit candidate approval of frozen plan
+        approve_res = client.post(
+            f"/api/v1/applications/{app_id}/plans/{plan_id}/approve",
+            headers=local_headers(),
+        )
+        assert approve_res.status_code == 200
+
         # 1. First simulated attempt (SUCCESS mode)
         key_1 = f"attempt-key-{uuid.uuid4().hex}"
         sim1_res = client.post(
@@ -584,6 +591,14 @@ def test_complete_20_step_export_import_roundtrip() -> None:
         plan_id = res_plan.json()["plan_id"]
         packet_sha256 = res_plan.json()["packet_sha256"]
         assert len(packet_sha256) == 64
+
+        # Explicit candidate approval of frozen plan
+        approve_res = s_client.post(
+            f"/api/v1/applications/{app_id}/plans/{plan_id}/approve",
+            headers=local_headers(),
+        )
+        assert approve_res.status_code == 200
+        packet_sha256 = approve_res.json()["packet_sha256"]
 
         # -------------------------------------------------------------
         # STEP 12: Simulated Execution Attempt

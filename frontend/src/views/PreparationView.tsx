@@ -17,12 +17,20 @@ interface ReadinessReport {
 }
 
 export interface ActionError {
-  action: 'tailor' | 'plan' | 'simulate' | 'recruiter' | 'readiness';
+  action: 'tailor' | 'plan' | 'approve' | 'simulate' | 'recruiter' | 'readiness';
   category: 'API_UNAVAILABLE' | 'VALIDATION_FAILURE' | 'INSUFFICIENT_EVIDENCE' | 'POLICY_BLOCKED' | 'SERVER_ERROR';
   title: string;
   message: string;
   retryFn: () => void;
 }
+
+export type WorkflowStage =
+  | 'DRAFT'
+  | 'PLAN_CREATED'
+  | 'REVIEW_REQUIRED'
+  | 'APPROVED'
+  | 'SIMULATION_SUCCESS'
+  | 'SIMULATION_FAILED';
 
 export function parseActionError(
   err: unknown,
@@ -107,8 +115,11 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
   const [claims, setClaims] = useState<Array<{ claim: string; fact_id?: string; source_excerpt?: string }>>([]);
   const [simulationReceipt, setSimulationReceipt] = useState<string>('');
   const [createdPlanId, setCreatedPlanId] = useState<string>('');
+  const [planHash, setPlanHash] = useState<string>('');
+  const [workflowStage, setWorkflowStage] = useState<WorkflowStage>('DRAFT');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPlanning, setIsPlanning] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
 
   // Recruiter Outreach State
@@ -131,15 +142,34 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
       setReadinessReport(null);
       setCurrentError(null);
       setSuccessNotice('');
+      setWorkflowStage('DRAFT');
+      setCreatedPlanId('');
+      setPlanHash('');
     } else if (!currentJobId && jobs.length > 0) {
       setCurrentJobId(jobs[0].id);
       setReadinessReport(null);
       setCurrentError(null);
       setSuccessNotice('');
+      setWorkflowStage('DRAFT');
+      setCreatedPlanId('');
+      setPlanHash('');
     }
   }, [selectedJobId, jobs]);
 
-
+  const handleMaterialChange = (type: 'resume' | 'cover', value: string) => {
+    if (type === 'resume') {
+      setResumeText(value);
+    } else {
+      setCoverText(value);
+    }
+    if (workflowStage !== 'DRAFT' || createdPlanId) {
+      setWorkflowStage('DRAFT');
+      setCreatedPlanId('');
+      setPlanHash('');
+      setSimulationReceipt('');
+      setSuccessNotice('Materials modified: previous plan and approval invalidated. Create a new plan to review and approve.');
+    }
+  };
 
   const handleGenerate = async () => {
     if (!currentJobId) return;
@@ -151,6 +181,9 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
       setResumeText(res.tailored_resume || '');
       setCoverText(res.tailored_cover_letter || '');
       setClaims(res.grounded_claims || []);
+      setWorkflowStage('DRAFT');
+      setCreatedPlanId('');
+      setPlanHash('');
       setSuccessNotice('Tailored resume and cover letter successfully generated from verified facts.');
     } catch (err) {
       // Form data is preserved; error is surfaced explicitly without fabricating content
@@ -172,27 +205,68 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
         cover_letter_text: coverText,
       });
       setCreatedPlanId(res.plan_id);
+      setPlanHash(res.plan_hash);
+      setWorkflowStage('PLAN_CREATED');
       setSimulationReceipt(
-        `Submission Plan Created & Signed\n` +
+        `Frozen Submission Plan Created (Unapproved)\n` +
         `Plan ID: ${res.plan_id}\n` +
         `Packet SHA-256: ${res.plan_hash}\n` +
         `Compensation Gate: ${res.is_compensation_eligible ? 'ELIGIBLE' : 'INELIGIBLE'}\n` +
         `Cooldown Gate: ${res.is_cooldown_clear ? 'CLEAR' : 'BLOCKED'}\n` +
-        `Status: Persisted for human review and offline dry-run.`
+        `Approval Status: REVIEW_REQUIRED (Explicit candidate approval required before simulation)`
       );
-      setSuccessNotice('Submission plan successfully frozen with verified SHA-256 hash.');
+      setSuccessNotice('Submission plan successfully frozen with verified SHA-256 hash. Review materials and explicitly approve below.');
     } catch (err) {
       // Never fabricate plan IDs or hashes on failure
       setCreatedPlanId('');
+      setPlanHash('');
       setSimulationReceipt('');
+      setWorkflowStage('DRAFT');
       setCurrentError(parseActionError(err, 'plan', handleCreatePlan));
     } finally {
       setIsPlanning(false);
     }
   };
 
+  const handleApprove = async () => {
+    if (!createdPlanId) return;
+    setIsApproving(true);
+    setCurrentError(null);
+    setSuccessNotice('');
+    try {
+      const res = await api.approveSubmissionPlan(createdPlanId);
+      setWorkflowStage('APPROVED');
+      setSimulationReceipt(
+        `Plan Approved by Candidate\n` +
+        `Plan ID: ${res.plan_id}\n` +
+        `Review State: ${res.review_state}\n` +
+        `Approval State: ${res.approval_state}\n` +
+        `Packet SHA-256: ${res.packet_hash}\n` +
+        `Reviewed At: ${res.reviewed_at}\n` +
+        `Status: Authenticated for safe loopback dry-run dispatch.`
+      );
+      setSuccessNotice('Submission plan and frozen materials explicitly approved by candidate. Dry-run simulation unlocked.');
+    } catch (err) {
+      setWorkflowStage('REVIEW_REQUIRED');
+      setCurrentError(parseActionError(err, 'approve', handleApprove));
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   const handleSimulate = async () => {
     if (!currentJobId) return;
+    if (workflowStage !== 'APPROVED') {
+      setWorkflowStage('REVIEW_REQUIRED');
+      setCurrentError({
+        action: 'simulate',
+        category: 'POLICY_BLOCKED',
+        title: 'Simulation Blocked: Approval Required',
+        message: 'Explicit candidate approval is required before running simulated ATS dispatch. Review and approve the frozen plan first.',
+        retryFn: handleSimulate,
+      });
+      return;
+    }
     setIsSimulating(true);
     setCurrentError(null);
     setSuccessNotice('');
@@ -202,9 +276,15 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
         plan_id: createdPlanId || undefined,
       });
       setSimulationReceipt(res.receipt);
-      setSuccessNotice(`Dry-run simulation completed: ${res.status}`);
+      if (res.status === 'SIMULATED_SUCCESS' || res.status === 'COMPLETED' || res.status === 'SUCCESS') {
+        setWorkflowStage('SIMULATION_SUCCESS');
+        setSuccessNotice(`Dry-run simulation completed: ${res.status}`);
+      } else {
+        setWorkflowStage('SIMULATION_FAILED');
+        setSuccessNotice(`Dry-run simulation recorded: ${res.status}`);
+      }
     } catch (err) {
-      // Never fabricate simulation receipt on failure
+      setWorkflowStage('SIMULATION_FAILED');
       setSimulationReceipt('');
       setCurrentError(parseActionError(err, 'simulate', handleSimulate));
     } finally {
@@ -296,6 +376,59 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
           </div>
         </div>
 
+        {/* Workflow Stage Bar */}
+        <div
+          id="prep-workflow-status"
+          style={{
+            marginTop: '12px',
+            padding: '10px 14px',
+            borderRadius: '6px',
+            background: 'var(--jp-surface-2)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: '13px',
+            flexWrap: 'wrap',
+            gap: '8px',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 600 }}>Workflow Stage:</span>
+            <span
+              id="prep-stage-badge"
+              className={`badge ${
+                workflowStage === 'APPROVED' || workflowStage === 'SIMULATION_SUCCESS'
+                  ? 'badge-success'
+                  : workflowStage === 'SIMULATION_FAILED'
+                  ? 'badge-danger'
+                  : workflowStage === 'REVIEW_REQUIRED'
+                  ? 'badge-warning'
+                  : workflowStage === 'PLAN_CREATED'
+                  ? 'badge-info'
+                  : 'badge-secondary'
+              }`}
+            >
+              {workflowStage}
+            </span>
+            {workflowStage === 'PLAN_CREATED' && (
+              <span className="badge badge-warning" id="prep-review-required-tag">REVIEW_REQUIRED</span>
+            )}
+            {workflowStage === 'APPROVED' && (
+              <span style={{ color: 'var(--jp-text-muted)', fontSize: '12px' }}>
+                (Explicit candidate approval active — simulation unlocked)
+              </span>
+            )}
+          </div>
+          {createdPlanId && (
+            <div style={{ fontSize: '12px', color: 'var(--jp-text-muted)' }}>
+              Plan ID: <code style={{ fontSize: '11px' }}>{createdPlanId.slice(0, 8)}...</code>
+              {planHash && (
+                <> | Packet SHA: <code style={{ fontSize: '11px' }}>{planHash.slice(0, 10)}...</code></>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Action Controls */}
         <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
@@ -320,12 +453,24 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
 
           <button
             type="button"
+            id="prep-approve-btn"
+            className={`btn-secondary ${workflowStage === 'APPROVED' ? 'btn-success' : ''}`}
+            onClick={handleApprove}
+            disabled={!createdPlanId || workflowStage === 'APPROVED' || isApproving}
+            title={!createdPlanId ? 'Create a submission plan first' : 'Explicit candidate approval of frozen materials'}
+          >
+            {isApproving ? 'Approving...' : workflowStage === 'APPROVED' ? '✓ Plan Approved' : '3. Approve Frozen Plan & Materials'}
+          </button>
+
+          <button
+            type="button"
             id="prep-simulate-btn"
             className="btn-secondary"
             onClick={handleSimulate}
-            disabled={isSimulating}
+            disabled={workflowStage !== 'APPROVED' || isSimulating}
+            title={workflowStage !== 'APPROVED' ? 'Simulation disabled: Candidate must explicitly approve frozen plan first' : 'Run safe loopback dry-run'}
           >
-            {isSimulating ? 'Simulating...' : '3. Simulate Submission (Dry-Run)'}
+            {isSimulating ? 'Simulating...' : '4. Simulate Submission (Dry-Run)'}
           </button>
 
           <button
@@ -335,7 +480,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
             onClick={handleGenerateRecruiter}
             disabled={!currentJobId || isGeneratingRecruiter}
           >
-            {isGeneratingRecruiter ? 'Drafting...' : '4. Draft Recruiter Message'}
+            {isGeneratingRecruiter ? 'Drafting...' : '5. Draft Recruiter Message'}
           </button>
 
           <button
@@ -345,7 +490,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
             onClick={handleCheckReadiness}
             disabled={!currentJobId || isLoadingReadiness}
           >
-            {isLoadingReadiness ? 'Auditing...' : '5. Audit Submission Readiness'}
+            {isLoadingReadiness ? 'Auditing...' : '6. Audit Submission Readiness'}
           </button>
         </div>
 
@@ -569,7 +714,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
             className="form-input form-textarea"
             rows={16}
             value={resumeText}
-            onChange={(e) => setResumeText(e.target.value)}
+            onChange={(e) => handleMaterialChange('resume', e.target.value)}
             placeholder="Click '1. Generate Tailored Draft' or paste your customized resume here..."
           />
         </div>
@@ -586,7 +731,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
             className="form-input form-textarea"
             rows={16}
             value={coverText}
-            onChange={(e) => setCoverText(e.target.value)}
+            onChange={(e) => handleMaterialChange('cover', e.target.value)}
             placeholder="Click '1. Generate Tailored Draft' or draft your cover letter here..."
           />
         </div>

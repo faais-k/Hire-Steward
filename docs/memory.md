@@ -1,9 +1,39 @@
 # Hire-steward — Project Memory and Current Status
 
-**Last updated:** 2026-11-11
+**Last updated:** 2026-11-12
 **Purpose:** Single concise, reliable source of truth for what is decided, evidenced as complete, currently in progress, blocked, and next. Update this file after meaningful implementation or decision changes.
 
 ## 1. Current state
+
+### P0 Approval Enforcement, Replay Integrity Ordering & Preparation Approval UI (2026-11-12)
+- **Eliminated Automatic Approval on Plan Creation:**
+  - `create_submission_plan()` in `backend/app/api/routes/application_tracking.py` creates plans strictly with `review_state = "UNREVIEWED"`.
+  - Removed automatic setting of `app.review_approval_state = "APPROVED"` and `app.approved_submission_plan_id`.
+  - Creating a plan never implies approval; explicit approval action is mandatory via dedicated endpoints (`POST /api/v1/preparation/plan/{plan_id}/approve` or `POST /api/v1/applications/{application_id}/plans/{plan_id}/approve`).
+- **Strict 5-Condition Simulation Approval Matrix:**
+  - `simulation_service.py` enforces all 5 authoritative approval conditions:
+    1. `plan.review_state == "USER_REVIEWED"`
+    2. `app.review_approval_state == "APPROVED"`
+    3. `app.approved_submission_plan_id == plan.id`
+    4. `app.reviewed_resume_sha256 == plan.resume_sha256`
+    5. `app.reviewed_cover_letter_sha256 == plan.cover_letter_sha256`
+  - Fails closed with `USER_REVIEW_REQUIRED` if any condition is missing, null, or mismatched.
+- **Authoritative Replay Ordering & Idempotent Failure Handling:**
+  - Cryptographic integrity verification (Step 6), deterministic policy gates (Step 7), and approval checks (Step 8) strictly precede cached-success replay lookup (Step 9). Tampered plans fail with `SimulationIntegrityError` before replay.
+  - Idempotent retries of failed attempts return `is_idempotent_replay=True` with identical failure details without key collision or unintended state advancement.
+- **Frontend Preparation UI Approval Workflow:**
+  - Implemented explicit workflow state machine (`DRAFT`, `PLAN_CREATED`, `REVIEW_REQUIRED`, `APPROVED`, `SIMULATION_SUCCESS`, `SIMULATION_FAILED`) in `PreparationView.tsx`.
+  - Added `#prep-stage-badge` displaying the active stage.
+  - Added explicit `#prep-approve-btn` requiring user action to approve the plan before simulation.
+  - Simulate button is strictly disabled until the plan is approved.
+  - Edits to resume or cover letter editors immediately invalidate prior approval and reset the workflow back to `DRAFT`.
+- **Comprehensive Automated Test Coverage:**
+  - Fast offline suite: **681 passed, 40 deselected, 0 failed** in ~90s (`uv run --locked pytest -m "not postgres" -q`).
+  - PostgreSQL 17 integration suite: **40 passed, 681 deselected, 0 failed** in ~60s against isolated schemas in `jobpilot_test`.
+  - Combined automated tests: **721 / 721 backend tests passed (100% pass rate)**.
+  - Frontend: strict TypeScript **0 errors**, Vitest **12 passed, 0 failed**, Vite production build **0 errors**.
+  - All 12 master end-to-end user journeys passing in `test_twelve_journeys_end_to_end.py`.
+  - Authentic candidate profile for Faais K preserved 100% intact in `jobpilot_workspace`.
 
 ### Master Security & Integrity Hardening, Cryptographic Submission Assurance & Migration 0011 (2026-11-11)
 - **Database Schema Migration 0011 (`0011_plan_frozen_material.py`):**

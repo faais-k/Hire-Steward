@@ -206,6 +206,20 @@ export const api = {
     });
   },
 
+  async approveSubmissionPlan(planId: string): Promise<{
+    plan_id: string;
+    application_id?: string;
+    review_state: string;
+    approval_state: string;
+    packet_hash: string;
+    reviewed_at: string;
+    message: string;
+  }> {
+    return request(`/api/v1/preparation/plan/${encodeURIComponent(planId)}/approve`, {
+      method: 'POST',
+    });
+  },
+
   async simulateSubmission(data: {
     job_posting_id: string;
     plan_id?: string;

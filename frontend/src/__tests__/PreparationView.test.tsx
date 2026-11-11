@@ -165,6 +165,21 @@ describe('PreparationView Fail-Closed Error Handling & Safety Tests', () => {
   });
 
   it('displays honest simulation error on HTTP 422 SIMULATION_POLICY_BLOCKED without fabricating success', async () => {
+    vi.spyOn(api, 'createSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'plan-abc-123',
+      plan_hash: 'b'.repeat(64),
+      message: 'Created',
+      is_compensation_eligible: true,
+      is_cooldown_clear: true,
+    });
+    vi.spyOn(api, 'approveSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'plan-abc-123',
+      review_state: 'USER_REVIEWED',
+      approval_state: 'APPROVED',
+      packet_hash: 'c'.repeat(64),
+      reviewed_at: '2026-11-11T20:00:00Z',
+      message: 'Approved',
+    });
     vi.spyOn(api, 'simulateSubmission').mockRejectedValueOnce(
       new ApiError(422, 'POLICY_BLOCKED: Simulation rejected by policy gate: Active cooldown in effect')
     );
@@ -177,12 +192,31 @@ describe('PreparationView Fail-Closed Error Handling & Safety Tests', () => {
       />
     );
 
+    const resumeEditor = document.getElementById('prep-resume-editor') as HTMLTextAreaElement;
+    fireEvent.change(resumeEditor, { target: { value: '# Reviewed Resume' } });
+
+    // Step 1: Create Plan
+    fireEvent.click(document.getElementById('prep-create-plan-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('PLAN_CREATED')).toBeInTheDocument();
+      expect(document.getElementById('prep-approve-btn')).not.toBeDisabled();
+    });
+
+    // Step 2: Explicitly Approve Plan
+    fireEvent.click(document.getElementById('prep-approve-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('APPROVED')).toBeInTheDocument();
+      expect(document.getElementById('prep-simulate-btn')).not.toBeDisabled();
+    });
+
+    // Step 3: Simulate
     const simulateBtn = document.getElementById('prep-simulate-btn')!;
     fireEvent.click(simulateBtn);
 
     await waitFor(() => {
       expect(screen.getByText('POLICY_BLOCKED')).toBeInTheDocument();
       expect(screen.getByText(/Active cooldown in effect/)).toBeInTheDocument();
+      expect(screen.getByText('SIMULATION_FAILED')).toBeInTheDocument();
     });
 
     // Must NOT show fake success receipt
@@ -191,6 +225,21 @@ describe('PreparationView Fail-Closed Error Handling & Safety Tests', () => {
   });
 
   it('renders validated simulation receipt only upon true backend success', async () => {
+    vi.spyOn(api, 'createSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'real-plan-xyz',
+      plan_hash: 'b'.repeat(64),
+      message: 'Created',
+      is_compensation_eligible: true,
+      is_cooldown_clear: true,
+    });
+    vi.spyOn(api, 'approveSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'real-plan-xyz',
+      review_state: 'USER_REVIEWED',
+      approval_state: 'APPROVED',
+      packet_hash: 'c'.repeat(64),
+      reviewed_at: '2026-11-11T20:00:00Z',
+      message: 'Approved',
+    });
     vi.spyOn(api, 'simulateSubmission').mockResolvedValueOnce({
       simulation_id: 'attempt-real-uuid',
       receipt: 'Simulated ATS Submission Receipt (Dry-Run)\nPlan ID: real-plan\nReceipt ID: sim_rec_12345\nStatus: SIMULATED_SUCCESS',
@@ -206,6 +255,22 @@ describe('PreparationView Fail-Closed Error Handling & Safety Tests', () => {
       />
     );
 
+    const resumeEditor = document.getElementById('prep-resume-editor') as HTMLTextAreaElement;
+    fireEvent.change(resumeEditor, { target: { value: '# Valid Resume' } });
+
+    // Step 1: Create Plan
+    fireEvent.click(document.getElementById('prep-create-plan-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('PLAN_CREATED')).toBeInTheDocument();
+    });
+
+    // Step 2: Explicitly Approve Plan
+    fireEvent.click(document.getElementById('prep-approve-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('APPROVED')).toBeInTheDocument();
+    });
+
+    // Step 3: Simulate
     const simulateBtn = document.getElementById('prep-simulate-btn')!;
     fireEvent.click(simulateBtn);
 
@@ -215,6 +280,117 @@ describe('PreparationView Fail-Closed Error Handling & Safety Tests', () => {
       expect(receipt?.textContent).toContain('sim_rec_12345');
       expect(receipt?.textContent).toContain('SIMULATED_SUCCESS');
       expect(screen.getByText(/Dry-run simulation completed: SIMULATED_SUCCESS/)).toBeInTheDocument();
+      expect(screen.getByText('SIMULATION_SUCCESS')).toBeInTheDocument();
+    });
+  });
+
+  it('executes full explicit approval workflow and invalidates approval upon material modification', async () => {
+    vi.spyOn(api, 'createSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'plan-lifecycle-1',
+      plan_hash: 'd'.repeat(64),
+      message: 'Signed',
+      is_compensation_eligible: true,
+      is_cooldown_clear: true,
+    });
+    const approveSpy = vi.spyOn(api, 'approveSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'plan-lifecycle-1',
+      review_state: 'USER_REVIEWED',
+      approval_state: 'APPROVED',
+      packet_hash: 'e'.repeat(64),
+      reviewed_at: '2026-11-11T20:00:00Z',
+      message: 'Approved',
+    });
+
+    render(
+      <PreparationView
+        jobs={mockJobs}
+        selectedJobId="job-101"
+        onSelectJob={() => {}}
+      />
+    );
+
+    // Initial state: DRAFT, simulation and approve buttons disabled
+    expect(screen.getByText('DRAFT')).toBeInTheDocument();
+    expect(document.getElementById('prep-approve-btn')).toBeDisabled();
+    expect(document.getElementById('prep-simulate-btn')).toBeDisabled();
+
+    // Enter draft materials
+    const resumeEditor = document.getElementById('prep-resume-editor') as HTMLTextAreaElement;
+    fireEvent.change(resumeEditor, { target: { value: '# Initial Draft' } });
+
+    // Create unapproved plan
+    fireEvent.click(document.getElementById('prep-create-plan-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('PLAN_CREATED')).toBeInTheDocument();
+      expect(screen.getByText('REVIEW_REQUIRED')).toBeInTheDocument();
+      expect(document.getElementById('prep-approve-btn')).not.toBeDisabled();
+      expect(document.getElementById('prep-simulate-btn')).toBeDisabled();
+    });
+
+    // Explicit approval action
+    fireEvent.click(document.getElementById('prep-approve-btn')!);
+    await waitFor(() => {
+      expect(approveSpy).toHaveBeenCalledWith('plan-lifecycle-1');
+      expect(screen.getByText('APPROVED')).toBeInTheDocument();
+      expect(document.getElementById('prep-simulate-btn')).not.toBeDisabled();
+    });
+
+    // Edit materials: must invalidate approval and reset stage to DRAFT
+    fireEvent.change(resumeEditor, { target: { value: '# Modified Draft After Approval' } });
+    expect(screen.getByText('DRAFT')).toBeInTheDocument();
+    expect(document.getElementById('prep-simulate-btn')).toBeDisabled();
+    expect(screen.getByText(/Materials modified: previous plan and approval invalidated/)).toBeInTheDocument();
+  });
+
+  it('handles approval failure on HTTP 422 with retry capability without enabling simulation', async () => {
+    vi.spyOn(api, 'createSubmissionPlan').mockResolvedValueOnce({
+      plan_id: 'plan-err-1',
+      plan_hash: 'f'.repeat(64),
+      message: 'Created',
+      is_compensation_eligible: true,
+      is_cooldown_clear: true,
+    });
+    vi.spyOn(api, 'approveSubmissionPlan')
+      .mockRejectedValueOnce(new ApiError(422, 'APPLICATION_MATERIALS_DIFFER: Current application resume differs'))
+      .mockResolvedValueOnce({
+        plan_id: 'plan-err-1',
+        review_state: 'USER_REVIEWED',
+        approval_state: 'APPROVED',
+        packet_hash: 'g'.repeat(64),
+        reviewed_at: '2026-11-11T20:00:00Z',
+        message: 'Approved',
+      });
+
+    render(
+      <PreparationView
+        jobs={mockJobs}
+        selectedJobId="job-101"
+        onSelectJob={() => {}}
+      />
+    );
+
+    const resumeEditor = document.getElementById('prep-resume-editor') as HTMLTextAreaElement;
+    fireEvent.change(resumeEditor, { target: { value: '# Material text' } });
+
+    fireEvent.click(document.getElementById('prep-create-plan-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('PLAN_CREATED')).toBeInTheDocument();
+    });
+
+    // Click approve -> fails with 422
+    fireEvent.click(document.getElementById('prep-approve-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('Validation Failure')).toBeInTheDocument();
+      expect(screen.getByText(/Current application resume differs/)).toBeInTheDocument();
+      expect(document.getElementById('prep-simulate-btn')).toBeDisabled();
+      expect(screen.getByText('REVIEW_REQUIRED')).toBeInTheDocument();
+    });
+
+    // Retry action -> succeeds
+    fireEvent.click(document.getElementById('prep-retry-btn')!);
+    await waitFor(() => {
+      expect(screen.getByText('APPROVED')).toBeInTheDocument();
+      expect(document.getElementById('prep-simulate-btn')).not.toBeDisabled();
     });
   });
 

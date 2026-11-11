@@ -266,19 +266,26 @@ def test_simulate_persists_attempt_and_receipt(test_db: Session):
     app.dependency_overrides[get_session] = lambda: test_db
     try:
         client = TestClient(app)
-        # 1. Create plan
+        # 1. Create plan (created as UNREVIEWED)
         plan_res = client.post(
             "/api/v1/preparation/plan",
             json={
                 "job_posting_id": "job-1",
                 "resume_text": "# Reviewed Resume",
                 "cover_letter_text": "Reviewed Cover Letter",
-                "approve": True,
             },
             headers=local_headers(),
         )
         assert plan_res.status_code == 200
         plan_id = plan_res.json()["plan_id"]
+
+        # Explicit candidate approval action (required before simulation)
+        app_res = client.post(
+            f"/api/v1/preparation/plan/{plan_id}/approve",
+            headers=local_headers(),
+        )
+        assert app_res.status_code == 200
+        assert app_res.json()["approval_state"] == "APPROVED"
 
         # 2. Simulate submission
         sim_res = client.post(

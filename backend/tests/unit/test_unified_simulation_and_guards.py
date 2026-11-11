@@ -194,6 +194,9 @@ def _make_plan_and_app(
         status=plan.status,
     )
     session.add(plan_model)
+    app.approved_submission_plan_id = plan.plan_id
+    app.reviewed_resume_sha256 = plan.resume_sha256
+    app.reviewed_cover_letter_sha256 = plan.cover_letter_sha256
     session.commit()
     return app, plan_model
 
@@ -425,14 +428,18 @@ class TestBothSimulationRoutesUnifiedBehavior:
 
     def test_preparation_simulate_succeeds(self, client_with_assessment):
         client, session = client_with_assessment
-        # Create plan via API
+        # Create plan via API (starts UNREVIEWED)
         plan_res = client.post(
             "/api/v1/preparation/plan",
-            json={"job_posting_id": "job-1", "resume_text": "# Resume", "cover_letter_text": "Cover", "approve": True},
+            json={"job_posting_id": "job-1", "resume_text": "# Resume", "cover_letter_text": "Cover"},
             headers=local_headers(),
         )
         assert plan_res.status_code == 200
         plan_id = plan_res.json()["plan_id"]
+
+        # Explicit candidate approval action
+        app_res = client.post(f"/api/v1/preparation/plan/{plan_id}/approve", headers=local_headers())
+        assert app_res.status_code == 200
 
         sim_res = client.post(
             "/api/v1/preparation/simulate",
@@ -448,10 +455,14 @@ class TestBothSimulationRoutesUnifiedBehavior:
         client, session = client_with_assessment
         plan_res = client.post(
             "/api/v1/preparation/plan",
-            json={"job_posting_id": "job-1", "resume_text": "# Resume idem", "cover_letter_text": "Cover idem", "approve": True},
+            json={"job_posting_id": "job-1", "resume_text": "# Resume idem", "cover_letter_text": "Cover idem"},
             headers=local_headers(),
         )
         plan_id = plan_res.json()["plan_id"]
+
+        # Explicit approval
+        app_res = client.post(f"/api/v1/preparation/plan/{plan_id}/approve", headers=local_headers())
+        assert app_res.status_code == 200
 
         sim1 = client.post(
             "/api/v1/preparation/simulate",
@@ -689,3 +700,453 @@ class TestSourceRegistryGuard:
         import os
         os.environ.pop("LIVE_DISCOVERY_ENABLED", None)
         assert is_live_discovery_enabled() is False
+
+
+# ---------------------------------------------------------------------------
+# Strict approval & replay ordering tests (P0 & P1)
+# ---------------------------------------------------------------------------
+
+
+class TestStrictSimulationApprovalAndReplayOrdering:
+    """Verify that cryptographic integrity, approval verification, and policy
+    gates strictly precede any idempotency/cached-success replay."""
+
+    def test_successful_simulation_followed_by_resume_tampering_rejected_on_replay(self, test_db: Session):
+        """Simulation succeeds, then resume is tampered. Replaying same idempotency key fails with integrity error."""
+        _make_eligible_assessment(test_db, "job-1", "assess-tamper-r")
+        app, plan = _make_plan_and_app(
+            test_db,
+            resume_text="# Perfect Resume Text",
+            cover_text="Cover text",
+            app_id="app-tamper-r",
+            plan_id="plan-tamper-r",
+        )
+
+        # Run 1: succeeds
+        res1 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-r")
+        assert res1.success is True
+        assert res1.is_idempotent_replay is False
+
+        # Tamper frozen resume
+        plan.resume_markdown = "# TAMPERED RESUME IN PLAN"
+        test_db.commit()
+
+        # Run 2: Replay with same idempotency key must NOT return cached success
+        with pytest.raises(SimulationIntegrityError) as exc_info:
+            execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-r")
+        assert exc_info.value.code == "RESUME_HASH_MISMATCH"
+
+    def test_successful_simulation_followed_by_cover_letter_tampering_rejected_on_replay(self, test_db: Session):
+        """Simulation succeeds, then cover letter is tampered. Replaying same idempotency key fails with integrity error."""
+        _make_eligible_assessment(test_db, "job-1", "assess-tamper-cl")
+        app, plan = _make_plan_and_app(
+            test_db,
+            resume_text="# Clean Resume Text",
+            cover_text="Original cover letter",
+            app_id="app-tamper-cl",
+            plan_id="plan-tamper-cl",
+        )
+
+        res1 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-cl")
+        assert res1.success is True
+
+        # Tamper frozen cover letter
+        plan.cover_letter_markdown = "TAMPERED COVER LETTER CONTENT"
+        test_db.commit()
+
+        with pytest.raises(SimulationIntegrityError) as exc_info:
+            execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-cl")
+        assert exc_info.value.code == "COVER_LETTER_HASH_MISMATCH"
+
+    def test_successful_simulation_followed_by_packet_hash_tampering_rejected_on_replay(self, test_db: Session):
+        """Simulation succeeds, then packet_sha256 is tampered. Replay fails with integrity error."""
+        _make_eligible_assessment(test_db, "job-1", "assess-tamper-pkt")
+        app, plan = _make_plan_and_app(
+            test_db,
+            resume_text="# Packet Test Resume",
+            cover_text="Packet test cover",
+            app_id="app-tamper-pkt",
+            plan_id="plan-tamper-pkt",
+        )
+
+        res1 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-pkt")
+        assert res1.success is True
+
+        # Tamper packet hash
+        plan.packet_sha256 = "0" * 64
+        test_db.commit()
+
+        with pytest.raises(SimulationIntegrityError) as exc_info:
+            execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-pkt")
+        assert exc_info.value.code == "PACKET_HASH_MISMATCH"
+
+    def test_successful_simulation_followed_by_answer_mutation_rejected_on_replay(self, test_db: Session):
+        """Simulation succeeds, then answers_json is mutated. Replay fails with integrity error."""
+        _make_eligible_assessment(test_db, "job-1", "assess-tamper-ans")
+        app, plan = _make_plan_and_app(
+            test_db,
+            resume_text="# Answer Test Resume",
+            cover_text="Answer test cover",
+            app_id="app-tamper-ans",
+            plan_id="plan-tamper-ans",
+        )
+
+        res1 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-ans")
+        assert res1.success is True
+
+        # Mutate answers
+        plan.answers_json = [{"question": "Q1", "answer": "MUTATED_VALUE"}]
+        test_db.commit()
+
+        with pytest.raises(SimulationIntegrityError) as exc_info:
+            execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-tamper-ans")
+        assert exc_info.value.code == "PACKET_HASH_MISMATCH"
+
+    def test_approval_revocation_followed_by_replay_rejected(self, test_db: Session):
+        """Simulation succeeds, then approval is revoked. Replay fails with USER_REVIEW_REQUIRED."""
+        _make_eligible_assessment(test_db, "job-1", "assess-revoke")
+        app, plan = _make_plan_and_app(
+            test_db,
+            resume_text="# Revocation Resume",
+            cover_text="Revocation cover",
+            app_id="app-revoke",
+            plan_id="plan-revoke",
+        )
+
+        res1 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-revoke")
+        assert res1.success is True
+
+        # Revoke approval on application
+        app.review_approval_state = "REVIEW_REQUIRED"
+        app.approved_submission_plan_id = None
+        test_db.commit()
+
+        with pytest.raises(SimulationPolicyError) as exc_info:
+            execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-revoke")
+        assert exc_info.value.code == "USER_REVIEW_REQUIRED"
+
+    def test_new_plan_created_after_previously_approved_plan_requires_new_approval(self, test_db: Session):
+        """Plan 1 is approved. Creating Plan 2 does not approve Plan 2; simulating Plan 2 fails with USER_REVIEW_REQUIRED."""
+        _make_eligible_assessment(test_db, "job-1", "assess-multi-plan")
+        app, plan1 = _make_plan_and_app(
+            test_db,
+            resume_text="# Version 1 Resume",
+            cover_text="Version 1 cover",
+            app_id="app-multi-plan",
+            plan_id="plan-v1",
+        )
+
+        # Plan 1 can simulate
+        res1 = execute_simulation(test_db, plan_id=plan1.id)
+        assert res1.success is True
+
+        # Now create Plan 2 with new material
+        from backend.app.domain.submission_plan import SubmissionPlan
+        v2_resume = "# Version 2 Resume Revised"
+        v2_cover = "Version 2 cover revised"
+        app.reviewed_resume_markdown = v2_resume
+        app.reviewed_cover_letter_markdown = v2_cover
+        app.review_approval_state = "REVIEW_REQUIRED"
+        app.approved_submission_plan_id = None
+        test_db.commit()
+
+        plan2_domain = SubmissionPlan.create(
+            plan_id="plan-v2",
+            application_id=app.id,
+            job_posting_id="job-1",
+            employer_handle="apex-tech",
+            target_role="Target Role",
+            resume_markdown=v2_resume,
+            cover_letter_markdown=v2_cover,
+            answers=[],
+            is_compensation_eligible=True,
+            is_cooldown_clear=True,
+            compensation_threshold_version=1,
+            review_state="UNREVIEWED",
+        )
+        plan2_model = SubmissionPlanModel(
+            id=plan2_domain.plan_id,
+            application_id=plan2_domain.application_id,
+            job_posting_id=plan2_domain.job_posting_id,
+            employer_handle=plan2_domain.employer_handle,
+            target_role=plan2_domain.target_role,
+            resume_sha256=plan2_domain.resume_sha256,
+            cover_letter_sha256=plan2_domain.cover_letter_sha256,
+            packet_sha256=plan2_domain.packet_sha256,
+            resume_markdown=v2_resume,
+            cover_letter_markdown=v2_cover,
+            review_state="UNREVIEWED",
+            answers_json=[],
+            is_compensation_eligible=True,
+            is_cooldown_clear=True,
+            compensation_threshold_version=1,
+            status=plan2_domain.status,
+        )
+        test_db.add(plan2_model)
+        test_db.commit()
+
+        # Simulating Plan 2 must fail because Plan 2 is UNREVIEWED and not approved on app
+        with pytest.raises(SimulationPolicyError) as exc_info:
+            execute_simulation(test_db, plan_id=plan2_model.id)
+        assert exc_info.value.code == "USER_REVIEW_REQUIRED"
+
+    def test_same_idempotency_key_replay_with_intact_plan_preserves_idempotency(self, test_db: Session):
+        """Valid unchanged plan returns identical cached receipt and is_idempotent_replay=True."""
+        _make_eligible_assessment(test_db, "job-1", "assess-idemp-intact")
+        app, plan = _make_plan_and_app(
+            test_db,
+            resume_text="# Intact Resume",
+            cover_text="Intact cover",
+            app_id="app-idemp-intact",
+            plan_id="plan-idemp-intact",
+        )
+
+        res1 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-key-intact-99")
+        assert res1.success is True
+        assert res1.is_idempotent_replay is False
+
+        res2 = execute_simulation(test_db, plan_id=plan.id, idempotency_key="idemp-key-intact-99")
+        assert res2.success is True
+        assert res2.is_idempotent_replay is True
+        assert res2.receipt == res1.receipt
+        assert res2.simulation_id == res1.simulation_id
+
+
+# ---------------------------------------------------------------------------
+# Plan creation routes & approval matrix tests (P1)
+# ---------------------------------------------------------------------------
+
+
+class TestPlanCreationRoutesNeverAutoApprove:
+    """Verify that neither plan creation route automatically approves a plan,
+    and that simulation strictly requires all 5 approval conditions."""
+
+    def test_preparation_plan_route_never_auto_approves(self, test_db: Session):
+        _make_eligible_assessment(test_db, "job-1", "assess-prep-noauto")
+        app = TrackedApplication(
+            id="app-prep-route",
+            job_posting_id="job-1",
+            status="SAVED",
+        )
+        test_db.add(app)
+        test_db.commit()
+
+        app_instance = create_app(session_factory=lambda: test_db)
+        client = TestClient(app_instance)
+
+        resp = client.post(
+            "/api/v1/preparation/plan",
+            headers=local_headers(),
+            json={
+                "job_posting_id": "job-1",
+                "resume_text": "# Candidate Prepared Resume",
+                "cover_letter_text": "Candidate cover letter",
+                "approve": True,  # even with approve: true in payload, route must NOT auto approve
+            },
+        )
+        assert resp.status_code == 200
+        plan_id = resp.json()["plan_id"]
+
+        plan_in_db = test_db.get(SubmissionPlanModel, plan_id)
+        assert plan_in_db is not None
+        assert plan_in_db.review_state == "UNREVIEWED"
+
+        app_in_db = test_db.get(TrackedApplication, "app-prep-route")
+        assert app_in_db.review_approval_state != "APPROVED"
+        assert app_in_db.approved_submission_plan_id != plan_id
+
+    def test_application_tracking_plan_route_never_auto_approves(self, test_db: Session):
+        _make_eligible_assessment(test_db, "job-1", "assess-apptrk-noauto")
+        app_id = "app-trk-route"
+        app = TrackedApplication(
+            id=app_id,
+            job_posting_id="job-1",
+            status="SAVED",
+            reviewed_resume_markdown="# Pre-existing text",
+            reviewed_cover_letter_markdown="Pre-existing cover",
+        )
+        test_db.add(app)
+        test_db.commit()
+
+        app_instance = create_app(session_factory=lambda: test_db)
+        client = TestClient(app_instance)
+
+        resp = client.post(
+            f"/api/v1/applications/{app_id}/submission-plan",
+            headers=local_headers(),
+        )
+        assert resp.status_code == 200
+        plan_id = resp.json()["plan_id"]
+
+        plan_in_db = test_db.get(SubmissionPlanModel, plan_id)
+        assert plan_in_db is not None
+        assert plan_in_db.review_state == "UNREVIEWED"
+
+        app_in_db = test_db.get(TrackedApplication, app_id)
+        assert app_in_db is not None
+        assert app_in_db.approved_submission_plan_id != plan_id
+        assert app_in_db.review_approval_state != "APPROVED"
+
+    def test_simulation_endpoints_approval_matrix(self, test_db: Session):
+        """Test both simulation endpoints across all 8 approval condition combinations."""
+        _make_eligible_assessment(test_db, "job-1", "assess-matrix")
+        app_id = "app-matrix"
+        plan_id = "plan-matrix"
+        app = TrackedApplication(
+            id=app_id,
+            job_posting_id="job-1",
+            status="READY_FOR_REVIEW",
+            reviewed_resume_markdown="# Matrix Resume",
+            reviewed_cover_letter_markdown="Matrix Cover",
+        )
+        test_db.add(app)
+        test_db.flush()
+
+        from backend.app.domain.submission_plan import SubmissionPlan
+        plan_domain = SubmissionPlan.create(
+            plan_id=plan_id,
+            application_id=app_id,
+            job_posting_id="job-1",
+            employer_handle="apex-tech",
+            target_role="Target Role",
+            resume_markdown="# Matrix Resume",
+            cover_letter_markdown="Matrix Cover",
+            answers=[],
+            is_compensation_eligible=True,
+            is_cooldown_clear=True,
+            compensation_threshold_version=1,
+            review_state="UNREVIEWED",
+        )
+        plan_model = SubmissionPlanModel(
+            id=plan_domain.plan_id,
+            application_id=plan_domain.application_id,
+            job_posting_id=plan_domain.job_posting_id,
+            employer_handle=plan_domain.employer_handle,
+            target_role=plan_domain.target_role,
+            resume_sha256=plan_domain.resume_sha256,
+            cover_letter_sha256=plan_domain.cover_letter_sha256,
+            packet_sha256=plan_domain.packet_sha256,
+            resume_markdown="# Matrix Resume",
+            cover_letter_markdown="Matrix Cover",
+            review_state="UNREVIEWED",
+            answers_json=[],
+            is_compensation_eligible=True,
+            is_cooldown_clear=True,
+            compensation_threshold_version=1,
+            status=plan_domain.status,
+        )
+        test_db.add(plan_model)
+        test_db.commit()
+
+        app_instance = create_app(session_factory=lambda: test_db)
+        client = TestClient(app_instance)
+
+        def _test_both(expected_prep_status: int, expected_app_success: bool, detail_match: str | None = None):
+            r1 = client.post(
+                "/api/v1/preparation/simulate",
+                headers=local_headers(),
+                json={"job_posting_id": "job-1", "plan_id": plan_id},
+            )
+            r2 = client.post(
+                f"/api/v1/applications/{app_id}/simulate-submission",
+                headers=local_headers(),
+                json={"plan_id": plan_id},
+            )
+            assert r1.status_code == expected_prep_status
+            if expected_prep_status == 200:
+                assert r1.json()["status"] == "SIMULATED_SUCCESS"
+            elif detail_match:
+                assert detail_match in r1.text
+
+            assert r2.status_code == 200
+            data2 = r2.json()
+            if expected_app_success:
+                assert data2["success"] is True
+                assert data2["status"] == "SIMULATED_SUCCESS"
+            else:
+                assert data2["success"] is False
+                assert data2["status"] == "SIMULATED_FAILURE"
+                if detail_match:
+                    assert data2["error_code"] == detail_match or detail_match in str(data2)
+
+        from backend.app.services.simulation_service import compute_canonical_packet_hash
+
+        def _update_plan_review_state(state: str):
+            plan_obj = test_db.get(SubmissionPlanModel, plan_id)
+            plan_obj.review_state = state
+            plan_obj.packet_sha256 = compute_canonical_packet_hash(
+                application_id=plan_obj.application_id,
+                job_posting_id=plan_obj.job_posting_id,
+                employer_handle=plan_obj.employer_handle,
+                target_role=plan_obj.target_role,
+                resume_sha256=plan_obj.resume_sha256,
+                cover_letter_sha256=plan_obj.cover_letter_sha256,
+                answers=[],
+                is_compensation_eligible=True,
+                is_cooldown_clear=True,
+                compensation_threshold_version=1,
+                review_state=state,
+            )
+            test_db.commit()
+
+        # 1. No approval
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 2. Plan-only approval (plan.review_state="USER_REVIEWED", but app not approved)
+        _update_plan_review_state("USER_REVIEWED")
+        a = test_db.get(TrackedApplication, app_id)
+        a.review_approval_state = "REVIEW_REQUIRED"
+        test_db.commit()
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 3. App-only approval (app approved, but plan.review_state="UNREVIEWED")
+        _update_plan_review_state("UNREVIEWED")
+        p = test_db.get(SubmissionPlanModel, plan_id)
+        a = test_db.get(TrackedApplication, app_id)
+        a.review_approval_state = "APPROVED"
+        a.approved_submission_plan_id = plan_id
+        a.reviewed_resume_sha256 = p.resume_sha256
+        a.reviewed_cover_letter_sha256 = p.cover_letter_sha256
+        test_db.commit()
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 4. Mismatched plan ID on app
+        _update_plan_review_state("USER_REVIEWED")
+        a = test_db.get(TrackedApplication, app_id)
+        a.approved_submission_plan_id = "completely-wrong-plan-id"
+        test_db.commit()
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 5. Mismatched resume hash on app
+        a = test_db.get(TrackedApplication, app_id)
+        a.approved_submission_plan_id = plan_id
+        a.reviewed_resume_sha256 = "0" * 64
+        test_db.commit()
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 6. Mismatched cover-letter hash on app
+        p = test_db.get(SubmissionPlanModel, plan_id)
+        a = test_db.get(TrackedApplication, app_id)
+        a.reviewed_resume_sha256 = p.resume_sha256
+        a.reviewed_cover_letter_sha256 = "0" * 64
+        test_db.commit()
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 7. Revoked approval
+        p = test_db.get(SubmissionPlanModel, plan_id)
+        a = test_db.get(TrackedApplication, app_id)
+        a.reviewed_cover_letter_sha256 = p.cover_letter_sha256
+        a.review_approval_state = "INVALIDATED"
+        test_db.commit()
+        _test_both(422, False, "USER_REVIEW_REQUIRED")
+
+        # 8. Fully valid approval via explicit approval endpoint
+        # Reset plan to unreviewed and call approve endpoint
+        _update_plan_review_state("UNREVIEWED")
+
+        app_resp = client.post(f"/api/v1/preparation/plan/{plan_id}/approve", headers=local_headers())
+        assert app_resp.status_code == 200
+        assert app_resp.json()["approval_state"] == "APPROVED"
+
+        # Now both simulation endpoints must succeed!
+        _test_both(200, True)

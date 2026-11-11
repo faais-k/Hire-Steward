@@ -174,6 +174,13 @@ def test_compensation_verification_gates_simulation_positive_and_negative() -> N
         plan_verified = res_plan_verified.json()
         assert plan_verified["is_compensation_eligible"] is True
 
+        # Explicit candidate approval of the frozen plan is required before simulation
+        approve_res = client.post(
+            f"/api/v1/applications/{app_verified_id}/plans/{plan_verified['plan_id']}/approve",
+            headers=local_headers(),
+        )
+        assert approve_res.status_code == 200
+
         # Step 2.3: Simulate submission in SUCCESS mode - MUST succeed
         idemp_key_verified = f"idemp-verified-{uuid.uuid4().hex}"
         res_sim_verified = client.post(

@@ -157,6 +157,14 @@ def test_submission_plan_and_simulation_api() -> None:
         assert plan_data["application_id"] == app_id
         assert "packet_sha256" in plan_data
         assert "resume_markdown" in plan_data
+        plan_id = plan_data["plan_id"]
+
+        # Explicit candidate approval of the frozen plan
+        approve_resp = client.post(
+            f"/api/v1/applications/{app_id}/plans/{plan_id}/approve",
+            headers=local_headers(),
+        )
+        assert approve_resp.status_code == 200
 
         # 2. POST /applications/{id}/simulate-submission (Dry-Run Success)
         idemp_key = "idemp_unit_dryrun_success_01"
@@ -275,7 +283,16 @@ def test_simulate_submission_idempotent_replay() -> None:
             session.commit()
 
         # Create submission plan
-        client.post(f"/api/v1/applications/{app_id}/submission-plan", headers=local_headers())
+        plan_resp = client.post(f"/api/v1/applications/{app_id}/submission-plan", headers=local_headers())
+        assert plan_resp.status_code == 200
+        plan_id = plan_resp.json()["plan_id"]
+
+        # Explicit candidate approval of the frozen plan
+        approve_resp = client.post(
+            f"/api/v1/applications/{app_id}/plans/{plan_id}/approve",
+            headers=local_headers(),
+        )
+        assert approve_resp.status_code == 200
 
         # -------------------------------------------------------------
         # Scenario 1: Replay of a SUCCESS attempt

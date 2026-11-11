@@ -218,6 +218,13 @@ def test_preparation_simulate_flow(prep_client: TestClient) -> None:
     assert plan_resp.status_code == 200
     plan_id = plan_resp.json()["plan_id"]
 
+    # Explicit candidate approval of the frozen plan
+    approve_resp = prep_client.post(
+        f"/api/v1/preparation/plan/{plan_id}/approve",
+        headers=local_headers(),
+    )
+    assert approve_resp.status_code == 200
+
     # 2. Simulate submission with frozen plan
     resp = prep_client.post(
         "/api/v1/preparation/simulate",

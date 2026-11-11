@@ -367,10 +367,10 @@ def mark_application_reviewed(
         app.reviewed_cover_letter_sha256 = compute_content_sha256(cover_content)
 
     app.reviewed_at = now
-    if resume_content and cover_content:
-        app.review_approval_state = "APPROVED"
-    else:
-        app.review_approval_state = "PARTIALLY_REVIEWED"
+    # Editing or updating application draft materials invalidates any prior approval.
+    # Explicit candidate approval of a frozen submission plan is strictly required.
+    app.review_approval_state = "REVIEW_REQUIRED"
+    app.approved_submission_plan_id = None
 
     if current_status in (ApplicationStatus.SAVED.value, ApplicationStatus.PREPARING.value):
         validate_status_transition(current_status, ApplicationStatus.READY_FOR_REVIEW)

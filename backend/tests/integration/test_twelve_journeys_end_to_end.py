@@ -408,7 +408,8 @@ def test_journey_7_and_8_submission_plan_and_dry_run_simulation(isolated_app):
         headers=local_headers(),
     )
     assert approve_res.status_code == 200
-    assert approve_res.json()["review_state"] == "APPROVED"
+    assert approve_res.json()["review_state"] == "USER_REVIEWED"
+    assert approve_res.json()["approval_state"] == "APPROVED"
 
     plan_id = unapproved_plan_id
     plan_hash = approve_res.json()["packet_sha256"]
