@@ -199,7 +199,7 @@ export const api = {
     job_posting_id: string;
     resume_text: string;
     cover_letter_text: string;
-  }): Promise<{ plan_id: string; plan_hash: string; message: string }> {
+  }): Promise<{ plan_id: string; plan_hash: string; message: string; is_compensation_eligible?: boolean; is_cooldown_clear?: boolean }> {
     return request('/api/v1/preparation/plan', {
       method: 'POST',
       body: JSON.stringify(data),
@@ -209,7 +209,7 @@ export const api = {
   async simulateSubmission(data: {
     job_posting_id: string;
     plan_id?: string;
-  }): Promise<{ simulation_id: string; receipt: string; dry_run: boolean }> {
+  }): Promise<{ simulation_id: string; receipt: string; dry_run: boolean; status: string }> {
     return request('/api/v1/preparation/simulate', {
       method: 'POST',
       body: JSON.stringify(data),
