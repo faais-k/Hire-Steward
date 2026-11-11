@@ -181,27 +181,33 @@ a { color: inherit; text-decoration: none; }
   border-radius: var(--radius-control);
 }
 
-/* Main Content Area */
+/* Main Content Area — Single scrolling container for views */
 .main-content {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   min-width: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
 }
 
-/* View Wrapper to maintain flex chain and scroll bounding */
-.view-wrapper {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  width: 100%;
+.main-content:focus {
+  outline: none;
 }
 
-/* Top Bar */
+/* View Wrapper — Natural content height */
+.view-wrapper {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  flex: none;
+}
+
+/* Top Bar — Sticky anchored at top of main-content */
 .topbar {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -211,6 +217,9 @@ a { color: inherit; text-decoration: none; }
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 
 .topbar-title {
@@ -476,9 +485,11 @@ a { color: inherit; text-decoration: none; }
 .workbench {
   display: grid;
   grid-template-columns: 420px minmax(0, 1fr);
-  flex: 1;
+  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
   min-height: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Left Pane: Job List */
@@ -1300,14 +1311,18 @@ a { color: inherit; text-decoration: none; }
 .view-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-  overflow-x: hidden;
   padding: 24px 32px;
   gap: 20px;
   box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  overflow: visible;
+  flex: none;
+}
+
+.view-container:focus {
+  outline: none;
 }
 
 @media (max-width: 1366px) {

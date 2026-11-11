@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <>
       <aside
-        className={`sidebar ${isOpen ? 'open' : ''}`}
+        className={`sidebar ${isOpen ? 'sidebar-open open' : ''}`}
         id="app-sidebar"
         aria-label="Application navigation"
       >

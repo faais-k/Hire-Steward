@@ -7,7 +7,7 @@ from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session, sessionmaker
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -254,6 +254,10 @@ def create_app(
     app.include_router(ai_router)
     app.include_router(data_portability_router)
 
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon():
+        return Response(status_code=204)
+
     # Mount static frontend workbench (preferring compiled production React dist)
     frontend_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "..", "frontend")
@@ -264,9 +268,18 @@ def create_app(
     if os.path.isdir(static_dir) and os.path.isfile(index_file):
         @app.get("/workbench")
         def serve_workbench():
-            return FileResponse(index_file)
+            return FileResponse(
+                index_file,
+                headers={"Cache-Control": "no-cache, must-revalidate, max-age=0"},
+            )
 
-        app.mount("/", StaticFiles(directory=static_dir, html=True), name="frontend")
+        class NoCacheStaticFiles(StaticFiles):
+            def file_response(self, *args, **kwargs) -> Response:
+                resp = super().file_response(*args, **kwargs)
+                resp.headers["Cache-Control"] = "no-cache, must-revalidate, max-age=0"
+                return resp
+
+        app.mount("/", NoCacheStaticFiles(directory=static_dir, html=True), name="frontend")
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request_handler(

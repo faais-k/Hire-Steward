@@ -77,7 +77,16 @@ export const App: React.FC = () => {
     }).catch(() => {});
   }, [loadJobs, loadApplications]);
 
-  // Keyboard shortcut listener
+  // Scroll to top and focus main container when switching views
+  useEffect(() => {
+    const mainEl = document.getElementById('main-content');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+      mainEl.focus({ preventScroll: true });
+    }
+  }, [currentView]);
+
+  // Keyboard shortcut listener (Ctrl+K search, Escape modals)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -87,10 +96,12 @@ export const App: React.FC = () => {
           searchEl.focus();
           searchEl.select();
         }
+        return;
       }
       if (e.key === 'Escape') {
         setIsAddJobOpen(false);
         setIsSidebarOpen(false);
+        return;
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -156,7 +167,7 @@ export const App: React.FC = () => {
         answersCount={answersCount}
       />
 
-      <div className="main-content">
+      <div className="main-content" id="main-content" tabIndex={-1}>
         <Topbar
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           isSidebarOpen={isSidebarOpen}
@@ -168,7 +179,7 @@ export const App: React.FC = () => {
         />
 
         {/* View 1: Overview Dashboard */}
-        <div style={{ display: currentView === 'overview' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'overview' ? 'block' : 'none' }}>
           <OverviewView
             onNavigate={setCurrentView}
             opportunitiesCount={jobs.length}
@@ -179,7 +190,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* View 2: Opportunities Workbench */}
-        <div style={{ display: currentView === 'opportunities' ? 'flex' : 'none', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'opportunities' ? 'flex' : 'none', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <OpportunitiesView
             jobs={jobs}
             trackedApplications={trackedApplications}
@@ -191,7 +202,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* View 3: Application Pipeline */}
-        <div style={{ display: currentView === 'pipeline' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'pipeline' ? 'block' : 'none' }}>
           <PipelineView
             applications={trackedApplications}
             onTransitionStatus={handleTransitionStatus}
@@ -204,7 +215,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* View 4: Preparation */}
-        <div style={{ display: currentView === 'preparation' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'preparation' ? 'block' : 'none' }}>
           <PreparationView
             jobs={jobs}
             selectedJobId={selectedJobId}
@@ -213,47 +224,47 @@ export const App: React.FC = () => {
         </div>
 
         {/* View 5: Candidate Profile */}
-        <div style={{ display: currentView === 'profile' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'profile' ? 'block' : 'none' }}>
           <ProfileView onProfileUpdated={setProfileScore} />
         </div>
 
         {/* View 6: Evidence Library */}
-        <div style={{ display: currentView === 'evidence' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'evidence' ? 'block' : 'none' }}>
           <EvidenceView onFactsUpdated={setFactsCount} />
         </div>
 
         {/* View 7: Answer Bank */}
-        <div style={{ display: currentView === 'answers' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'answers' ? 'block' : 'none' }}>
           <AnswersView onAnswersUpdated={setAnswersCount} />
         </div>
 
         {/* View 8: Source Registry */}
-        <div style={{ display: currentView === 'sources' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'sources' ? 'block' : 'none' }}>
           <SourcesView />
         </div>
 
         {/* View 9: AI & Usage */}
-        <div style={{ display: currentView === 'ai' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'ai' ? 'block' : 'none' }}>
           <AiView />
         </div>
 
         {/* View 10: Settings & Policy */}
-        <div style={{ display: currentView === 'settings' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'settings' ? 'block' : 'none' }}>
           <SettingsView />
         </div>
 
         {/* View 11: Export & Import */}
-        <div style={{ display: currentView === 'portability' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'portability' ? 'block' : 'none' }}>
           <PortabilityView />
         </div>
 
         {/* View 12: Activity Log */}
-        <div style={{ display: currentView === 'activity' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'activity' ? 'block' : 'none' }}>
           <ActivityView />
         </div>
 
         {/* View 13: System Health */}
-        <div style={{ display: currentView === 'system' ? 'block' : 'none' }}>
+        <div className="view-wrapper" style={{ display: currentView === 'system' ? 'block' : 'none' }}>
           <SystemView />
         </div>
       </div>

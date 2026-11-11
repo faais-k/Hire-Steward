@@ -48,3 +48,6 @@ node_modules/
 /scratch/
 /scratch_prompt.txt
 /.agents/
+
+skills-lock.json
+audit_results.json

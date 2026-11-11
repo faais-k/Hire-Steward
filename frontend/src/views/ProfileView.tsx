@@ -371,7 +371,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onProfileUpdated }) =>
   };
 
   return (
-    <main className="view-container" id="profile-view">
+    <main className="view-container" id="profile-view" tabIndex={-1}>
       <div className="section-card">
         <div className="section-header">
           <div>
@@ -783,6 +783,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onProfileUpdated }) =>
           <div style={{ marginTop: '24px' }}>
             <button
               type="submit"
+              id="save-profile-btn"
               className="btn-primary"
               disabled={isSaving}
               style={{ minWidth: '160px' }}
