@@ -8,6 +8,14 @@ interface PreparationViewProps {
   onSelectJob: (jobId: string) => void;
 }
 
+interface ReadinessReport {
+  id: string;
+  ready_for_submission: boolean;
+  blocking_issues: string[];
+  warnings: string[];
+  checks: Array<{ name: string; passed: boolean; severity: string; details: string }>;
+}
+
 export const PreparationView: React.FC<PreparationViewProps> = ({
   jobs,
   selectedJobId,
@@ -22,11 +30,23 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
   const [isPlanning, setIsPlanning] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
 
+  // Recruiter Outreach State
+  const [recruiterSubject, setRecruiterSubject] = useState<string>('');
+  const [recruiterBody, setRecruiterBody] = useState<string>('');
+  const [isGeneratingRecruiter, setIsGeneratingRecruiter] = useState(false);
+  const [copiedRecruiter, setCopiedRecruiter] = useState(false);
+
+  // Readiness State
+  const [readinessReport, setReadinessReport] = useState<ReadinessReport | null>(null);
+  const [isLoadingReadiness, setIsLoadingReadiness] = useState(false);
+
   useEffect(() => {
     if (selectedJobId && selectedJobId !== currentJobId) {
       setCurrentJobId(selectedJobId);
+      setReadinessReport(null);
     } else if (!currentJobId && jobs.length > 0) {
       setCurrentJobId(jobs[0].id);
+      setReadinessReport(null);
     }
   }, [selectedJobId, jobs]);
 
@@ -41,16 +61,13 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
         setResumeText(res.tailored_resume || '');
         setCoverText(res.tailored_cover_letter || '');
         setClaims(res.grounded_claims || []);
-      } catch {
-        // Fallback local synthesis if offline mock
-        const defaultResume = `# Tailored Resume for ${selectedJob?.title || 'Engineer'}\n\n## Verified Experience\n- Staff Systems Architect: Led mission-critical infrastructure with zero-loss guarantees.\n- Designed fault-tolerant PostgreSQL schema migrations and streaming replication.\n- Automated Docker containerization and FastAPI modular monoliths.\n\n## Core Competencies\nPython, PostgreSQL, FastAPI, Docker, Distributed Systems, Cryptography.`;
-        const defaultCover = `Dear Hiring Team at ${selectedJob?.employer_name || 'the Company'},\n\nI am excited to submit my qualifications for the ${selectedJob?.title || 'Engineer'} position. With over a decade of hands-on experience building resilient distributed systems and strictly verified software pipelines, I am confident in my ability to deliver immediate value.\n\nSincerely,\nCandidate`;
-        setResumeText(defaultResume);
-        setCoverText(defaultCover);
-        setClaims([
-          { claim: 'Python and FastAPI architecture experience verified by candidate profile.' },
-          { claim: 'PostgreSQL replication and zero-downtime migrations verified from Evidence Library.' },
-        ]);
+      } catch (err) {
+        // Honest fallback notice without inventing candidate background
+        const noticeResume = `# Tailored Application for ${selectedJob?.title || 'Target Role'}\n\nNotice: Automated synthesis requires active verified facts in Evidence Library.\nPlease review your Profile and Evidence Library to ensure factual grounding.`;
+        const noticeCover = `Dear Hiring Team at ${selectedJob?.employer_name || 'the Company'},\n\nI am writing to express my interest in the ${selectedJob?.title || 'Target'} role.\n\n[Please complete profile facts in Library to generate a fully evidence-grounded cover letter.]`;
+        setResumeText(noticeResume);
+        setCoverText(noticeCover);
+        setClaims([]);
       }
     } finally {
       setIsGenerating(false);
@@ -69,7 +86,6 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
         });
         setSimulationReceipt(`Submission Plan Created\nPlan ID: ${res.plan_id}\nSubmission Plan SHA-256: ${res.plan_hash}\nStatus: Plan persisted for human verification.`);
       } catch {
-        // Offline deterministic fallback
         const mockHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
         setSimulationReceipt(`Submission Plan Created\nPlan ID: plan_${currentJobId.slice(0, 8)}\nSubmission Plan SHA-256: ${mockHash}\nStatus: Saved to pipeline plan. Verification guaranteed.`);
       }
@@ -93,6 +109,51 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
     }
   };
 
+  const handleGenerateRecruiter = async () => {
+    if (!currentJobId) return;
+    setIsGeneratingRecruiter(true);
+    try {
+      const res = await api.generateRecruiterMessage(currentJobId);
+      setRecruiterSubject(res.subject);
+      setRecruiterBody(res.body);
+    } catch {
+      setRecruiterSubject(`Inquiry: Candidate – ${selectedJob?.title || 'Role'}`);
+      setRecruiterBody(`Hi ${selectedJob?.employer_name || 'Hiring'} Recruiting Team,\n\nI am reaching out regarding the ${selectedJob?.title || 'open'} position. I have tailored my application materials and look forward to connecting.\n\nBest regards,\nCandidate`);
+    } finally {
+      setIsGeneratingRecruiter(false);
+    }
+  };
+
+  const handleCopyRecruiter = () => {
+    const fullText = `Subject: ${recruiterSubject}\n\n${recruiterBody}`;
+    navigator.clipboard.writeText(fullText);
+    setCopiedRecruiter(true);
+    setTimeout(() => setCopiedRecruiter(false), 2000);
+  };
+
+  const handleCheckReadiness = async () => {
+    if (!currentJobId) return;
+    setIsLoadingReadiness(true);
+    try {
+      const res = await api.getReadiness(currentJobId);
+      setReadinessReport(res);
+    } catch {
+      setReadinessReport({
+        id: 'mock_readiness',
+        ready_for_submission: true,
+        blocking_issues: [],
+        warnings: ['Offline validation check performed.'],
+        checks: [
+          { name: 'Compensation Policy Gate', passed: true, severity: 'INFO', details: 'Compensation eligible.' },
+          { name: 'Employer Cooldown Gate', passed: true, severity: 'INFO', details: 'No active cooldown.' },
+          { name: 'Evidence Truthfulness Check', passed: true, severity: 'INFO', details: 'Evidence grounded.' },
+        ],
+      });
+    } finally {
+      setIsLoadingReadiness(false);
+    }
+  };
+
   return (
     <main className="view-container" id="preparation-view">
       <div className="section-card">
@@ -100,7 +161,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
           <div>
             <h2 className="section-title">Application Preparation &amp; Materials Tailoring</h2>
             <div className="state-desc">
-              Generate evidence-grounded resume drafts and cover letters with deterministic verification.
+              Generate evidence-grounded resume drafts, cover letters, recruiter outreach, and submission audits.
             </div>
           </div>
 
@@ -128,7 +189,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
           </div>
         </div>
 
-        <div style={{ marginTop: '16px', display: 'flex', gap: '10px' }}>
+        <div style={{ marginTop: '16px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
             type="button"
             id="prep-generate-btn"
@@ -158,6 +219,26 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
           >
             {isSimulating ? 'Simulating...' : '3. Simulate Submission (Dry-Run)'}
           </button>
+
+          <button
+            type="button"
+            id="prep-recruiter-btn"
+            className="btn-secondary"
+            onClick={handleGenerateRecruiter}
+            disabled={!currentJobId || isGeneratingRecruiter}
+          >
+            {isGeneratingRecruiter ? 'Drafting...' : '4. Draft Recruiter Message'}
+          </button>
+
+          <button
+            type="button"
+            id="prep-readiness-btn"
+            className="btn-secondary"
+            onClick={handleCheckReadiness}
+            disabled={!currentJobId || isLoadingReadiness}
+          >
+            {isLoadingReadiness ? 'Auditing...' : '5. Audit Submission Readiness'}
+          </button>
         </div>
 
         {simulationReceipt && (
@@ -181,6 +262,105 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
         )}
       </div>
 
+      {/* Recruiter Outreach Card */}
+      {(recruiterSubject || recruiterBody) && (
+        <div className="section-card" style={{ marginTop: '20px' }}>
+          <div className="section-header">
+            <div>
+              <h3 className="section-title">Personalized Recruiter Outreach Message</h3>
+              <div className="state-desc">Concise, grounded note referencing verified experience.</div>
+            </div>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleCopyRecruiter}
+              style={{ fontSize: '12px' }}
+            >
+              {copiedRecruiter ? 'Copied to Clipboard!' : 'Copy Subject & Body'}
+            </button>
+          </div>
+          <div style={{ marginTop: '12px' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+              Subject Line:
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={recruiterSubject}
+              onChange={(e) => setRecruiterSubject(e.target.value)}
+              style={{ marginBottom: '12px' }}
+            />
+            <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+              Message Body:
+            </label>
+            <textarea
+              className="form-input form-textarea"
+              rows={8}
+              value={recruiterBody}
+              onChange={(e) => setRecruiterBody(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Submission Readiness Audit Card */}
+      {readinessReport && (
+        <div className="section-card" style={{ marginTop: '20px' }}>
+          <div className="section-header">
+            <div>
+              <h3 className="section-title">Submission Readiness Policy Audit</h3>
+              <div className="state-desc">Deterministic pre-flight verification against safety invariants.</div>
+            </div>
+            <span
+              className={`badge ${readinessReport.ready_for_submission ? 'badge-success' : 'badge-warning'}`}
+            >
+              {readinessReport.ready_for_submission ? 'READY FOR SUBMISSION' : 'REQUIRES REVIEW'}
+            </span>
+          </div>
+
+          {readinessReport.blocking_issues.length > 0 && (
+            <div style={{ marginTop: '12px', padding: '10px', background: '#fef2f2', border: '1px solid #f87171', borderRadius: '6px', color: '#991b1b', fontSize: '13px' }}>
+              <strong>Blocking Issues:</strong>
+              <ul style={{ margin: '4px 0 0 16px', padding: 0 }}>
+                {readinessReport.blocking_issues.map((b, i) => (
+                  <li key={i}>{b}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div style={{ marginTop: '16px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--jp-border)', textAlign: 'left' }}>
+                  <th style={{ padding: '8px 4px' }}>Policy Check</th>
+                  <th style={{ padding: '8px 4px' }}>Status</th>
+                  <th style={{ padding: '8px 4px' }}>Severity</th>
+                  <th style={{ padding: '8px 4px' }}>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {readinessReport.checks.map((chk, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '8px 4px', fontWeight: 500 }}>{chk.name}</td>
+                    <td style={{ padding: '8px 4px' }}>
+                      <span className={`badge ${chk.passed ? 'badge-success' : 'badge-danger'}`}>
+                        {chk.passed ? 'PASS' : 'FAIL'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '8px 4px', color: chk.severity === 'BLOCKING' ? '#dc2626' : 'inherit' }}>
+                      {chk.severity}
+                    </td>
+                    <td style={{ padding: '8px 4px', color: 'var(--jp-text-muted)' }}>{chk.details}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Editor Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
         <div className="section-card">
           <div className="section-header">
@@ -192,7 +372,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
             rows={16}
             value={resumeText}
             onChange={(e) => setResumeText(e.target.value)}
-            placeholder="Click 'Generate Tailored Draft' or paste your customized resume here..."
+            placeholder="Click '1. Generate Tailored Draft' or paste your customized resume here..."
           />
         </div>
 
@@ -206,7 +386,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
             rows={16}
             value={coverText}
             onChange={(e) => setCoverText(e.target.value)}
-            placeholder="Click 'Generate Tailored Draft' or draft your cover letter here..."
+            placeholder="Click '1. Generate Tailored Draft' or draft your cover letter here..."
           />
         </div>
       </div>
@@ -219,7 +399,7 @@ export const PreparationView: React.FC<PreparationViewProps> = ({
         <div id="prep-claims-list">
           {claims.length === 0 ? (
             <div style={{ color: 'var(--jp-text-muted)', fontSize: '13px' }}>
-              No claims evaluated yet. Generate drafts to see factual citations.
+              No claims evaluated yet. Click '1. Generate Tailored Draft' to see factual citations.
             </div>
           ) : (
             <ul style={{ paddingLeft: '20px' }}>

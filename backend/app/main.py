@@ -25,6 +25,7 @@ from backend.app.api.routes.system import router as system_router
 from backend.app.api.routes.settings import router as settings_router
 from backend.app.api.routes.source_registry import router as source_registry_router
 from backend.app.api.routes.ai_router import router as ai_router
+from backend.app.api.routes.preparation import router as preparation_router
 from backend.app.api.routes.data_portability import router as data_portability_router
 from backend.app.db.session import make_session_factory
 from backend.app.evidence_config import EvidenceSettings, evidence_settings_from_environment
@@ -252,6 +253,7 @@ def create_app(
     app.include_router(settings_router)
     app.include_router(source_registry_router)
     app.include_router(ai_router)
+    app.include_router(preparation_router)
     app.include_router(data_portability_router)
 
     @app.get("/favicon.ico", include_in_schema=False)

@@ -216,6 +216,30 @@ export const api = {
     });
   },
 
+  async generateRecruiterMessage(jobPostingId: string, tone?: string): Promise<{
+    id: string;
+    subject: string;
+    body: string;
+    word_count: number;
+    tone: string;
+    cited_facts: Array<{ claim_id: string; statement: string }>;
+  }> {
+    return request('/api/v1/preparation/recruiter-message', {
+      method: 'POST',
+      body: JSON.stringify({ job_posting_id: jobPostingId, tone: tone || 'Professional & Direct' }),
+    });
+  },
+
+  async getReadiness(jobPostingId: string): Promise<{
+    id: string;
+    ready_for_submission: boolean;
+    blocking_issues: string[];
+    warnings: string[];
+    checks: Array<{ name: string; passed: boolean; severity: string; details: string }>;
+  }> {
+    return request(`/api/v1/preparation/readiness/${encodeURIComponent(jobPostingId)}`);
+  },
+
   // Answer Bank
   async getAnswers(): Promise<AnswerBankItem[]> {
     return request<AnswerBankItem[]>('/api/v1/answers');

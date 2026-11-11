@@ -46,6 +46,42 @@ DEFAULT_PRICING_TABLE: dict[str, ModelPricing] = {
         output_rate_per_million=10.00,
         injected_overhead_tokens=0,
     ),
+    "llama-3.3-70b-versatile": ModelPricing(
+        model_alias="llama-3.3-70b-versatile",
+        input_rate_per_million=0.59,
+        output_rate_per_million=0.79,
+        injected_overhead_tokens=0,
+    ),
+    "llama-3.1-8b-instant": ModelPricing(
+        model_alias="llama-3.1-8b-instant",
+        input_rate_per_million=0.05,
+        output_rate_per_million=0.08,
+        injected_overhead_tokens=0,
+    ),
+    "mixtral-8x7b-32768": ModelPricing(
+        model_alias="mixtral-8x7b-32768",
+        input_rate_per_million=0.24,
+        output_rate_per_million=0.24,
+        injected_overhead_tokens=0,
+    ),
+    "gemini-2.0-flash": ModelPricing(
+        model_alias="gemini-2.0-flash",
+        input_rate_per_million=0.10,
+        output_rate_per_million=0.40,
+        injected_overhead_tokens=0,
+    ),
+    "gemini-1.5-pro": ModelPricing(
+        model_alias="gemini-1.5-pro",
+        input_rate_per_million=1.25,
+        output_rate_per_million=5.00,
+        injected_overhead_tokens=0,
+    ),
+    "ollama-local": ModelPricing(
+        model_alias="ollama-local",
+        input_rate_per_million=0.0,
+        output_rate_per_million=0.0,
+        injected_overhead_tokens=0,
+    ),
 }
 
 

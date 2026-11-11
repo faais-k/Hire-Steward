@@ -71,8 +71,26 @@ def test_ai_status_and_question_answering() -> None:
     assert status_data["paid_ai_enabled"] is False
     assert status_data["budget_cap_usd"] == 5.0
     assert status_data["remaining_budget_usd"] == 5.0
+    assert "supported_providers" in status_data
+    assert "groq" in status_data["supported_providers"]
+    assert "gemini" in status_data["supported_providers"]
+    assert "has_groq_key" in status_data
+    assert "has_gemini_key" in status_data
     for key, val in status_data.items():
         assert not str(val).startswith("sk-")
+
+    # 1b. GET /api/v1/ai/providers
+    providers_resp = client.get("/api/v1/ai/providers", headers=local_headers())
+    assert providers_resp.status_code == 200
+    providers = providers_resp.json()
+    assert len(providers) >= 6
+    provider_ids = [p["provider_id"] for p in providers]
+    assert "offline_mock" in provider_ids
+    assert "groq" in provider_ids
+    assert "gemini" in provider_ids
+    assert "anthropic" in provider_ids
+    assert "openai" in provider_ids
+    assert "ollama" in provider_ids
 
     # 2. POST /api/v1/ai/answer-question - Match in Answer Bank
     ans_resp1 = client.post(

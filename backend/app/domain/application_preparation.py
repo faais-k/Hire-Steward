@@ -632,3 +632,264 @@ def build_application_draft(
         ),
         generated_at=datetime.now(timezone.utc).isoformat(),
     )
+
+
+class RecruiterMessageDraft(BaseModel):
+    """Tailored, evidence-grounded outreach message for recruiter or hiring manager."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    job_posting_id: str
+    job_title: str
+    employer_handle: str
+    subject: str
+    body: str
+    cited_facts: list[TailoredClaim]
+    tone: str
+    word_count: int
+    generated_at: str
+
+
+class ReadinessCheckItem(BaseModel):
+    """Individual policy or completeness check for application submission readiness."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    passed: bool
+    severity: str  # "BLOCKING", "WARNING", "INFO"
+    details: str
+
+
+class ApplicationReadinessReport(BaseModel):
+    """Comprehensive readiness assessment report prior to application submission."""
+
+    model_config = ConfigDict(frozen=True)
+
+    id: str
+    job_posting_id: str
+    ready_for_submission: bool
+    blocking_issues: list[str]
+    warnings: list[str]
+    checks: list[ReadinessCheckItem]
+    checked_at: str
+
+
+def build_recruiter_message(
+    job_posting_id: str,
+    job_title: str,
+    employer_handle: str,
+    candidate_evidence: list[CandidateEvidenceItem],
+    candidate_name: str = "Candidate",
+    candidate_headline: str = "",
+    tone: str = "Professional & Direct",
+) -> RecruiterMessageDraft:
+    """Deterministically assemble a concise, tailored recruiter outreach message."""
+    usable, unreviewed, _ = filter_usable_evidence(candidate_evidence)
+
+    subject = f"Inquiry: {candidate_name} – {job_title}"
+    cited_claims: list[TailoredClaim] = []
+
+    skills = [c.display_label for c in usable if c.fact_type == FactType.SKILL.value]
+    experiences = [c.display_label for c in usable if c.fact_type == FactType.EMPLOYMENT.value]
+
+    highlights: list[str] = []
+    if skills:
+        top_skills = ", ".join(skills[:4])
+        highlights.append(f"Core technical proficiencies: {top_skills}")
+        cited_claims.append(
+            TailoredClaim(
+                claim_id=f"claim_{uuid4().hex[:8]}",
+                fact_id=usable[0].fact_id if usable else "skill_summary",
+                fact_type="skill",
+                statement=top_skills,
+                verification_state="VERIFIED",
+                is_unreviewed=False,
+                provenance_count=1,
+                relevance_reason="Matches core role requirements",
+            )
+        )
+    if experiences:
+        top_exp = experiences[0]
+        highlights.append(f"Recent impact: {top_exp}")
+
+    body_lines = [
+        f"Hi {employer_handle} Recruiting Team,",
+        "",
+        f"I am writing to express my strong interest in the {job_title} role at {employer_handle}.",
+    ]
+    if candidate_headline:
+        body_lines.append(f"As a {candidate_headline}, I focus on delivering robust, high-impact systems.")
+
+    if highlights:
+        body_lines.append("")
+        body_lines.append("Key qualifications from my background:")
+        for h in highlights:
+            body_lines.append(f"- {h}")
+
+    body_lines.extend([
+        "",
+        "I have prepared application materials tailored to this position and would welcome the opportunity to connect.",
+        "",
+        "Best regards,",
+        candidate_name,
+    ])
+
+    body_text = "\n".join(body_lines)
+    word_count = len(body_text.split())
+
+    return RecruiterMessageDraft(
+        id=str(uuid4()),
+        job_posting_id=job_posting_id,
+        job_title=job_title,
+        employer_handle=employer_handle,
+        subject=subject,
+        body=body_text,
+        cited_facts=cited_claims,
+        tone=tone,
+        word_count=word_count,
+        generated_at=datetime.now(timezone.utc).isoformat(),
+    )
+
+
+def assess_application_readiness(
+    job_posting_id: str,
+    has_resume: bool,
+    has_cover_letter: bool,
+    has_contact_info: bool,
+    compensation_meets_floor: bool,
+    is_cooldown_active: bool,
+    unreviewed_fact_count: int = 0,
+    conflicted_fact_count: int = 0,
+) -> ApplicationReadinessReport:
+    """Audit application readiness against submission safety policies and completeness requirements."""
+    checks: list[ReadinessCheckItem] = []
+    blocking_issues: list[str] = []
+    warnings: list[str] = []
+
+    # 1. Compensation Policy Gate (R-01)
+    if not compensation_meets_floor:
+        checks.append(
+            ReadinessCheckItem(
+                name="Compensation Policy Gate",
+                passed=False,
+                severity="BLOCKING",
+                details="Target compensation is below your configured hard compensation floor. Submission blocked.",
+            )
+        )
+        blocking_issues.append("Compensation below hard floor")
+    else:
+        checks.append(
+            ReadinessCheckItem(
+                name="Compensation Policy Gate",
+                passed=True,
+                severity="INFO",
+                details="Compensation satisfies hard policy floor.",
+            )
+        )
+
+    # 2. Employer Cooldown Gate
+    if is_cooldown_active:
+        checks.append(
+            ReadinessCheckItem(
+                name="Employer Cooldown Gate",
+                passed=False,
+                severity="BLOCKING",
+                details="Active cooldown period in effect for this employer. Submission blocked to prevent duplicates.",
+            )
+        )
+        blocking_issues.append("Active cooldown period with employer")
+    else:
+        checks.append(
+            ReadinessCheckItem(
+                name="Employer Cooldown Gate",
+                passed=True,
+                severity="INFO",
+                details="No conflicting active cooldowns.",
+            )
+        )
+
+    # 3. Fact Truthfulness & Verification Gate
+    if conflicted_fact_count > 0:
+        checks.append(
+            ReadinessCheckItem(
+                name="Evidence Truthfulness Check",
+                passed=False,
+                severity="BLOCKING",
+                details=f"{conflicted_fact_count} conflicted fact(s) detected. Resolve conflicting evidence before submission.",
+            )
+        )
+        blocking_issues.append(f"{conflicted_fact_count} conflicted fact(s) detected")
+    elif unreviewed_fact_count > 0:
+        checks.append(
+            ReadinessCheckItem(
+                name="Evidence Truthfulness Check",
+                passed=True,
+                severity="WARNING",
+                details=f"{unreviewed_fact_count} unreviewed claim(s) require manual review before submission.",
+            )
+        )
+        warnings.append(f"{unreviewed_fact_count} unreviewed claim(s) require verification")
+    else:
+        checks.append(
+            ReadinessCheckItem(
+                name="Evidence Truthfulness Check",
+                passed=True,
+                severity="INFO",
+                details="All claims verified and grounded in candidate library.",
+            )
+        )
+
+    # 4. Mandatory Application Materials Check
+    if not has_resume:
+        checks.append(
+            ReadinessCheckItem(
+                name="Resume Material Check",
+                passed=False,
+                severity="BLOCKING",
+                details="Tailored resume markdown has not been generated or reviewed.",
+            )
+        )
+        blocking_issues.append("Resume markdown missing")
+    else:
+        checks.append(
+            ReadinessCheckItem(
+                name="Resume Material Check",
+                passed=True,
+                severity="INFO",
+                details="Tailored resume present.",
+            )
+        )
+
+    if not has_contact_info:
+        checks.append(
+            ReadinessCheckItem(
+                name="Candidate Identity & Contact Check",
+                passed=False,
+                severity="BLOCKING",
+                details="Candidate contact information is incomplete in Profile.",
+            )
+        )
+        blocking_issues.append("Candidate contact info incomplete")
+    else:
+        checks.append(
+            ReadinessCheckItem(
+                name="Candidate Identity & Contact Check",
+                passed=True,
+                severity="INFO",
+                details="Candidate identity and contact details verified.",
+            )
+        )
+
+    ready = len(blocking_issues) == 0
+
+    return ApplicationReadinessReport(
+        id=str(uuid4()),
+        job_posting_id=job_posting_id,
+        ready_for_submission=ready,
+        blocking_issues=blocking_issues,
+        warnings=warnings,
+        checks=checks,
+        checked_at=datetime.now(timezone.utc).isoformat(),
+    )

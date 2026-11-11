@@ -53,17 +53,100 @@ def get_ai_status(session: Session = Depends(get_session)) -> dict[str, Any]:
     summary = _budget_tracker.get_summary()
 
     return {
-        "active_mode": "OFFLINE_MOCK",
+        "active_mode": settings.get("ai_provider_mode", "OFFLINE_MOCK"),
         "paid_ai_enabled": False,  # Strict offline default
         "live_inference_authorized": False,
         "has_anthropic_key": creds.has_anthropic,
         "has_openai_key": creds.has_openai,
+        "has_groq_key": creds.has_groq,
+        "has_gemini_key": creds.has_gemini,
+        "has_ollama": creds.has_ollama,
         "budget_cap_usd": summary.budget_cap_usd,
         "committed_spend_usd": summary.committed_spend_usd,
         "active_reservations_usd": summary.active_reservations_usd,
         "remaining_budget_usd": summary.remaining_budget_usd,
-        "supported_models": ["offline-mock-evaluator"],
+        "supported_providers": ["offline_mock", "groq", "gemini", "anthropic", "openai", "ollama"],
+        "supported_models": [
+            "offline-mock-evaluator",
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+            "mixtral-8x7b-32768",
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "claude-sonnet-5-5",
+            "gpt-6.1-sol",
+        ],
+        "provider_configuration_guidance": {
+            "groq": "Set HIRE_STEWARD_GROQ_API_KEY in your environment to enable Groq models.",
+            "gemini": "Set HIRE_STEWARD_GEMINI_API_KEY in your environment to enable Google Gemini models.",
+            "anthropic": "Set HIRE_STEWARD_ANTHROPIC_API_KEY in your environment to enable Anthropic Claude models.",
+            "openai": "Set HIRE_STEWARD_OPENAI_API_KEY in your environment to enable OpenAI models.",
+            "ollama": "Run Ollama locally at http://127.0.0.1:11434 with your selected model.",
+        },
     }
+
+
+@router.get("/providers")
+def list_ai_providers(session: Session = Depends(get_session)) -> list[dict[str, Any]]:
+    """List configured and available AI providers and their operational readiness."""
+    creds = load_provider_credentials()
+    return [
+        {
+            "provider_id": "offline_mock",
+            "name": "Deterministic Offline Evaluator",
+            "status": "ACTIVE_DEFAULT",
+            "requires_key": False,
+            "has_key": True,
+            "cost_per_evaluation_usd": 0.00,
+            "description": "Zero external network calls, zero data egress, deterministic matching.",
+        },
+        {
+            "provider_id": "groq",
+            "name": "Groq LPU Inference",
+            "status": "READY" if creds.has_groq else "NEEDS_KEY",
+            "requires_key": True,
+            "has_key": creds.has_groq,
+            "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+            "description": "Ultra-fast open weights inference via Groq Cloud API.",
+        },
+        {
+            "provider_id": "gemini",
+            "name": "Google Gemini",
+            "status": "READY" if creds.has_gemini else "NEEDS_KEY",
+            "requires_key": True,
+            "has_key": creds.has_gemini,
+            "models": ["gemini-2.0-flash", "gemini-1.5-pro"],
+            "description": "Google Gemini multimodal and reasoning models via Generative Language API.",
+        },
+        {
+            "provider_id": "anthropic",
+            "name": "Anthropic Claude",
+            "status": "READY" if creds.has_anthropic else "NEEDS_KEY",
+            "requires_key": True,
+            "has_key": creds.has_anthropic,
+            "models": ["claude-sonnet-5-5"],
+            "description": "Frontier reasoning and alignment evaluation with strict JSON schema.",
+        },
+        {
+            "provider_id": "openai",
+            "name": "OpenAI GPT",
+            "status": "READY" if creds.has_openai else "NEEDS_KEY",
+            "requires_key": True,
+            "has_key": creds.has_openai,
+            "models": ["gpt-6.1-sol"],
+            "description": "Frontier models with strict structured JSON output and store=false.",
+        },
+        {
+            "provider_id": "ollama",
+            "name": "Local Ollama",
+            "status": "CONFIGURED",
+            "requires_key": False,
+            "has_key": True,
+            "base_url": creds.ollama_base_url,
+            "cost_per_evaluation_usd": 0.00,
+            "description": "Local self-hosted LLM execution over private loopback socket.",
+        },
+    ]
 
 
 @router.post("/generate-draft")
