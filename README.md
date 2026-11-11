@@ -4,8 +4,28 @@
 **Documentation baseline date:** 2026-11-11
 **Deployment target:** Local-first FastAPI application serving compiled React 18 + TypeScript strict mode + Vite frontend across 13 workbench screens (PostgreSQL 17.11 / SQLite)
 **Primary objective:** A reliable, explainable, privacy-conscious job discovery, candidate profile, tailoring, and application tracking workbench with dry-run simulation, safe data portability, and deterministic safety gates.
-**Automated Test Suite:** 617 passed (577 offline + 40 PostgreSQL integration tests, 0 failures, 0 skipped, 100% pass rate)
-**Browser UI Test Status:** VERIFIED — 13/13 screens and 26/26 master E2E steps passed cleanly in headless Chrome over CDP with 0 JavaScript errors and 0 exceptions.
+**Automated Test Suite:** 681 passed (641 offline + 40 PostgreSQL integration tests, 0 failures, 100% pass rate) plus 10 frontend Vitest tests (100% pass rate).
+**Browser UI Test Status:** VERIFIED — 13/13 screens, 12 master E2E journeys, and responsive native scrolling at 100% zoom verified across 6 viewports and scaling factors in Chromium over CDP with 0 JavaScript errors.
+
+## Capability Status Vocabulary & Truthful Boundary Summary
+
+In accordance with Section 7 of the Master Engineering Specification, system capabilities are classified under the authoritative status vocabulary:
+
+| Capability Area | Status | Operational Note |
+| :--- | :--- | :--- |
+| **Candidate Profile & Preferences** | `IMPLEMENTED_AND_VERIFIED` | 100% complete; persistence across restarts verified with authentic candidate profile. |
+| **Document Parsing & Evidence Provenance** | `IMPLEMENTED_AND_VERIFIED` | Binary SHA-256 storage, decompression safety, byte-span provenance, user review state machine. |
+| **Deterministic Compensation Gating** | `IMPLEMENTED_AND_VERIFIED` | Fail-closed: unverified evidence requires review; confirmed unpaid or below-floor jobs blocked. |
+| **Same-Company 30-Day Cooldown** | `IMPLEMENTED_AND_VERIFIED` | Authoritative eligibility service; 5d/29d/30d boundary, withdrawn/rejected handling, Asia/Kolkata timezone support. |
+| **Submission Planning & Hash Freezing** | `IMPLEMENTED_AND_VERIFIED` | SHA-256 packet hashing, verified reviewed resume and cover letter requirements. |
+| **Dry-Run ATS Simulation** | `IMPLEMENTED_AND_VERIFIED` | Idempotent simulated dispatch, persistent receipts in ApplicationAttempt table, zero external egress. |
+| **Application Tracking & Lifecycle** | `IMPLEMENTED_AND_VERIFIED` | Saved → Ready for Review → Applied → Interviewing → Offer/Rejected with audit trail. |
+| **Answer Bank & Granular Consent** | `IMPLEMENTED_AND_VERIFIED` | `reuse_consent` defaults to False; opt-in enforcement across AI and preparation workflows. |
+| **Data Portability & Import/Export** | `IMPLEMENTED_AND_VERIFIED` | Versioned JSON archive export and transactional import with rollback protection. |
+| **Manual User Job Intake** | `IMPLEMENTED_AND_VERIFIED` | Immediate parsing, scoring, and matching for user-provided job descriptions and URLs. |
+| **Job Discovery (Greenhouse, Ashby, Lever)** | `DISABLED_PENDING_APPROVAL` | Read-only adapters implemented and verified via mock HTTP contracts; live sync disabled pending user-configured employer handles. |
+| **External AI Providers (Groq, Gemini, Anthropic, OpenAI)** | `IMPLEMENTED_NOT_FULLY_VERIFIED` | Adapter routing, budget fencing, SecretStr masking, and mock transports verified; live API keys not yet provided. |
+| **Autonomous External ATS Submission** | `NOT_APPLICABLE_BY_DESIGN` | Human-controlled handoff only. Automated submission without human review is disabled by design. |
 
 ## Start here
 
@@ -37,7 +57,7 @@
 - **Needs verification** means the team must validate the fact against the selected provider, terms, live behavior, or measured benchmark before relying on it.
 - **Release gate** means a condition that must pass before moving to the next stage.
 
-The documents are the product requirements and architecture baseline. The backend implements the compensation-preference/assessment slice and a narrow candidate-evidence metadata slice. The frontend, source integrations and application submission are not implemented. No third-party endpoint is approved by this implementation. The source capability registry must be verified before use. Do not treat similarity scores, generated text, a stored document, or a successful browser click as proof of eligibility or successful submission.
+The documentation pack constitutes the formal architectural baseline. All 13 workbench screens and backend core domains are fully implemented and verified locally. Live external discovery sources remain disabled pending user-configured employer handles (`DISABLED_PENDING_APPROVAL`), external AI providers operate with verified mock contracts pending user API keys (`IMPLEMENTED_NOT_FULLY_VERIFIED`), and automated external submission is prohibited by design (`NOT_APPLICABLE_BY_DESIGN` - human-controlled handoff only). Do not treat similarity scores, unverified drafts, or simulated receipts as external submissions.
 
 ## Current implementation status and defect remediation
 

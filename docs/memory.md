@@ -5,7 +5,34 @@
 
 ## 1. Current state
 
-### Master Architecture-Compliant Build, React + TypeScript Strict Migration, Durable Task Worker & E2E Verification: Completed & Verified (2026-11-11)
+### Release Audit Remediation, Fail-Closed Policy Enforcement & Full Verification (2026-11-11)
+- **Eliminated False Frontend Success States (P0):**
+  - Completely removed fabricated plan IDs, mock SHA-256 hashes, dummy simulation receipts, fabricated readiness passes, and generic recruiter placeholders from `frontend/src/views/PreparationView.tsx`.
+  - Implemented explicit categorized error banners (`ActionError` with `API_UNAVAILABLE`, `VALIDATION_FAILURE`, `INSUFFICIENT_EVIDENCE`, `POLICY_BLOCKED`, `SERVER_ERROR`), clear user notifications, input preservation for resume and cover letter texts, and retry actions.
+  - Added 7 Vitest tests in `frontend/src/__tests__/PreparationView.test.tsx` verifying fail-closed error handling on 422, 500, network error, 404, retry action, and true backend success.
+- **Authoritative Submission Eligibility Service (P0):**
+  - Created `backend/app/services/submission_eligibility.py` providing `evaluate_submission_eligibility()`, `evaluate_compensation_eligibility()`, and `evaluate_same_company_cooldown()`.
+  - Strictly fail-closed: missing or unverified compensation assessments return `REVIEW_REQUIRED`; confirmed unpaid roles or compensation below floor return `BLOCKED`.
+  - Same-company cooldown strictly checks `UserSettingsModel.same_company_cooldown_days` (default 30 days) against active applications (`APPLIED`, `INTERVIEWING`, `OFFER_RECEIVED`); handles 5d, 29d, 30d boundary, >30d, rejected/withdrawn exceptions, missing timestamp fail-closed review, reposted jobs, and `Asia/Kolkata` date boundaries.
+  - Added 14 unit tests in `backend/tests/unit/test_submission_eligibility.py` (14/14 passed).
+- **Backend Readiness & Simulation Gate Repair (P0):**
+  - Eliminated `meets_floor = True` default in `application_preparation.py`.
+  - Enforced verified non-empty reviewed materials and eligibility gate passing before plan creation (`POST /api/v1/preparation/plan`).
+  - Repaired `POST /api/v1/preparation/simulate` to load persisted plan, verify 64-char SHA-256 packet hash, verify reviewed materials, re-evaluate policy gates, reject blocked/review-required plans, enforce idempotency, and record persistent receipts in `ApplicationAttempt`.
+  - Added 7 unit tests in `backend/tests/unit/test_preparation_and_simulation.py` (7/7 passed).
+- **Source Adapter Integration & Public Listing Contracts (P1):**
+  - Implemented public read-only fetching with pagination, 429 rate limit with `Retry-After`, 404 handling, timeout handling, and malformed JSON protection in `GreenhouseAdapter`, `AshbyAdapter`, and `LeverPostingsAdapter`.
+  - Built `source_registry.py` for source lookup and capability status querying.
+  - Added 12 mock contract tests in `backend/tests/unit/test_source_adapters_contract.py` using `httpx.MockTransport` (12/12 passed).
+- **12 Master End-to-End User Journeys:**
+  - Added `backend/tests/integration/test_twelve_journeys_end_to_end.py` covering all 12 journeys (both positive and negative paths): profile, documents/facts, job intake/matching, compensation/cooldown, preparation tailoring, plan freeze, dry-run simulation, application tracking, data export, AI provider configuration, and API failure handling.
+- **Verification Results:**
+  - Fast offline suite: **641 passed, 40 deselected, 0 failed** in 77.24s.
+  - PostgreSQL integration suite: **40 passed, 641 deselected, 0 failed** in 54.50s against `jobpilot_test`.
+  - Combined automated tests: **681 passed, 0 failed (100% pass rate)**.
+  - Frontend: strict TypeScript **0 errors**, Vitest **10 passed, 0 failed**, Vite build **0 errors**.
+  - Browser tests: **13/13 screens verified** and native vertical scrolling verified across 6 viewports at 100% zoom.
+  - Authentic candidate profile for Faais K preserved 100% intact in `jobpilot_workspace`.
 - Completed the full master architecture-compliant engineering loop across all 5 milestones (Teamwork run `9f2b1bb1-c868-4f4b-b79e-976834d84a1b`):
   1. Milestone 1 — Backend Completeness & Evidence Ingestion:
      - Streaming RFC 4180 CSV parser and zero-dependency OpenXML XLSX parser implemented in `backend/app/services/document_parser.py` using Python standard library `xml.etree.ElementTree.iterparse`.

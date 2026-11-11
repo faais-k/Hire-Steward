@@ -26,12 +26,14 @@ This document explicitly defines what Hire-Steward does and does **not** do acro
 7. **Local Lifecycle Tracking:** Records application stages (Discovered, Reviewing, Applied, Interviewing, Offered, Rejected, Archived) with full local audit logging.
 
 ### 2.2 What the System Does NOT Do
-1. **No Autonomous External Submissions:** Hire-Steward **never** submits applications, uploads resumes, or fills external forms without explicit, manual human consent and execution.
-2. **No Blind Auto-Apply / Botting:** There is no "auto-apply to 500 jobs while you sleep" feature. Every submission requires human review of tailored artifacts.
-3. **No Unverified Fact Fabrication:** The AI tailoring engine cannot invent degrees, companies, certifications, skills, or metrics not grounded in the candidate's verified evidence store.
-4. **No Direct Candidate Compensation Authorization by LLM:** A model cannot override user compensation floors or mark an unpaid posting as eligible.
-5. **No CAPTCHA Solving or Cloudflare Bypass:** Hire-Steward strictly respects anti-bot protections, WAFs, and `robots.txt`. It will never attempt to circumvent access controls or anti-bot challenges.
-6. **No External Telemetry or Cloud Sync:** There is no remote SaaS server, user tracking, crash analytics, or phone-home telemetry.
+1. **No Autonomous External Submissions (`NOT_APPLICABLE_BY_DESIGN`):** Hire-Steward **never** submits applications, uploads resumes, or fills external forms without explicit, manual human consent and execution. The system produces frozen submission packets for human-controlled handoff only.
+2. **No Blind Auto-Apply / Botting (`NOT_APPLICABLE_BY_DESIGN`):** There is no "auto-apply to 500 jobs while you sleep" feature. Every submission requires human review of tailored artifacts.
+3. **No Unverified Fact Fabrication (`ENFORCED`):** The AI tailoring engine cannot invent degrees, companies, certifications, skills, or metrics not grounded in the candidate's verified evidence store.
+4. **No Direct Candidate Compensation Authorization by LLM (`ENFORCED`):** A model cannot override user compensation floors or mark an unpaid posting as eligible. Missing or unverified salary evidence fails closed to `REVIEW_REQUIRED`.
+5. **No CAPTCHA Solving or Cloudflare Bypass (`NOT_APPLICABLE_BY_DESIGN`):** Hire-Steward strictly respects anti-bot protections, WAFs, and `robots.txt`. It will never attempt to circumvent access controls or anti-bot challenges.
+6. **No External Telemetry or Cloud Sync (`NOT_APPLICABLE_BY_DESIGN`):** There is no remote SaaS server, user tracking, crash analytics, or phone-home telemetry.
+7. **No Unapproved Live Discovery Ingestion (`DISABLED_PENDING_APPROVAL`):** While Greenhouse, Ashby, and Lever read-only adapters are verified via mock HTTP contracts, live external feed polling remains disabled pending user configuration of approved employer handles.
+8. **No Live External Inference Without User API Keys (`IMPLEMENTED_NOT_FULLY_VERIFIED`):** Frontier AI providers (Groq, Gemini, Anthropic, OpenAI) operate in verified offline mock mode until the user provides active API keys in local environment variables.
 
 ---
 

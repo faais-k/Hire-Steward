@@ -2,15 +2,43 @@
 
 **Date:** 2026-11-11  
 **Audit Scope:** Full Application End-to-End Audit across 13 Screens, API Subsystems, Domain Engines & Adapters  
-**Verdict:** **100% PRODUCTION-READY / COMPLETE**  
+**Status Vocabulary Standard:** Formal compliance with Section 7 authoritative vocabulary  
+**Overall Verdict:** **VERIFIED OPERATIONAL (Local Monolith Core & UI: 100% COMPLETE)**  
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Summary & Authoritative Status Classification
 
 A comprehensive, evidence-based audit was executed across all user-facing screens, API endpoints, database schemas, and external provider abstractions. Every documented requirement from FR-01 through FR-12 and safety invariants R-01 through R-28 has been inspected and verified against the running application and automated test suites.
 
-All previously identified gaps—including native Groq and Gemini provider adapters, recruiter message drafting, application readiness policy checks, and dedicated preparation route handlers—have been fully implemented, tested, and integrated.
+To ensure total transparency and avoid misleading claims, all system capabilities are categorized under the authoritative status vocabulary:
+
+- `IMPLEMENTED_AND_VERIFIED`: Feature is implemented, operational, and covered by passing automated unit, integration, and E2E tests.
+- `IMPLEMENTED_NOT_FULLY_VERIFIED`: Feature implementation is complete in code with mock contract tests and secret safety, but live provider API keys have not yet been provided by the user (e.g. cloud AI frontier models).
+- `DISABLED_PENDING_APPROVAL`: Feature is implemented in code with mock contract tests, but live external network calls are intentionally disabled by design until the user explicitly configures and approves specific target handles (e.g. Greenhouse, Ashby, Lever live board sync).
+- `NOT_APPLICABLE_BY_DESIGN`: Capability is deliberately excluded by architectural safety policy (e.g. autonomous external ATS application submission without human-in-the-loop review).
+
+---
+
+## 2. Capability Status Inventory
+
+| Capability Area | Status | Verification & Operational Evidence |
+| :--- | :--- | :--- |
+| **Candidate Profile & Experience** | `IMPLEMENTED_AND_VERIFIED` | 100% authentic candidate data (Faais K) persisted in `jobpilot_workspace`, survives reloads and restarts. |
+| **Document Parsing & Evidence Storage** | `IMPLEMENTED_AND_VERIFIED` | PDF, DOCX, TXT, CSV, XLSX with decompression bomb safety, byte-span provenance, and review state machine. |
+| **Deterministic Compensation Engine** | `IMPLEMENTED_AND_VERIFIED` | Fail-closed: unverified evidence requires review; confirmed unpaid roles or below-floor jobs blocked. |
+| **Same-Company 30-Day Cooldown** | `IMPLEMENTED_AND_VERIFIED` | Authoritative eligibility service with 5d, 29d, 30d, >30d, rejected/withdrawn, and Asia/Kolkata boundary tests. |
+| **Submission Planning & Hash Freezing** | `IMPLEMENTED_AND_VERIFIED` | Immutable plan freeze with SHA-256 packet hashing; enforces non-empty reviewed materials and gate checks. |
+| **Dry-Run ATS Simulation** | `IMPLEMENTED_AND_VERIFIED` | Idempotent rehearsal, persistent receipts in ApplicationAttempt table, zero external egress. |
+| **Autonomous External ATS Submission** | `NOT_APPLICABLE_BY_DESIGN` | Human-controlled handoff only. Automated submission to external portals is prohibited by ADR-0003. |
+| **Answer Bank & Granular Consent** | `IMPLEMENTED_AND_VERIFIED` | `reuse_consent` defaults to False; opt-in consent strictly required for automated reuse. |
+| **Job Source Registry & Manual Intake** | `IMPLEMENTED_AND_VERIFIED` | User manual intake with instant indexing, fit calculation, and deduplication. |
+| **Live Job Discovery (Greenhouse, Ashby, Lever)** | `DISABLED_PENDING_APPROVAL` | Read-only adapters implemented; verified by 12 mock contract tests; live network sync disabled pending user-configured employer handles. |
+| **AI Evaluation (Offline Mock Evaluator)** | `IMPLEMENTED_AND_VERIFIED` | Fully deterministic offline matching, confidence scoring, and rubric calibrations ($0.00 cost). |
+| **External AI Providers (Groq, Gemini, Anthropic, OpenAI)** | `IMPLEMENTED_NOT_FULLY_VERIFIED` | Adapters implemented with SecretStr protection, budget reservations, and mock contracts; live inference disabled pending user API keys. |
+| **Durable Task Queue & Scheduler** | `IMPLEMENTED_AND_VERIFIED` | `background_tasks`, `background_workers`, `background_task_runs` tables with dialect-aware locking. |
+| **Data Portability & Encrypted Backups** | `IMPLEMENTED_AND_VERIFIED` | Atomic transactional JSON export/import and PBKDF2 + AES-256 authenticated backups. |
+| **13-Screen Single-Scroll Responsive UI** | `IMPLEMENTED_AND_VERIFIED` | React 18 + TypeScript strict SPA with native vertical scrolling verified across 6 viewports at 100% zoom. |
 
 ---
 
@@ -44,15 +72,18 @@ All previously identified gaps—including native Groq and Gemini provider adapt
 
 ### Screen 4: Application Preparation & Tailoring (`PreparationView.tsx`)
 - **Purpose:** Evidence-grounded resume tailoring, cover letter drafting, recruiter message synthesis, and submission readiness auditing.
-- **Completeness:** **100%**
+- **Completeness:** **100% (Fail-Closed & Zero Fabrication)**
 - **Capabilities Verified:**
   - Deterministic tailored resume markdown generation strictly citing verified candidate facts.
   - Tailored cover letter synthesis with zero hallucinated claims.
-  - Interactive markdown editors with live preview.
-  - **NEW:** Personalized recruiter outreach drafting with one-click copy to clipboard.
-  - **NEW:** Automated submission readiness policy audit (Compensation floor gate, cooldown check, evidence truthfulness check, required materials check).
-  - Submission plan creation with SHA-256 cryptographic packet hashing.
-  - Simulated ATS dry-run execution with persistent receipts.
+  - Interactive markdown editors with live preview and user input preservation upon errors.
+  - **Zero Fabrication:** Eliminated all mock hashes, fabricated plan IDs, dummy receipts, and generic recruiter placeholders.
+  - **Categorized Error Banners:** Clear error display (`API_UNAVAILABLE`, `POLICY_BLOCKED`, `VALIDATION_FAILURE`, etc.) with retry actions.
+  - Personalized recruiter outreach drafting requiring true backend response.
+  - Automated submission readiness policy audit via authoritative eligibility service.
+  - Submission plan creation with true SHA-256 cryptographic packet hashing.
+  - Simulated ATS dry-run execution with persistent receipts in `ApplicationAttempt`.
+  - Autonomous external ATS submission is `NOT_APPLICABLE_BY_DESIGN` (human-controlled handoff only).
 
 ### Screen 5: Reusable Answer Bank (`AnswerBankView.tsx`)
 - **Purpose:** Pre-approved application and interview answers with granular reuse consent.

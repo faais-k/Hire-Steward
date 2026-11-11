@@ -14,7 +14,9 @@ Hire-Steward features a provider-neutral AI architecture supporting five primary
 4. **OpenAI GPT:** Structured schema generation (GPT-4o, reasoning models).
 5. **Local Ollama:** Self-hosted, private offline inference on `http://127.0.0.1:11434`.
 
-By default, the application operates in **OFFLINE_MOCK** mode with **zero paid external API calls**, zero network egress, and zero credential assumptions.
+By default, the application operates in **OFFLINE_MOCK** mode (`IMPLEMENTED_AND_VERIFIED`) with **zero paid external API calls**, zero network egress, and zero credential assumptions.
+
+External cloud AI providers (Groq, Gemini, Anthropic, OpenAI) are classified as `IMPLEMENTED_NOT_FULLY_VERIFIED`: the adapters, payload builders, response parsers, SecretStr protections, and pre-socket budget reservations are implemented and verified via deterministic mock contracts; live production inference will be enabled only when the user sets the appropriate API keys below.
 
 ---
 

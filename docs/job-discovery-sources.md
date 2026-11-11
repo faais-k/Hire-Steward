@@ -1,6 +1,10 @@
 # Hire-steward — Job Discovery Sources and Checkpointing
 
-**Status:** Source-agnostic policy and adapter design. Individual sources stay disabled until their current method, terms and capabilities are verified.
+**Status:** Implementation & Verification Baseline (2026-11-11)
+**Authoritative Capability Classification:**
+- **Manual User Intake (`manual_intake`):** `IMPLEMENTED_AND_VERIFIED` (supports direct job description and canonical URL ingestion).
+- **Public Feed Discovery (Greenhouse, Ashby, Lever):** `DISABLED_PENDING_APPROVAL` (read-only HTTP fetching, pagination, and rate limit resilience implemented and verified with mock HTTP contracts; live network sync remains disabled pending user-configured employer handles).
+- **External Automated ATS Application Submission:** `NOT_APPLICABLE_BY_DESIGN` (human-controlled handoff only).
 
 ## 1. Source registry
 
