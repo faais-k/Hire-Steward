@@ -53,25 +53,42 @@ export interface CandidateCertification {
 }
 
 export interface CandidateProfile {
-  full_name: string;
-  headline: string;
-  summary: string;
-  contact_email: string;
-  phone: string;
-  location: string;
-  linkedin_url: string;
-  github_url: string;
-  portfolio_url: string;
-  skills: string[];
-  languages: string[];
-  experiences: CandidateExperience[];
-  educations: CandidateEducation[];
-  projects: CandidateProject[];
-  certifications: CandidateCertification[];
+  id?: string;
+  name?: string;
+  full_name?: string;
+  headline?: string;
+  summary?: string;
+  contact_info?: {
+    email?: string;
+    phone?: string;
+    location?: string;
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+    languages?: string[];
+  };
+  contact_email?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  portfolio_url?: string;
+  skills?: string[] | Array<{ name: string; category?: string; proficiency_level?: string; years_experience?: number }>;
+  languages?: string[];
+  employment?: CandidateExperience[];
+  experiences?: CandidateExperience[];
+  education?: CandidateEducation[];
+  educations?: CandidateEducation[];
+  projects?: CandidateProject[];
+  certifications?: CandidateCertification[];
+  profile?: Record<string, unknown>;
   completeness?: {
-    score: number;
-    percentage: number;
-    is_complete: boolean;
+    score?: number;
+    percentage?: number;
+    is_complete?: boolean;
+    missing_elements?: string[];
+    strengths?: string[];
     details?: Record<string, boolean>;
   };
 }

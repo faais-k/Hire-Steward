@@ -84,7 +84,7 @@ def calculate_profile_completeness(profile_dict: dict[str, Any]) -> Completeness
     strengths: list[str] = []
 
     # 1. Full name (10%)
-    name = (profile_dict.get("name") or "").strip()
+    name = (profile_dict.get("name") or profile_dict.get("full_name") or "").strip()
     if name:
         score += 0.10
         strengths.append("Full name provided")
@@ -93,9 +93,9 @@ def calculate_profile_completeness(profile_dict: dict[str, Any]) -> Completeness
 
     # 2. Contact info (20%)
     contact = profile_dict.get("contact_info") or {}
-    email = (contact.get("email") or "").strip()
-    phone = (contact.get("phone") or "").strip()
-    location = (contact.get("location") or "").strip()
+    email = (contact.get("email") or profile_dict.get("contact_email") or profile_dict.get("email") or "").strip()
+    phone = (contact.get("phone") or profile_dict.get("phone") or "").strip()
+    location = (contact.get("location") or profile_dict.get("location") or "").strip()
     if email and (phone or location):
         score += 0.20
         strengths.append("Verified contact information present")
@@ -118,8 +118,11 @@ def calculate_profile_completeness(profile_dict: dict[str, Any]) -> Completeness
         missing.append("Professional summary and headline are missing")
 
     # 4. Employment Experience (25%)
-    employment = profile_dict.get("employment") or []
-    valid_jobs = [j for j in employment if (j.get("company") and j.get("role"))]
+    employment = profile_dict.get("employment") or profile_dict.get("experiences") or []
+    valid_jobs = [
+        j for j in employment
+        if isinstance(j, dict) and (j.get("company") and j.get("role"))
+    ]
     if len(valid_jobs) >= 2:
         score += 0.25
         strengths.append(f"{len(valid_jobs)} work experiences recorded")
@@ -130,8 +133,11 @@ def calculate_profile_completeness(profile_dict: dict[str, Any]) -> Completeness
         missing.append("At least one employment history entry required")
 
     # 5. Education (15%)
-    education = profile_dict.get("education") or []
-    valid_edu = [e for e in education if (e.get("institution") and e.get("degree"))]
+    education = profile_dict.get("education") or profile_dict.get("educations") or []
+    valid_edu = [
+        e for e in education
+        if isinstance(e, dict) and (e.get("institution") and e.get("degree"))
+    ]
     if valid_edu:
         score += 0.15
         strengths.append("Educational background provided")
@@ -140,10 +146,14 @@ def calculate_profile_completeness(profile_dict: dict[str, Any]) -> Completeness
 
     # 6. Skills (20%)
     skills = profile_dict.get("skills") or []
-    if len(skills) >= 5:
+    valid_skills = [
+        s for s in skills
+        if (isinstance(s, str) and s.strip()) or (isinstance(s, dict) and (s.get("name") or "").strip())
+    ]
+    if len(valid_skills) >= 5:
         score += 0.20
-        strengths.append(f"{len(skills)} skills listed")
-    elif len(skills) >= 2:
+        strengths.append(f"{len(valid_skills)} skills listed")
+    elif len(valid_skills) >= 2:
         score += 0.12
         missing.append("Add at least 5 key skills for best match accuracy")
     else:
@@ -156,7 +166,7 @@ def calculate_profile_completeness(profile_dict: dict[str, Any]) -> Completeness
     certs = profile_dict.get("certifications") or []
     if certs:
         strengths.append(f"{len(certs)} certification(s) listed")
-    langs = contact.get("languages") or []
+    langs = contact.get("languages") or profile_dict.get("languages") or []
     if langs:
         strengths.append(f"{len(langs)} language(s) recorded")
 

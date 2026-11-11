@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any
+from typing import Any, Union
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -26,27 +26,116 @@ router = APIRouter(prefix="/api/v1/profile", tags=["Candidate Profile"])
 
 class ProfileUpdateRequest(BaseModel):
     name: str | None = None
+    full_name: str | None = None
     headline: str | None = None
     summary: str | None = None
     contact_info: dict[str, Any] | None = None
+    contact_email: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    location: str | None = None
+    linkedin_url: str | None = None
+    github_url: str | None = None
+    portfolio_url: str | None = None
+    languages: list[str] | None = None
     education: list[dict[str, Any]] | None = None
+    educations: list[dict[str, Any]] | None = None
     employment: list[dict[str, Any]] | None = None
+    experiences: list[dict[str, Any]] | None = None
     projects: list[dict[str, Any]] | None = None
-    skills: list[dict[str, Any]] | None = None
+    skills: list[Union[dict[str, Any], str]] | None = None
     certifications: list[dict[str, Any]] | None = None
 
 
+def _normalize_profile_payload(payload: ProfileUpdateRequest) -> dict[str, Any]:
+    raw = payload.model_dump()
+    data: dict[str, Any] = {}
+
+    name = raw.get("name") or raw.get("full_name")
+    if name is not None:
+        data["name"] = name
+    if raw.get("headline") is not None:
+        data["headline"] = raw["headline"]
+    if raw.get("summary") is not None:
+        data["summary"] = raw["summary"]
+
+    contact = dict(raw.get("contact_info") or {})
+    if raw.get("contact_email") is not None:
+        contact["email"] = raw["contact_email"]
+    elif raw.get("email") is not None:
+        contact["email"] = raw["email"]
+    if raw.get("phone") is not None:
+        contact["phone"] = raw["phone"]
+    if raw.get("location") is not None:
+        contact["location"] = raw["location"]
+    if raw.get("linkedin_url") is not None:
+        contact["linkedin"] = raw["linkedin_url"]
+    if raw.get("github_url") is not None:
+        contact["github"] = raw["github_url"]
+    if raw.get("portfolio_url") is not None:
+        contact["portfolio"] = raw["portfolio_url"]
+    if raw.get("languages") is not None:
+        contact["languages"] = raw["languages"]
+
+    if contact or raw.get("contact_info") is not None:
+        data["contact_info"] = contact
+
+    edu = raw.get("education") if raw.get("education") is not None else raw.get("educations")
+    if edu is not None:
+        data["education"] = edu
+
+    emp = raw.get("employment") if raw.get("employment") is not None else raw.get("experiences")
+    if emp is not None:
+        data["employment"] = emp
+
+    if raw.get("projects") is not None:
+        data["projects"] = raw["projects"]
+
+    if raw.get("certifications") is not None:
+        data["certifications"] = raw["certifications"]
+
+    skills_raw = raw.get("skills")
+    if skills_raw is not None:
+        normalized_skills: list[dict[str, Any]] = []
+        for s in skills_raw:
+            if isinstance(s, str):
+                normalized_skills.append({"name": s.strip()})
+            elif isinstance(s, dict):
+                normalized_skills.append(s)
+        data["skills"] = normalized_skills
+
+    return data
+
+
 def _profile_to_dict(profile: Any) -> dict[str, Any]:
+    contact = profile.contact_info or {}
+    skills_list = profile.skills or []
+    flat_skills: list[str] = [
+        s["name"] if isinstance(s, dict) and "name" in s else str(s)
+        for s in skills_list
+    ]
     return {
         "id": profile.id,
         "name": profile.name,
+        "full_name": profile.name,
         "headline": profile.headline,
         "summary": profile.summary,
-        "contact_info": profile.contact_info,
+        "contact_info": contact,
+        "contact_email": contact.get("email", ""),
+        "email": contact.get("email", ""),
+        "phone": contact.get("phone", ""),
+        "location": contact.get("location", ""),
+        "linkedin_url": contact.get("linkedin", ""),
+        "github_url": contact.get("github", ""),
+        "portfolio_url": contact.get("portfolio", ""),
+        "languages": contact.get("languages", []),
         "education": profile.education,
+        "educations": profile.education,
         "employment": profile.employment,
+        "experiences": profile.employment,
         "projects": profile.projects,
         "skills": profile.skills,
+        "skills_flat": flat_skills,
         "certifications": profile.certifications,
         "completeness_score": profile.completeness_score,
         "updated_at": profile.updated_at.isoformat() if profile.updated_at else None,
@@ -60,14 +149,16 @@ def get_profile(
     """Retrieve candidate profile and completeness assessment."""
     profile = profile_service.get_or_create_profile(session)
     report = profile_service.get_profile_report(session)
+    profile_dict = _profile_to_dict(profile)
     return {
-        "profile": _profile_to_dict(profile),
+        "profile": profile_dict,
         "completeness": {
             "score": report.score,
             "percentage": report.percentage,
             "missing_elements": report.missing_elements,
             "strengths": report.strengths,
         },
+        **profile_dict,
     }
 
 
@@ -78,19 +169,21 @@ def update_profile(
     _guard: None = Depends(require_local_same_origin),
 ) -> dict[str, Any]:
     """Update profile fields, persist changes, and refresh completeness."""
-    update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
+    update_data = _normalize_profile_payload(payload)
     with session.begin():
         profile = profile_service.update_profile(session, update_data)
         report = profile_service.get_profile_report(session)
 
+    profile_dict = _profile_to_dict(profile)
     return {
-        "profile": _profile_to_dict(profile),
+        "profile": profile_dict,
         "completeness": {
             "score": report.score,
             "percentage": report.percentage,
             "missing_elements": report.missing_elements,
             "strengths": report.strengths,
         },
+        **profile_dict,
     }
 
 
@@ -99,7 +192,7 @@ def assess_completeness(
     payload: ProfileUpdateRequest,
 ) -> dict[str, Any]:
     """Assess completeness report for given profile payload without saving."""
-    data = payload.model_dump()
+    data = _normalize_profile_payload(payload)
     report = calculate_profile_completeness(data)
     return {
         "score": report.score,

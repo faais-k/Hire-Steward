@@ -234,3 +234,62 @@ def test_map_fact_skill_populates_name() -> None:
     fact_data = map_resp.json()
     assert fact_data["value"]["name"] == "PostgreSQL Database Administration"
     assert fact_data["value"]["text"] == "PostgreSQL Database Administration"
+
+
+def test_profile_accepts_flat_keys_and_string_skills() -> None:
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    CandidateProfile.__table__.create(engine)
+    session_factory = sessionmaker(bind=engine)
+
+    app = create_app(session_factory=session_factory)
+    client = TestClient(app)
+
+    payload = {
+        "full_name": "Faais K",
+        "headline": "AI Engineer | Generative AI",
+        "summary": "Applied AI engineer focused on LLM applications.",
+        "contact_email": "faaisbinkasim@gmail.com",
+        "phone": "+91-7356893969",
+        "location": "Kerala, India",
+        "linkedin_url": "https://linkedin.com/in/faais-k",
+        "github_url": "https://github.com/faais-k",
+        "portfolio_url": "https://ascent-intrv.vercel.app",
+        "skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "PyTorch"],
+        "experiences": [
+            {"company": "SwarmLens Pvt. Ltd.", "role": "AI Intern", "start_date": "2026-05"},
+            {"company": "Biztime IT Solutions", "role": "Software Engineer Intern", "start_date": "2024-07"},
+        ],
+        "educations": [
+            {"institution": "Calicut University, MES College", "degree": "B.Sc. Computer Science"},
+        ],
+    }
+
+    put_resp = client.put("/api/v1/profile", json=payload, headers=local_headers())
+    assert put_resp.status_code == 200, put_resp.text
+    data = put_resp.json()
+
+    assert data["profile"]["name"] == "Faais K"
+    assert data["full_name"] == "Faais K"
+    assert data["contact_email"] == "faaisbinkasim@gmail.com"
+    assert data["profile"]["contact_info"]["email"] == "faaisbinkasim@gmail.com"
+    assert data["profile"]["contact_info"]["phone"] == "+91-7356893969"
+    assert len(data["profile"]["skills"]) == 5
+    assert data["profile"]["skills"][0]["name"] == "Python"
+    assert "Python" in data["skills_flat"]
+    assert len(data["profile"]["employment"]) == 2
+    assert len(data["profile"]["education"]) == 1
+    assert data["completeness"]["percentage"] == 100
+
+    # Verify GET returns same normalized data
+    get_resp = client.get("/api/v1/profile", headers=local_headers())
+    assert get_resp.status_code == 200
+    get_data = get_resp.json()
+    assert get_data["name"] == "Faais K"
+    assert get_data["full_name"] == "Faais K"
+    assert get_data["contact_email"] == "faaisbinkasim@gmail.com"
+    assert get_data["completeness"]["percentage"] == 100
+
